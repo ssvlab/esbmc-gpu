@@ -1,0 +1,77 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_locker_} is reserved. */}
+@code{#include <mailutils/locker.h>}
+@end smallexample
+
+@deftypefun  int mu_locker_set_default_flags (int @var{flags}, enum mu_locker_set_mode @var{mode})
+@end deftypefun
+
+@deftypefun void mu_locker_set_default_retry_timeout (time_t @var{to})
+@end deftypefun
+
+@deftypefun void mu_locker_set_default_retry_count (size_t @var{n})
+@end deftypefun
+
+@deftypefun void mu_locker_set_default_expire_timeout (time_t @var{t})
+@end deftypefun
+
+@deftypefun  void mu_locker_set_default_external_program (char *@var{path})
+@end deftypefun
+
+A flags of 0 means that the default will be used.
+
+@deftypefun  int mu_locker_create (mu_locker_t *, const char *@var{filename}, int @var{flags})
+@end deftypefun
+
+@deftypefun void mu_locker_destroy (mu_locker_t *)
+@end deftypefun
+
+Time is measured in seconds.
+
+@deftypefun  int mu_locker_set_flags (mu_locker_t, int)
+@end deftypefun
+
+@deftypefun  int mu_locker_set_expire_time (mu_locker_t, int)
+@end deftypefun
+
+@deftypefun  int mu_locker_set_retries (mu_locker_t, int)
+@end deftypefun
+
+@deftypefun  int mu_locker_set_retry_sleep (mu_locker_t, int)
+@end deftypefun
+
+@deftypefun  int mu_locker_set_external (mu_locker_t, const char *@var{program})
+@end deftypefun
+
+@deftypefun  int mu_locker_get_flags (mu_locker_t, int *)
+@end deftypefun
+
+@deftypefun  int mu_locker_get_expire_time (mu_locker_t, int*)
+@end deftypefun
+
+@deftypefun  int mu_locker_get_retries (mu_locker_t, int *)
+@end deftypefun
+
+@deftypefun  int mu_locker_get_retry_sleep (mu_locker_t, int *)
+@end deftypefun
+
+@deftypefun  int mu_locker_get_external (mu_locker_t, char **)
+@end deftypefun
+
+@deftypefun  int mu_locker_lock (mu_locker_t)
+@end deftypefun
+
+@deftypefun  int mu_locker_touchlock (mu_locker_t)
+@end deftypefun
+
+@deftypefun  int mu_locker_unlock (mu_locker_t)
+@end deftypefun
+
+@deftypefun  int mu_locker_remove_lock (mu_locker_t)
+@end deftypefun

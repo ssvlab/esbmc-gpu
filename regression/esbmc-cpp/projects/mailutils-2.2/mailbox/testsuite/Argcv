@@ -1,0 +1,52 @@
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2005, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+#
+1 2 3
+3: 1 2 3
+
+quoted\ space
+1: "quoted space"
+
+a "tab	character"
+2: a tab\tcharacter
+
+\157\143\164\141\154\40and\x20\x68\x65\x78
+1: "octal and hex"
+
+\157\143\164\141\154\40 and \x20\x68\x65\x78
+3: "octal " and " hex"
+
+A\x3-\48\39
+1: A\003-\0048\0039
+
+# FIXME: Tcl is not able to properly handle binary data, even with
+# fconfigure -binary, so I had to disable this test
+#message: ASCII upper part
+#верхняя половина таблицы
+#3: \327\305\322\310\316\321\321 \320\317\314\317\327\311\316\301 \324\301\302\314\311\303\331
+
+messed        up'quotations     ' in "a  single'" "command" lin"e
+6: messed "upquotations     " in "a  single'" command "lin\"e"
+
+'unbalanced "quote
+2: 'unbalanced "\"quote"
+
+unbalanced "quote
+2: unbalanced "\"quote"
+
+"
+1: "\""

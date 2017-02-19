@@ -1,0 +1,27 @@
+@c snarfed from "mu_scm.c":130
+@deffn {Scheme procedure} mu-register-format rest
+Registers desired mailutils formats. Any number of arguments can be given.
+Each argument must be one of the following strings:
+
+@multitable @columnfractions 0.3 0.6
+@headitem Argument @tab Meaning
+@item @samp{mbox}  @tab Regular UNIX mbox format
+@item @samp{mh}    @tab @acronym{MH} mailbox format
+@item @samp{maildir} @tab @i{Maildir} mailbox format
+@item @samp{pop}   @tab @acronym{POP} mailbox format
+@item @samp{imap}  @tab @acronym{IMAP} mailbox format
+@item @samp{sendmail} @tab @i{sendmail} mailer format
+@item @samp{smtp}  @tab @acronym{SMTP} mailer format
+@end multitable
+
+If called without arguments, the function registers all available formats
+
+@end deffn
+
+@c snarfed from "mu_scm.c":163
+@deffn {Scheme procedure} mu-strerror err
+Return the error message corresponding to @var{err}, which must be
+an integer value.
+
+@end deffn
+

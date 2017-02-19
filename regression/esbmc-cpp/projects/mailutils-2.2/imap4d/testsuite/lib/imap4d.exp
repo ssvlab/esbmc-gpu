@@ -1,0 +1,331 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+source $top_srcdir/testsuite/lib/mailutils.exp
+    
+mu_init "--rcfile=$objdir/imap4d.rc"
+mu_version
+if ![mu_check_capability ENABLE_VIRTUAL_DOMAINS] {
+    clone_output "WARNING: Support for virtual domains not compiled in"
+    clone_output "WARNING: Skipping tests for imap4d"
+    exit 0
+}
+
+set IMAP4D_ETC_DIR "$MU_DATA_DIR/etc"
+
+mu_makespool "$MU_RC_DIR" "$IMAP4D_ETC_DIR"
+mu_create_config imap4d
+
+set IMAP4D_TAG 0
+
+### Only procedures should come after this point.
+
+proc imap4d_version {} {
+    global MU_TOOL
+    global MU_TOOL_FLAGS
+    global MU_TOOL_VERSION
+    
+    mu_version
+    if ![is_remote host] {
+	clone_output "[which $MU_TOOL] version $MU_TOOL_VERSION"
+    } else {
+	clone_output "$MU_TOOL on remote host version $MU_TOOL_VERSION"
+    }
+}
+
+proc default_imap4d_start {args} {
+    global verbose
+    global MU_TOOL
+    global MU_TOOL_FLAGS
+    global expect_out
+    global imap4d_spawn_id
+    
+    mu_version
+
+    set args [lindex $args 0]
+    if [info exists MU_TOOL_FLAGS] {
+	set sw "$MU_TOOL_FLAGS "
+    } else {
+	set sw ""
+    }
+    
+    if [llength $args] {
+	append sw $args
+    } 
+    
+    set imap4d_cmd "$MU_TOOL $sw"
+    verbose "Spawning $imap4d_cmd"
+
+    set imap4d_spawn_id [remote_spawn host $imap4d_cmd]
+    if { $imap4d_spawn_id < 0 || $imap4d_spawn_id == "" } {
+	perror "Spawning $imap4d_cmd failed."
+	return 1;
+    }
+
+    mu_expect 360 {
+	-re "\\* (OK)|(PREAUTH) IMAP4rev1 Debugging mode.*\r\n" {
+	    verbose "imap4d initialized."
+	}
+	default {
+	    perror "imap4d not initialized"
+            exit 1
+	}
+    }
+    return 0
+}
+
+proc default_imap4d_stop {} {
+    verbose "Stopping imap4d"
+    if [imap4d_test "LOGOUT"\
+	    "BYE Session terminating." \
+	    "OK LOGOUT Completed"] {
+	perror "LOGOUT failed"
+	exit 1
+    }
+    remote_close host;
+    return 0
+}
+
+proc imap4d_start {args} {
+    global MU_SPOOL_DIR
+    
+    verbose "Starting imap4d"
+
+    set reuse_spool 0
+    for {set i 0} {$i < [llength $args]} {incr i} {
+	set a [lindex $args $i]
+	if {"$a" == "-reuse-spool"} {
+	    set reuse_spool 1
+	} else {
+	    break;
+	}
+    }
+
+    if {$reuse_spool == 0} {
+	mu_prepare_spools
+	mu_copy_file $MU_SPOOL_DIR/teaparty.mbox $MU_SPOOL_DIR/INBOX
+    }
+    return [default_imap4d_start [concat [lrange $args $i end]]]
+}
+    
+proc imap4d_stop {} {
+    global imap4d_spawn_id
+    if {[info exists imap4d_spawn_id] && $imap4d_spawn_id > 0} {
+	default_imap4d_stop
+	unset imap4d_spawn_id
+    }
+}
+
+##
+
+proc imap4d_make_command { string } {
+    global IMAP4D_TAG
+    
+    incr IMAP4D_TAG
+    return "$IMAP4D_TAG $string"
+}
+
+proc imap4d_send { string } {
+    return [mu_send "$string"]
+}
+
+proc imap4d_command { cmd } {
+    return [mu_command [imap4d_make_command $cmd]]
+}
+
+proc imap4d_uidvalidity {} {
+    regsub "(\[0-9\]*)\[0-9\]" "[clock seconds]" "\\1\[0-9\]" val
+    return $val
+}
+
+proc imap4d_exit {} {
+    imap4d_stop
+}
+
+proc imap4d_auth {args} {
+    set user [lindex $args 0]
+    set pass [lindex $args 1]
+    if [imap4d_test "LOGIN $user $pass"] {
+	perror "Failed to authorize."
+	exit 1
+    }
+}    
+    
+# imap4d_test [-message MESSAGE][-default (FAIL|XFAIL)][-long][-silent][-sort]
+#            COMMAND [UNTAGGED...][TAGGED]
+# COMMAND   - Command to send.
+# UNTAGGED  - A list of untagged responses to expect in return. 
+# TAGGED    - A tagged response to expect in return. Defaults to "OK"
+# MESSAGE   - [optional] message to output
+proc imap4d_test {args} {
+    global IMAP4D_TAG
+    global verbose
+    
+    set default ""
+    set message ""
+    set long 0
+    set silent 0
+    set sort 0
+    for {set i 0} {$i < [llength $args]} {incr i} {
+	set a [lindex $args $i]
+	if {"$a" == "-default"} {
+	    set default [lindex $args [expr $i + 1]]
+	    incr i
+	} elseif {"$a" == "-message"} {
+	    set message [lindex $args [expr $i + 1]]
+	    incr i
+	} elseif {"$a" == "-long"} {
+	    set long 1
+	} elseif {"$a" == "-silent"} {
+	    set silent 1
+	} elseif {"$a" == "-sort"} {
+	    set sort 1
+	} else {
+	    set args [lrange $args $i end]
+	    break
+	}
+    }
+
+    if {"$message" == ""}  {
+	set message [lindex $args 0]
+    }
+
+    if $verbose>2 then {
+	send_user "Message is \"$message\"\n"
+    }
+
+    set command [lindex $args 0]
+    if {$long} {
+	set command_data [lindex $args 1]
+	set args [lrange $args 1 end]
+    } 
+	
+    set pattern [list]
+    set len [expr [llength $args] - 1]
+
+    if {$len >= 2} {
+	set regexp 0
+	set literal 0
+	for {set i 1} {$i <= [expr $len - 1]} {incr i} {
+	    switch -regexp -- "[lindex $args $i]" {
+		^-re.*$	-
+		^--     { set item "[lindex $args $i]"; set regexp 1 }
+		^-literal   { set literal 1; continue }
+		^-noliteral { set literal 0; continue }
+		default {  if {!$literal} {
+				if {$regexp} {
+				    set item "\\* [lindex $args $i]"
+				} else {
+				    set item "* [lindex $args $i]"
+				}
+			   } else {
+				set item [lindex $args $i]
+			   }
+ 		           set regexp 0
+		       }
+	    }
+	    
+	    set pattern [concat $pattern [list $item]]
+	}
+	set tagged [lindex $args end]
+    } elseif {$len == 1} {
+	set tagged [lindex $args end]
+    } else {
+	set tagged "OK"
+    }
+
+    verbose "TAGGED $tagged"
+    if {$long} {
+	set command "$command {[string length $command_data]}"
+	imap4d_command $command
+	set pattern [concat $pattern [list "$IMAP4D_TAG $tagged"]]
+
+	mu_expect 360 {
+	    -re "^\\+ GO AHEAD.*$" { }
+	    default {
+		perror "imap4d_long_test failed"
+		return 1
+	    }
+	}
+
+	verbose "Sending $command_data" 3
+	mu_send "$command_data\n"
+
+	set s [split $command_data "\n"]
+        set s [lrange $s 0 [expr [llength $s] - 2]]
+        set result [mu_expect_list 360 [concat $s $pattern]]
+    } elseif {$sort && [llength $pattern] > 0} {
+	set command [imap4d_make_command $command]
+	set result [mu_test $command [list "-re" "(.*)\n$IMAP4D_TAG $tagged"]]
+	if {$result == 0} {
+	    if [info exists expect_out(1,string)] {
+		set out [lsort -ascii [split $expect_out(1,string) "\n"]]
+		set in [lsort -ascii $pattern]
+		if {[llength $in] == [llength $out]} {
+		    for {set i 0} {$i < [llength $in]} {incr i} {
+			regexp "(\[^\r\]*)" [lindex $out $i] dummy tmp
+			if [string compare [lindex $in $i] $tmp] {
+			    verbose "Item $i comparison failed"
+			    set result 1
+			    break
+			}
+		    }
+		} else {
+		    verbose "Input and output lists have different lengths"
+		    set result 1
+		}
+
+		if {$result} {
+		    verbose "Input: $in"
+		    verbose "Output: $out"
+		}
+		
+	    } else {
+		verbose "expect_out(1,string) does not exist. Buffer: $expect_out(buffer)"
+		set result 1
+	    }
+	} 
+    } else {
+	set command [imap4d_make_command $command]
+	set pattern [concat $pattern [list "$IMAP4D_TAG $tagged"]]
+        set result [mu_test $command $pattern]
+    }
+
+    if {!$silent} {
+	if {$result == 0} {
+	    pass "$message"
+	} elseif {$result == 1} {
+	    if { "$default" == "" || "$default" != "FAIL" } {
+		fail "$message"
+	    } else {
+		xfail "$message"
+		set result 0
+	    }
+	} elseif {$result == -2} {
+	    fail "$message (timeout)"
+        } elseif {$result == -3} {
+	    fail "$message (eof)"
+        } else {
+	    fail "$message"
+        }
+    }
+    return $result
+}
+	    
+

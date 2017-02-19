@@ -1,0 +1,91 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+sieve_test stop.sv -pattern\
+"STOP on msg uid 1"\
+"STOP on msg uid 2"\
+"STOP on msg uid 3"
+
+sieve_test null.sv -pattern\
+"IMPLICIT KEEP on msg uid 1"\
+"IMPLICIT KEEP on msg uid 2"\
+"IMPLICIT KEEP on msg uid 3"
+
+sieve_test keep.sv -pattern\
+"KEEP on msg uid 1"\
+"KEEP on msg uid 2"\
+"KEEP on msg uid 3"
+
+sieve_test discard.sv -pattern\
+"DISCARD on msg uid 1: marking as deleted"\
+"DISCARD on msg uid 2: marking as deleted"\
+"DISCARD on msg uid 3: marking as deleted"
+
+sieve_test --set "mailbox.folder=\"'$MU_SPOOL_DIR'\"" fileinto.sv -pattern\
+"FILEINTO on msg uid 1: delivering into +file"\
+"FILEINTO on msg uid 2: delivering into +file"\
+"FILEINTO on msg uid 3: delivering into +file"
+
+mu_test_file "$MU_SPOOL_DIR/file" \
+"From coyote@desert.example.org Sun May  6 22:16:47 2001"\
+"From: coyote@desert.example.org"\
+"To: roadrunner@acme.example.com"\
+"Subject: I have a present for you"\
+"X-Caffeine: C8H10N4O2"\
+""\
+"Look, I'm sorry about the whole anvil thing, and I really"\
+"didn't mean to try and drop it on you from the top of the"\
+"cliff.  I want to try to make it up to you.  I've got some"\
+"great birdseed over here at my place--top of the line"\
+"stuff--and if you come by, I'll have it all wrapped up"\
+"for you.  I'm really sorry for all the problems I've caused"\
+"for you over the years, but I know we can work this out."\
+""\
+-- "--"\
+"Wile E. Coyote   \"Super Genius\"   coyote@desert.example.org"\
+""\
+"From b1ff@de.res.example.com Sun May  6 22:17:15 2001"\
+"From: youcouldberich!@reply-by-postal-mail.invalid"\
+"To: rube@landru.example.edu"\
+"Subject: \$\$\$ YOU, TOO, CAN BE A MILLIONAIRE! \$\$\$"\
+"Date: TBD"\
+"X-Number: 0015"\
+""\
+"YOU MAY HAVE ALREADY WON TEN MILLION DOLLARS, BUT I DOUBT"\
+"IT!  SO JUST POST THIS TO SIX HUNDRED NEWSGROUPS!  IT WILL"\
+"GUARANTEE THAT YOU GET AT LEAST FIVE RESPONSES WITH MONEY!"\
+"MONEY! MONEY! COLD HARD CASH!  YOU WILL RECEIVE OVER"\
+"\$20,000 IN LESS THAN TWO MONTHS!  AND IT'S LEGAL!!!!!!!!!"\
+"!!!!!!!!!!!!!!!!!!111111111!!!!!!!11111111111!!1  JUST"\
+"SEND \$5 IN SMALL, UNMARKED BILLS TO THE ADDRESSES BELOW!"\
+""\
+"From bar@dontmailme.org  Fri Dec 28 23:28:09 2001"\
+"Received: (from bar@dontmailme.org)"\
+"\tby dontmailme.org id fERKR9N16790"\
+"\tfor foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Coffee"\
+""\
+"How about some coffee?"
+
+# end of action.exp
+

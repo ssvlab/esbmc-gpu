@@ -1,0 +1,363 @@
+This is the GNU Mailutils package
+=================================
+
+* Introduction
+==============
+
+GNU Mailutils is a rich and powerful protocol-independent mail
+framework.  It contains a series of useful mail libraries, clients,
+and servers.  These are the primary mail utilities for the GNU system.
+The central library is capable of handling electronic mail in various
+mailbox formats and protocols, both local and remote.  Specifically,
+this project contains a POP3 server, an IMAP4 server, and a Sieve mail
+filter. It also provides a POSIX `mailx' client, and a collection of
+other handy tools.
+
+The GNU Mailutils libraries supply an ample set of primitives for
+handling electronic mail in programs written in C, C++, Python or
+Scheme.
+
+At the core of Mailutils is libmailutils, a library which provides
+universal access to various mailboxes and protocols: UNIX mailbox,
+Maildir, MH, POP3, IMAP4, Sendmail, SMTP.  Mailutils offers functions
+for almost any mail-related task, such as parsing of messages, email
+addresses and URLs, handling MIME messages, listing mail folders,
+mailcap facilities, extensible Sieve filtering, access control lists.
+It supports various modern data security and authentication
+techniques: TLS encryption, SASL and GSSAPI, to name a few.
+The framework is able to work with a wide variety of authorization
+databases, ranging from traditional system password database up to
+RADIUS, SQL and LDAP.
+
+The utilities provided by Mailutils include imap4d and pop3d mail
+servers, mail reporting utility comsatd, general-purpose mail delivery
+agent maidag, mail filtering program sieve, and an implementation of
+MH message handling system.
+
+All utilities share the same subset of command line options and use
+a unified configuration mechanism, which allows to easily configure
+the package as a whole.
+
+This software is part of the GNU Project and is copyrighted by the
+Free Software Foundation.  All libraries are distributed under the
+terms of the Lesser GNU Public License.  The documentation is licensed
+under the GNU FDL, and everything else is licensed under the GNU GPL.
+The complete texts of the corresponding licences are included in the
+files COPYING.LESSER, COPYING and doc/texinfo/COPYING.DOC.
+
+* Why use this package?
+=======================
+
+This package started off to try and handle large mailbox files more
+gracefully then current POP3 servers did. While it handles this task,
+it also allows you to support a variety of different mailbox formats
+without any real effort on your part. Also, if a new format is added
+at a later date, your program will support that new format
+automatically as soon as it is compiled against the new library.
+
+This package is also released as part of Debian, so you should expect
+it to compile cleanly on all the platforms supported there.
+
+* How to install
+================
+
+Please see the INSTALL file in this directory for the generic instructions
+on how to use configure. The following short summary describes the
+mailutils-specific configuration options:
+
+    --enable-debug
+
+	Compile Mailutils with debugging support. This disables
+	compiler optimizations and adds debugging information to the
+	binaries. 
+
+    --disable-pam
+
+	Do not build PAM support. By default configure will build PAM
+	support if the host system supports it. Use this option to
+	suppress this behaviour.
+
+    --disable-pthread
+
+	Do not build thread-safe libraries.
+
+    --without-fribidi
+
+        Do not include fribidi support, even if libfribidi is present.
+		
+    --with-sql=MODLIST
+
+        Enable support for authentication using given SQL modules.
+        MODLIST is a colon-separated list of SQL modules to use.
+        Available modules are 'mysql', 'postgres' and 'odbc'. E.g.,
+        to enable all modules: 
+
+		--with-sql=mysql:postgres:odbc
+
+
+        Note that depending on how your SQL systems are installed,
+        this may require adding appropriate directories to the library
+        and include paths, e.g.
+
+
+	./configure LDFLAGS='-L/usr/local/mysql/lib -L/usr/local/pgsql/lib' \
+                    CPPFLAGS='-I/usr/local/mysql/include \
+                             -I/usr/local/pgsql/include' 
+    		    --with-sql=mysql:postgres
+
+
+    --with-mysql
+
+        Equivalent to --with-sql=mysql
+
+        Note that depending on how your MySQL system is installed, this
+        may require adding appropriate directories to the library and
+        include paths, e.g.:
+
+	./configure LDFLAGS='-L/usr/local/mysql/lib' \
+                    CPPFLAGS='-I/usr/local/mysql/include' --with-mysql
+
+    --with-postgres
+
+        Equivalent to --with-sql=postgres 
+
+	You may have to explicitly specify LIBS and CPPFLAGS (see
+	above). 
+
+    --with-odbc[={odbc|iodbc}]
+
+        Without arguments or with 'odbc' as its argument it is
+        equivalent to --with-sql=odbc.
+
+	--with-odbc=iodbc enables ODBC support via libiodbc.
+
+	You may have to explicitly specify LIBS and CPPFLAGS (see
+	above). 
+
+    --with-mh-bindir=DIR
+
+        By default the MH binaries are installed in
+        ${exec_prefix}/bin/mu-mh. To change this, use --with-mh-bindir
+        option. If DIR starts with '/' it is taken as an absolute
+        path specification, otherwise ${prefix} is prepended to it. 
+
+    --with-virtual-pwddir=DIR
+
+	Use DIR instead of $sysconfdir/domain as the location of
+	virtual mail domain database. This option is ignored if
+        --disable-virtual-domains is specified.
+
+    --without-readline
+
+	Build 'mail' without readline support.
+
+    --without-gnutls
+
+	Disable the TLS/SSL encryption via GnuTLS (a Transport Layer
+	Security Library) in IMAP4/POP3 daemons and utilities.
+
+    --with-gsasl
+
+	Enable GNU SASL support (Simple Authentication and Security
+	Layer framework). IMAP4d supports this mechanism. This
+	requires GSASL version 0.2.3 or newer. 
+
+    --with-gssapi
+
+	Enable GSSAPI authentication. For this to work, you will have
+	to have Kerberos V installed on your system.
+
+    --without-python
+
+	Do not build Python interface library.
+
+    --without-guile
+
+	Do not build Guile interface library.
+
+    --with-guiledir[=DIR]
+
+        Specify the directory to install guile modules to. By default
+        they are installed in
+
+	  $(prefix)/share/mailutils/$(VERSION)/guile.
+
+	The option --with-guiledir used without argument instructs
+	configure script to install modules to the site-wide Guile
+	directory, where it is easier to find them. This directory is
+	defined as $(guile_pkgdatadir)/site where guile_pkgdatadir is
+	the Guile package data directory as returned by `guile-config
+	info pkgdatadir'.
+
+	Otherwise, if an argument to the option is given, it specifies
+	the absolute file name of the installation directory for Guile
+	modules. 
+	
+    --with-mail-rc=FILE
+
+	Set the location of the system-wide configuration file for mail
+	utility. FILE must be an absolute filename specification.
+	Default is $sysconfdir/mail.rc
+
+    --with-mail-spool=PATH
+
+	Override the location of the mailspool. The default value
+	depends on the system. Usually it is either /var/spool/mail
+	or /var/mail. PATH is either an absolute directory name, or a
+	valid `mbox' URL in the form:
+
+		mbox:path;type=TYPE;param=N;user=
+
+	This method allows you to use indexed mailspools. For servers
+	with a really big number of users this may provide a
+	significant speedup in opening the mailbox. 
+
+	TYPE is one of:
+		hash       --  The user's mailbox is kept in a subdirectory
+			       whose name is determined by hashing first
+			       N characters of the user name. There are
+			       256 subdirectories named from 00 through FF.
+		index	   --  The user's mailbox is located PARAM directories
+                               down the `path'. The directories are named
+                               after the first N letters of a login name.
+			       For example, when N=2 the mailbox for
+			       user `smith' is `/var/spool/mail/s/m/smith'.
+	        rev-index  --  Same as above, except that the last letters
+			       are used, thus the mailbox for `smith' will
+	                       be /var/spool/mail/h/t/smith. This may provide
+	                       a better average distribution than the `index'
+			       method.
+	
+    --with-log-facility=facility
+
+	Enable logging to the given syslog facility. Default is `mail'.
+
+    --without-included-regex
+
+	Don't compile regex; this is the default on systems with version
+	2 of the GNU C library (use with caution on other systems)
+
+    --disable-nls
+
+        Do not use Native Language Support
+
+    --with-included-gettext
+
+       Use the GNU gettext library included in the Mailutils distribution.
+
+    --with-included-argp
+
+        Use the argp library supplied with the package, instead of the
+        one from your libc. You will need this option if the libc library
+        on your system was compiled without NLS support.
+
+The following options enable DBM support in Mailutils. DBM support is
+necessary if you wish to use APOP authentication in POP3 daemon or to
+use DBM-based mail box quotas with maildag.
+
+    --with-gdbm
+
+	Use GNU DBM
+
+    --with-berkeley-db[=ARG]
+
+	Use Berkeley DB. If ARG is not specified, configure will
+	attempt to autodetect the database version to use. Unless ARG
+	begins with a digit, it is taken as a library name, without
+	the `lib' prefix and library type suffix, so that specifying
+
+	    --with-berkeley-db=db-3.1
+
+	instructs configure to use library libdb-3.1.so (or
+	libdb-3.1.a).
+	Otherwise, if ARG begins with a digit, it is understood as a
+	library version number to link to. In this case configure
+	assumes a Slackware-like installation layout. Thus, using
+
+	    --with-berkeley-db=3.1
+
+	tells configure to use library libdb-3.1.so (or libdb-3.1.a)
+	and header file /usr/include/db31/db.h    
+
+    --with-ndbm
+
+	Use NDBM
+
+    --with-tokyocabinet
+
+	Use Tokyo Cabinet DBM
+
+        Only one dbm option may be specified. Which one depends on
+        the flavor of DBM you are using. GDBM is most common for GNU
+        system.
+
+Use following options to disable support for particular protocols or
+features:
+
+    --disable-imap        Disables IMAP protocol support. 
+    --disable-pop         Disables POP protocol support. 
+    --disable-smtp        Disables support for SMTP mailer.
+    --disable-sendmail    Disables support for `Sendmail' mailer.
+    --disable-mh          Disables support for MH mailbox format.  
+    --disable-virtual-domains 
+                          Disables support for authentication using
+                          virtual mail domains.
+
+Special options are provided that control whether each particular
+Mailutils program is built. These are:
+
+    --disable-build-frm        do not build frm
+    --disable-build-pop3d      do not build pop3d
+    --disable-build-imap4d     do not build imap4d
+    --disable-build-comsat     do not build comsat
+    --disable-build-maidag     do not build maidag
+    --disable-build-mail       do not build mail
+    --disable-build-sieve      do not build sieve
+    --disable-build-guimb      do not build guimb
+    --disable-build-messages   do not build messages
+    --disable-build-readmsg    do not build readmsg
+    --disable-build-dotlock    do not build dotlock
+    --disable-build-movemail   do not build movemail
+    --disable-build-mimeview   do not build mimeview
+    --disable-build-mh         do not build mh utilities
+
+Several environment variables affect the configuration. Currently,
+the only mailutils-specific variable is DEFAULT_CUPS_CONFDIR. It
+sets the location of CUPS (Common UNIX Printing System) configuration
+directory, which is needed for `mimeview' utility. By default, this
+location is $sysconfdir/cups. On most sites, however, it may be
+reasonable to set it to /etc/cups, e.g.:
+
+	./configure DEFAULT_CUPS_CONFDIR=/etc/cups ...
+
+
+* Where to report BUGS
+======================
+
+Please report any bugs to <bug-mailutils@gnu.org>. We encourage
+sysadmins who will be using this package to subscribe to this list by
+sending an email to <bug-mailutils-request@gnu.org> with the word
+`subscribe' in the body of the message. Another way to subscribe is
+by visiting http://mail.gnu.org/mailman/listinfo/bug-mailutils.
+
+* Copyright information:
+
+Copyright (C) 2002, 2003, 2004, 2005, 2006, 2009, 2010 Free Software
+Foundation, Inc.
+
+   Permission is granted to anyone to make or distribute verbatim
+   copies of this document as received, in any medium, provided that
+   the copyright notice and this permission notice are preserved,
+   thus giving the recipient permission to redistribute in turn.
+
+   Permission is granted to distribute modified versions
+   of this document, or of portions of it,
+   under the above conditions, provided also that they
+   carry prominent notices stating who last changed them.
+
+
+Local Variables:
+mode: outline
+paragraph-separate: "[ 	]*$"
+version-control: never
+End:

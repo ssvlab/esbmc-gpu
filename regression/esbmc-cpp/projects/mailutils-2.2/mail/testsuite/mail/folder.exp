@@ -1,0 +1,62 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Test mailbox name expansion and various aspects of `file' and `folders'
+# functionality.
+
+mail_start "--file=%mbox1"
+mail_command "set readonly"
+
+mail_command "set folder=\"$MU_FOLDER_DIR\""
+mail_test "folders" -re "one.*two"
+
+mail_test "file +one" \
+ "Held 5 messages in $MU_SPOOL_DIR/mbox1" 
+mail_test "sum" \
+ "\"$MU_FOLDER_DIR/one\": 1 message 1 new"
+mail_test "headers" \
+ ">N   1 Foo Bar            Fri Dec 28 22:18  10/350   Mailbox 1"	
+
+mail_test "file +two" \
+ "Held 1 message in $MU_FOLDER_DIR/one"
+mail_test "sum" \
+ "\"$MU_FOLDER_DIR/two\": 1 message 1 new"
+mail_test "headers" \
+ ">N   1 Foo Bar            Fri Dec 28 22:18  10/350   Mailbox 2"
+
+mail_test "file #" \
+ "Held 1 message in $MU_FOLDER_DIR/two"
+mail_test "sum" \
+ "\"$MU_FOLDER_DIR/one\": 1 message 1 new"
+
+mail_test "file #" \
+ "Held 1 message in $MU_FOLDER_DIR/one"
+mail_test "sum" \
+ "\"$MU_FOLDER_DIR/two\": 1 message 1 new"
+
+mail_test "file &" \
+ "Held 1 message in $MU_FOLDER_DIR/two"
+mail_test "sum" \
+ "\"$MU_SPOOL_DIR/mbox\": 1 message 1 new"
+mail_test "headers" \
+ ">N   1 Sergey Poznyakoff  Tue Jul 16 12:11  12/425   MBOX"	
+
+mail_stop
+
+#End of folder.exp

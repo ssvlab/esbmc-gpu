@@ -1,0 +1,4 @@
+main.cu
+--unwind 9 --force-malloc-success -I ~/libraries/ --state-hashing --context-switch 3 --data-races-check
+^VERIFICATION FAILED$
+#W/W data race$

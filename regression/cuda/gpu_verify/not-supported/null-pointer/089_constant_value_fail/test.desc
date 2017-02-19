@@ -1,0 +1,4 @@
+main.cu
+-I ~/libraries --context-switch 4 --force-malloc-success --state-hashing --unwind 9  
+^VERIFICATION FAILED$
+#NULL pointer$

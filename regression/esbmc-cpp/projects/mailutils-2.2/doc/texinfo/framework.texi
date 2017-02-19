@@ -1,0 +1,168 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@menu
+* Folder::             Folder.
+* Mailbox::            Mailbox.
+* Mailer::             Protocol Used to Send Mail.
+* Message::            Message.
+* Envelope::           Envelope.
+* Headers::            Headers.
+* Body::               Body.
+* Attribute::          Attribute.
+* Stream::             Stream.
+* Iterator::           Iterator.
+* Authenticator::      Authenticator.
+* Address::            Address.
+* Locker::             Locker.
+* URL::                Uniform Resource Locators.
+* Parse822::           Parsing RFC 822 headers.
+* Mailcap::            Parsing RFC 1524 file.
+@end menu
+
+Wherever the mail is and whatever format it is stored in, it is operated
+upon using the same set of functions. To unified the C API,
+GNU Mailutils offers a heteroclite set of objects that work in
+aggregation to do operations on emails.
+Each object does a specific task and delegates non-related tasks to others.
+The object comes alive by specifying a @emph{URL} parameter when created,
+it will indicate the storage format or protocol (POP3, IMAP4, MH, MAILDIR,
+etc ..).
+
+@smallexample
+@group
+                          mu_folder_t                  mu_url_t
+  -/var/mail-    +- .. ->+-------------------+   +-->+------------+
+ (  alain *-)-+  |       |   mu_url_t      *-|---+   |   port     |
+  ----------  |  |       |-------------------|       |   hostname |
+ (  jakob *-)-+--+       |   mu_auth_t     *-|---+   |   file     |
+  ----------  |          |-------------------|   |   |   ...      |
+ (  jeff  *-)-+          |   mu_stream_t     |   |   +------------+
+  ----------  |          |-------------------|   |
+ (  shaleh*-)-+          |   .....           |   |    mu_auth_t
+  ----------             |-------------------|   +-->+-------------+
+                     +---|-* mu_mailbox_t[]  |       | mu_ticket_t |
+  mu_mailbox_t       |   +-------------------+       +-------------+
+ +-------------------+
+ |   mu_locker_t  *--|-------------+
+ |-------------------|             |
+ |   mu_url_t        |             |          mu_locker_t
+ |-------------------|             +-------->+---------+
+ |   mu_stream_t     |                       | lock    |
+ |-------------------|                       | unlock  |
+ |  mu_message_t[] *-|-------+               +---------+
+ +-------------------+       |                     mu_envelope_t
+                             |          +-------->+-----------+
+  mu_message_t               |          |         | date      |
+ +-------------------+<------+          |         | from      |
+ |   mu_envelope_t *-|------------------+         | to        |
+ |-------------------|              mu_header_t   +-----------+
+ |   mu_header_t   *-|------------>+-----------------+
+ |-------------------|             |   mu_stream_t   |
+ |   mu_body_t     *-|----+        +-----------------+
+ +-------------------+    |    mu_body_t
+                          +-->+-----------------+
+                              |   mu_stream_t   |
+                              +-----------------+
+@end group
+@end smallexample
+
+As an example, here is a simplified version of @code{from} command. It
+lists the @samp{From} and @samp{Subject} headers of every mail in a mailbox.
+
+@smallexample
+@include sfrom.inc
+@end smallexample
+
+Here is a sample output produced by this program:
+
+@smallexample
+@cartouche
+% ./sfrom pop://alain@@localhost
+Passwd: xxxx
+Jim Meyering <meyering@@foo.org>      fetish(shellutils) beta
+Fran@,{c}ois Pinard <pinard@@bar.org> recode new alpha
+@dots{}
+@end cartouche
+@end smallexample
+
+@node Folder
+@subsection Folder
+@cindex Folder
+@include folder.texi
+
+@node Mailbox
+@subsection Mailbox
+@cindex Mailbox
+@include mailbox.texi
+
+@node Mailer
+@subsection Mailer
+@cindex Mailer
+@include mailer.texi
+
+@node Message
+@subsection Message
+@cindex Message
+@include message.texi
+
+@node Envelope
+@subsection Envelope
+@cindex Envelope
+@include envelope.texi
+
+@node Headers
+@subsection Headers
+@cindex Headers
+@include headers.texi
+
+@node Body
+@subsection Body
+@cindex Body
+@include body.texi
+
+@node Attribute
+@subsection Attribute
+@cindex Attribute
+@include attribute.texi
+
+@node Stream
+@subsection Stream
+@cindex Stream
+@include stream.texi
+
+@node Iterator
+@subsection Iterator
+@cindex Iterator
+@include iterator.texi
+
+@node Authenticator
+@subsection Authenticator
+@cindex Authenticator
+@include auth.texi
+
+@node Address
+@subsection Address
+@cindex Address
+@include address.texi
+
+@node Locker
+@subsection Locker
+@cindex Locker
+@include locker.texi
+
+@node URL
+@subsection URL
+@cindex URL
+@include url.texi
+
+@node Parse822
+@subsection Parse822
+@include parse822.texi
+
+@node Mailcap
+@subsection Mailcap
+@include mailcap.texi

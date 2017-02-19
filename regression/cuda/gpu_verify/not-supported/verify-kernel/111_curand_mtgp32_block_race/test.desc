@@ -1,0 +1,4 @@
+main.cu
+-I ~/libraries/ -DGPU_threads=32 --force-malloc-success --state-hashing --context-switch 2    
+^VERIFICATION FAILED$
+#VERIFICATION FAILED$

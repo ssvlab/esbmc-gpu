@@ -1,0 +1,175 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_imap4_} is reserved */}
+@code{#include <mailutils/imap4.h>}
+
+@end smallexample
+
+Internet Message Access Protocol - Version (4rev1). In IMAP4, the client
+must be prepared to accept any responses at all times. The server responses
+have three forms: status responses, server data and command continuation
+request. Untagged responses, for historical reasons are also call
+"unsolicited responses".
+
+@subsection Commands
+
+@subsubsection Initialization
+@cindex IMAP4 Initialization
+
+@deftypefun int mu_imap4_create (mu_imap4_t *)
+@end deftypefun
+
+@deftypefun int mu_imap4_open (mu_imap4_t, const char *@var{hostname}, unsigned int @var{port}, int @var{flags})
+@end deftypefun
+
+@deftypefun int imap4d_set_timeout (mu_imap4_t, unsigned int @var{seconds})
+@end deftypefun
+
+@subsubsection Append
+@cindex IMAP4 Append
+
+@deftypefun int mu_imap4_append (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Capability
+@cindex IMAP4 Capability
+
+@deftypefun int mu_imap4_capability (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Create
+@cindex IMAP4 Create
+
+@deftypefun int mu_imap4_create_mailbox (mu_imap4_t, const char *@var{mbox})
+@end deftypefun
+
+@subsubsection Check
+@cindex IMAP4 Check
+
+@deftypefun int mu_imap4_check (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Close
+@cindex IMAP4 Close
+
+@deftypefun int mu_imap4_close (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Copy
+@cindex IMAP4 Copy
+
+@deftypefun int mu_imap4_copy (mu_imap4_t)
+@end deftypefun
+
+@subsubsection UID Copy
+@cindex IMAP4 UID Copy
+
+@deftypefun int mu_imap4_uid_copy (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Delete
+@cindex IMAP4 Delete
+
+@deftypefun int mu_imap4_delete (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Fetch
+@cindex IMAP4 Fetch
+
+@deftypefun int mu_imap4_fetch (mu_imap4_t)
+@end deftypefun
+
+@subsubsection UID Fetch
+@cindex IMAP4 UID Fetch
+
+@deftypefun int mu_imap4_uid_fetch (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Examine
+@cindex IMAP4 Examine
+
+@deftypefun int mu_imap4_examine (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Expunge
+@cindex IMAP4 Expunge
+
+@deftypefun int mu_imap4_expunge (mu_imap4_t)
+@end deftypefun
+
+@subsubsection List
+@cindex IMAP4 List
+
+@deftypefun int mu_imap4_list (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Lsub
+@cindex IMAP4 Lsub
+
+@deftypefun int mu_imap4_lsub (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Namespace
+@cindex IMAP4 Namespace
+
+@deftypefun int mu_imap4_namespace (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Rename
+@cindex IMAP4 Rename
+
+@deftypefun int mu_imap4_rename (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Search
+@cindex IMAP4 Search
+
+@deftypefun int mu_imap4_search (mu_imap4_t)
+@end deftypefun
+
+@subsubsection UID Search
+@cindex IMAP4 UID Search
+
+@deftypefun int mu_imap4_uid_search (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Select
+@cindex IMAP4 Select
+
+@deftypefun int mu_imap4_select (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Status
+@cindex IMAP4 Status
+
+@deftypefun int mu_imap4_status (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Store
+@cindex IMAP4 Store
+
+@deftypefun int mu_imap4_store (mu_imap4_t)
+@end deftypefun
+
+@subsubsection UID Store
+@cindex IMAP4 UID Store
+
+@deftypefun int mu_imap4_uid_store (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Subscribe
+@cindex IMAP4 Subscribe
+
+@deftypefun int mu_imap4_subscribe (mu_imap4_t)
+@end deftypefun
+
+@subsubsection Unsubscribe
+@cindex IMAP4 Unsubscribe
+
+@deftypefun int mu_imap4_unsubscribe (mu_imap4_t)
+@end deftypefun

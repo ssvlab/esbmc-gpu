@@ -1,0 +1,553 @@
+//////////////////////////////////////////////////////////////
+This file is in AsciiDoc format.  Use the following command
+to convert it to HTML:
+
+     asciidoc README
+
+See end of file for copyright statement.
+//////////////////////////////////////////////////////////////
+GINT
+====
+Sergey Poznyakoff <gray@gnu.org>
+2, May 11, 2010
+
+NAME
+----
+GINT -- Guile Integration Framework
+
+DESCRIPTION
+-----------
+Integrating *Guile* into a project consists of a set of routine steps,
+which, however trivial, require additional efforts from authors and
+impose on them an extra maintenance burden.  These steps include, among
+others, checking for the presence of Guile, determining its version number,
+and creating additional Makefile rules.  Authors maintaining several projects
+that use Guile as an extension language, soon find out that these
+steps differ only insigificantly between the projects.  It is therefore
+natural to move their _common denominator_ into a separate module and share
+this module between the projects.
+
+*GINT* is an attempt to create such a module.  It reduces the task of
+integrating Guile to importing a submodule and editing a couple of files.
+
+*GINT* is designed as a Git submodule easily embeddable into any project.
+The only requirement for this host project is that it must use GNU Automake
+and Autoconf.  It is also recommended, but not required, that the host project
+use Git for its repository.
+
+INSTALLATION
+------------
+
+To illustrate how to use *GINT*, let's suppose your project has the
+following structure:
+
+.Sample project listing
+---------------------------------------------------------------------
+-rw-r--r-- 1 gray users   2993 2010-04-05 00:15 Makefile.am      <1>
+-rw-r--r-- 1 gray users   3026 2010-04-05 19:21 configure.ac     <2>
+drwxr-xr-x 2 gray users    240 2010-04-05 02:27 m4/              <3> 
+drwxr-xr-x 5 gray users   1992 2010-04-05 19:20 src/             <4>
+-rw-r--r-- 1 gray users   1286 2010-04-05 13:18 src/Makefile.am  <5> 
+-rw-r--r-- 1 gray users   1034 2010-04-05 13:18 src/iface.c
+---------------------------------------------------------------------
+
+<1>  Top-level +Makefile+ source.
+<2>  Configuration script source.
+<3>  Directory with macro definitions for *aclocal*.
+<4>  Source directory.  It contains actual _C_ and +scm+ sources,
+   which define new *Guile* interfaces.
+<5>  Source +Makefile.am+.
+
+The purpose of *GINT* is to provide the autotools magic necessary to
+check, at configure time, whether Guile is installed, determine its version
+number and location of its components on the local file system, then to
+compile and _snarf_ the _C_ sources, and finally, to produce the
+documentation files (+guile-procedures.texi+ and +guile-procedures.txt+).
+
+Installation of *GINT* consists of the following four steps:
+
+1. Importing +gint+ submodule.
+2. Editing the top-level +Makefile.am+
+3. Editing +configure.ac+
+4. Editing source +Makefile.am+.
+
+These steps are described in detail in the following subsections.
+
+Import GINT as a submodule
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This needs to be done only once:
+
+----------------------------------------------------
+git submodule add git://git.gnu.org.ua/gint.git gint
+git submodule init
+----------------------------------------------------
+
+[[gint-dir]]
+The *submodule add* command takes two arguments: the submodule repository,
+which should be exactly as shown above, and the pathname of the
+cloned submodule in your project.  This latter is entirely at your option.
+Throughout this document we will suppose that the module pathname is
++gint+.  You will need to adjust the examples if you chose another
+name for it.
+
+Edit the toplevel +Makefile.am+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add +-I gint+ to the +ACLOCAL_AMFLAGS+ variable, and +gint+ to
+the +SUBDIRS+ variable.  For example:
+
+----------------------------------------
+ACLOCAL_AMFLAGS = -I m4 -I gint
+SUBDIRS = gint src
+----------------------------------------
+
+Notice that in +SUBDIRS+, the +gint+ entry must precede the names of
+those directories that depend on it.
+
+Edit the +configure.ac+ file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Obviously, you need to add the submodule's Makefile to the list of
++AC_CONFIG_FILES+, e.g.:
+
+----------------------------------------
+AC_CONFIG_FILES(Makefile
+                gint/Makefile
+                src/Makefile)
+----------------------------------------
+
+Next, add a call to <<GINT_INIT,+GINT_INIT+>> at an appropriate point.
+This macro serves two purposes.  First, it informs the +gint+ submodule
+about its location relative to the top project directory and configures
+its features.  Second, it checks for the presence of Guile's binaries
+and libraries, verifies if its version is modern enough, and runs a
+series of user-supplied commands, depending on the result of this check.
+
+In a simplest case, the following line will be enough:
+
+---------
+GINT_INIT
+---------
+
+For a detailed discussion, see the <<GINT_INIT, macro description>>.
+
+Edit source `Makefile.am`
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The source `Makefile.am` (or `Makefile.am`'s, if there are several of these, in
+separate directories) must include the file `gint/gint.mk`, which provides
++Makefile+ rules necessary to properly build various files (e.g. +.x+ and
++.doc+ files from corresponding +.c+ sources, etc) and to compute dependencies
+between them.  Usually, it is OK to use a relative location. For example, in our
+sample project the `gint` and `src` directories have same parent directory,
+therefore we could add to `src/Makefile.am` the following line:
+
+-----------------------
+include ../gint/gint.mk
+-----------------------
+
+The rules in `gint.mk` make certain assumptions about some `Makefile`
+variables. Namely, the following variables must be defined before
+including the file: +INCLUDES+, +EXTRA_DIST+, +CLEANFILES+,
++DISTCLEANFILES+, +SUFFIXES+, +BUILT_SOURCES+.  See the
+http://sources.redhat.com/automake/automake.html[`Automake` documentation],
+for more info on these.  If no special value is needed, define each
+of them to an empty string (see example below).
+
+Firthermore, the +MAKEINFO+ variable must contain the pathname (not
+necessarily an absolute one), of the +makeinfo+ binary.  It is initialized
+by +Automake+ if your project contains a `Makefile.am` with the +info_TEXINFOS+
+variable set.  If not, you will have to initialize it manually.
+
+Finally, the following +GINT+-specific variables must be defined:
+
+sitedir::
+The location where to install site-specific Guile modules.  We advise
+to set it to:
+
+---------------------------------
+sitedir = @GUILE_SITE@/$(PACKAGE)
+---------------------------------
+
+See <<guile-site-dir, The `site directory' problem>>, for a detailed
+discussion of sitedir.
+
+site_DATA::
+	A list of modules to install to +sitedir+.
+DOT_X_FILES::
+	A list of +.x+ files to be generated.
+DOT_DOC_FILES::
+	A list of +.doc+ files to be generated.
+
+These two can be easily produced from the list of source +c+ files
+using http://www.gnu.org/software/make/manual/html_node/Substitution-Refs.html[+make+ substitution references]:
+
+-----------------------------------------------
+lib_LTLIBRARIES = libproj.la
+libproj_la_SOURCES = iface.c var.c
+
+INCLUDES =-I$(top_builddir) -I$(srcdir)
+EXTRA_DIST=
+DOT_X_FILES=$(libproj_la_SOURCES:.c=.x)
+DOT_DOC_FILES=$(libproj_la_SOURCES:.c=.doc)
+
+sitedir = @GUILE_SITE@/$(PACKAGE)
+site_DATA = proj.scm
+
+SUFFIXES=
+CLEANFILES=
+DISTCLEANFILES=
+include ../gint/gint.mk
+------------------------------------------------
+
+[[GINT_INIT]]
+The +GINT_INIT+ macro
+---------------------
+
+-------------------------------------------------------------
+GINT_INIT(DIR, OPTIONS, ACTION-IF-FOUND, ACTION-IF-NOT-FOUND)
+-------------------------------------------------------------
+
+This macro configures +GINT+ submodule, located in subdirectory
+`DIR` according to the settings given in `OPTIONS`.  It then
+verifies if Guile is installed on the system and if so executes
+commands supplied by `ACTION-IF-FOUND`.  Additionaly, it sets
+a number of <<gint-subst-vars, substitution variables>> describing
+various details of Guile installation.
+
+Otherwise, if Guile is not installed or is found to be unusable,
+`ACTION-IF-NOT-FOUND` is executed.
+
+All parameters are optional:
+
+DIR::
++GINT+ <<gint-dir,submodule directory>> (defaults to `gint`).
+
+OPTIONS::
+A whitespace-separated list of options.
+
+ACTION-IF-FOUND::
+Commands to execute if Guile is present.
+
+IF-NOT-FOUND::
+Commands to execute if Guile is not found or its version is too old.
+If not given, the default action is to print a diagnostic message on
+the standard error and abort execution.
+
+The +OPTIONS+ parameter offers a way to control the
+functionality provided by +GINT_INIT+.  Its value is a
+whitespace-separated list of words.  Each word must be either the
+name of an option, or the minimum (i.e. the oldest) allowed version
+of Guile.  For example, to check for Guile 1.8 or later one could
+write:
+
+------------------------
+GINT_INIT([gint], [1.8])
+------------------------
+
+The following is a list of valid options:
+
+nodoc::
+Disable generation of +.doc+ files (see <<doc-snarfing, Doc snarfing>>).
+
+inc::
+Enable generation of `.inc` files.  Each such file contains a set of
+`export` statements, one for each `SCM_DEFINE` in the corresponding
+`.c` source file.  Normally this option is not needed, because it is
+more appropriate to define public interfaces using `SCM_DEFINE_PUBLIC`
+macro.
+
+std-site-dir::
+Set <<sitedir,site directory>> to the standard Guile site directory, as
+returned by the +%site-dir+ primitive.
++
+This is one of the locations where Guile looks for its modules.
+However, this setting breaks standard `distcheck` rules and automated builds,
+because this directory is normally outside of the installation prefix.
+Therefore by default, +GINT+ does not use it.  <<guile-site-dir, See
+below>>, for a description of the method used to determine site directory.
+
+snarf-doc-filter::
+Use +snarf-doc-filter+ to extract docstrings from _C_ files.  *GINT* offers
+two programs for extraction of Scheme docstrings from _C_ sources.  By default,
+the _C_ implementation is used, mainly because it is much faster than its
+Scheme counterpart.  By supplying the +snarf-doc-filter+ option, you instruct
+*GINT* to use Scheme implementation instead.  See the section
+<<doc-snarfing, Doc snarfing>> for a detailed discussion.
+
+[[option-generators]]
+By default, the generated +configure+ script always checks for Guile.  The
+following options modify this behavior:
+
+with-guile::
+Add a +--with-guile+ option to configure.  Do not check for Guile if
+configure was called with +--with-guile=no+ (or +--without-guile+).
+
+without-guile::
+Same as above, except that Guile checks are disabled by default.  I.e. the
+configure script checks for Guile only if invoked with the +--with-guile+
+option.
+
+enable-guile::
+Add a +--enable-guile+ option to configure.  Do not check for Guile if
+configure was called with +--enable-guile=no+ (or +--disable-guile+).
+
+disable-guile::
+Same as above, except that Guile checks are disabled by default.  I.e. the
+configure script checks for Guile only if invoked with the +--enable-guile+
+option.
+
+Only one of these four options may be given to a +GINT_INIT+ invocation.
+
+If the check for Guile was disabled at configure time, either by default or
+by the user's request, the action of +GINT_INIT+ depends on whether it had
+been given the +ACTION-IF-NOT-FOUND+ argument.  If not, +GINT_INIT+ does
+nothing.  Otherwise, the +ACTION-IF-NOT-FOUND+ argument is executed just as
+if Guile has not been found.  If you need to discern between various failure
+reasons (`check disabled` vs. `Guile not found` or vs. `Guile version too
+low`), use the <<gint_guile_status, +gint_guile_status+>> variable.
+
+Here is a more complex example of +GINT_INIT+ usage:
+
+.+GINT_INIT+ macro
+-------------------------------------------------------
+GINT_INIT([modules/gint], [1.8 with-guile std-site-dir],
+          [use_guile=yes],
+	  [use_guile=no])
+-------------------------------------------------------
+
+This fragment initializes the +GINT+ module located in `modules/gint` and
+checks for Guile version 1.8 or newer.  The resulting script understands
+the +--with-guile+ option and sets <<sitedir,sitedir>> to the standard Guile
+site directory.  The shell variable `use_guile` is set to `yes` or `no`,
+depending on whether Guile was found or not.
+
+Notice, that you may not use this macro within a shell conditional, or
+within any +Autoconf+ macro that generates such a conditional.  In particular,
+the following invocation is wrong:
+
+.*Wrong usage*
+-----------------------------------------
+AC_ARG_WITH([guile],
+            [GINT_INIT([modules/gint])])
+-----------------------------------------
+
+Instead, use one of the <<option-generators, option generating>> options,
+described above.
+
+[[gint-subst-vars]]
+Substitution Variables
+----------------------
+Upon successful return, +GINT_INIT+ sets the following Automake
+substitution variables:
+
+[[GUILE_VERSION]]
+GUILE_VERSION::
+The version of Guile, as a string, e.g. `1.9.9`.  Additionally,
+a _C_ preprocessor macro with the same name is defined.
+
+[[GUILE_VERSION_NUMBER]]
+GUILE_VERSION_NUMBER::
+The version of Guile packed into a decimal number using the following formula:
++
+---------------------------------------
+MAJOR * 1000 + MINOR * 100 + PATCHLEVEL
+---------------------------------------
++
+where `MAJOR`, `MINOR` and `PATCHLEVEL` are the three parts of a version
+number, separated by dots.  For example, the version string `1.9.9` will produce
+the value `1909`, and the version `2.0` will yield `2000`.
++
+A _C_ preprocessor macro with the same name is also defined.
+
+GUILE_INCLUDES::
+_C_ compiler flags needed to compile with Guile, as
+returned by `guile-config compile`.
+
+GUILE_LIBS::
+Loader flags and additional libraries needed to link with +libguile+, as
+returned by `guile-config link`.
+
+GUILE_SNARF::
+The full pathname of the `guile-snarf` binary.
+
+GUILE_TOOLS::
+The full pathname of the `guile-tools` binary.
+
+[[sitedir]]
+GUILE_SITE::
+The full pathname of the Guile site-wide module directory.
+
+[[gint-shell-vars]]
+Shell Variables
+---------------
+The +GINT_INIT+ macro sets the following shell variables:
+
+gint_enable_guile::
+By default, set to `yes`.  If an <<option-generators, option generating>>
+option was used, this variable is set to `no` if the *Guile* checks were
+disabled (either by default or by the user request) and to `yes` otherwise.
+
+[[gint_guile_status]]
+gint_guile_status::
+This variable contains the status of the last check.  It is `ok`, if the
+check has passed, `badversion` if the Guile version is older than the
+requested minimum and `cantlink` if Guile was found but the attempt to
+link a test program had failed.  You may use this variable in the
++ACTION-IF-NOT-FOUND+ argument to +GINT_INIT+ to discern between
+various reasons for failure.
+
+[[gint_guile_debug]]
+gint_guile_debug::
+Set if guile supports the debugging macros (i.e. +SCM_DEVAL_P+,
++SCM_BACKTRACE_P+, +SCM_RECORD_POSITIONS_P+ and SCM_RESET_DEBUG_MODE).
+
+[[config.h defines]]
+Config.h Defines
+----------------
+GUILE_DEBUG_MACROS::
+Defined if guile supports the debugging macros (i.e. +SCM_DEVAL_P+,
++SCM_BACKTRACE_P+, +SCM_RECORD_POSITIONS_P+ and SCM_RESET_DEBUG_MODE).
+See also the <<gint_guile_debug, +gint_guile_debug+>> variable.
+
+GUILE_VERSION::
+Same as the <<GUILE_VERSION, +GUILE_VERSION+>> substitution variable.
+
+GUILE_VERSION_NUMBER::
+Same as the <<GUILE_VERSION_NUMBER, +GUILE_VERSION_NUMBER+>> substitution
+variable.
+
+[[doc-snarfing]]
+Doc Snarfing
+~~~~~~~~~~~~
+Guile interfaces are defined in _C_ files using +SCM_DEFINE+ or
++SCM_DEFINE_PUBLIC+ macros.  Among other parameters, these macros also
+allow to specify a _docstring_ for the interface being defined.
+
+_Doc snarfing_ is a process of extraction these docstrings from _C_
+sources and combining them into two text files: +guile-procedures.texi+,
+a _Texinfo_ document suitable for inclusion in the project's documentation,
+and +guile-procedures.txt+, which is installed along with the rest of
+files and is used by Guile's +help+ function.
+
+Apart from this primary goal, doc snarfing also serves to catch some minor
+programming errors, such as using incorrect +SCM_ARG+_n_ macro in +SCM_ASSERT+,
+etc.
+
+Doc snarfing consists of two phases.  _C_ preprocessor is used
+on the source file and its output is piped to a special program, called
+_snarf filter_.  The purpose of the snarf filter is to extract Guile-related
+information from the preprocessed source.  This information is stored in
+a file with the +.doc+ suffix.  The +.doc+ files created in this phase
+are then used to produce final files: +guile-procedures.texi+ and
++guile-procedures.txt+.
+
+The +guile-procedures.texi+ file is created by concatenating all
++.doc+ files together and applying the +guile-tools
+snarf-check-and-output-texi+ command to the resulting document.  This
+command is a part of Guile installation.
+
+The +guile-procedures.txt+ is created by invoking +makeinfo+ with the
+ +guile-procedures.texi+ file as input.
+ 
+Unfortunately, Guile installation does not include any snarf filter
+program.  *GINT* fixes this oversight and offers two filter implementations:
+
+clexer::
+This is a default implementation.  It is written in _C_ and is
+extremely efficient.  During bootstrap it requires *flex* to
+convert the +clexer.l+ file into a _C_ source which is then distributed
+with the package.  Of course, *flex* is needed only during the bootstrap,
+it is not required to compile from a packaged source.
+
+snarf-doc-filter::
+A filter written entirely in Scheme.  It does not require compilation,
+but is significantly slower than +clexer+ and therefore is not used
+by default.  If you wish to use it, add the +snarf-doc-filter+ option to
+the invocation of +GINT_INIT+.  It may be feasible only if you require
+Guile 1.9.8 or later.
+
+The +clexer.l+ source is written so as to not require any special attention
+from your part.  The only two points that are worth mentioning are:
+
+1. It includes +<config.h>+ if the preprocessor symbol +HAVE_CONFIG_H+
+is defined.
+2. It uses +strerror+ function to convert _C_ error numbers to text.
+
+You may wish to supply additional command line options for compiling it,
+if your +config.h+ is placed in an unusual location or includes another
+file, not accessible within the normal include path and/or if you wish
+to supply a replacement for +strerror+ on systems that lack it (which
+is extremely rare nowadays).  To do so, define variables +GINT_INCLUDES+
+and/or +GINT_LDADD+ in the `ACTION-IF-FOUND` argument to +GINT_INIT+:
+
+GINT_INCLUDES::
+	Specifies additional command line options to be appended to the
+	+INCLUDES+ statement in +gint/Makefile.am+.
+GINT_LDADD::
+	Specifies additional command line options to be appended to the
+	+LDADD+ statement in +gint/Makefile.am+.
+
+Notice also that if your code does not require doc snarfing, you
+may disable it by supplying the +nodoc+ option to the invocation
+of +GINT_INIT+.
+	
+[[guile-site-dir]]
+THE `SITE DIRECTORY' PROBLEM
+----------------------------
+Projects installing some Scheme sources would normally want to install
+them under Guile's  'site directory' (+%site-dir+ Guile primitive). This way,
+Guile will be able to find them without any additional configuration. However,
+such usage breaks the standard GNU practice of not installing files outside
+of project's install prefix, unless the user explicitly requires so.
+As a consequence, it also breaks the standard `make distcheck` rule.
+
+To avoid this, configuration code generated by +GINT+ macros determines
+the location of the site directory using the following algorithm:
+
+1. Determine actual value of the default Guile site directory, by inspecting
+the value returned  by the +%site-dir+ primitive.
+2. If that value lies under the current installation prefix, it is accepted
+as the installation directory.
+3. Otherwise, if the +--with-guile-site-dir+ option is supplied:
+ a. If it is used without arguments, +%site-dir+ is enforced as the
+    installation directory.
+ b. Otherwise, the value of this option is taken as new site
+    directory.  Notice, that this value must be an absolute directory name.
+4. Otherwise, a warning is issued and `$(datadir)/guile/site` is used as
+the site directory.
+
+The use if this algorithm is suppressed and Guile site directory is
+used instead, if the <<GINT_INIT,+GINT_INIT+>> macro was invoked
+with the +std-site-dir+ option.
+
+FILES
+-----
+The package consists of the following files:
+------------------------------------------------------
+Makefile.am        <1>
+README             <2>
+clexer.l           <3> 
+extract-exports    <4>
+gint.m4            <5>
+gint.mk            <6>
+guile.m4           <7>
+snarf-doc-filter   <8>
+------------------------------------------------------
+
+<1>  Makefile for building +GINT+ components.
+<2>  The source file for this documentation.
+<3>  Source of the +clexer+, a program for extracting docstrings and
+     similar information from C files.
+<4>  Auxiliary program for converting +.doc+ files into a series of
+     Guile +export+ declarations.
+<5>  Source of the +GINT_INIT+ macro.
+<6>  Makefile to be included from the host project's +Makefile.am+.
+<7>  Auxiliary defines for +GINT_INIT+.
+<8>  Alternative implementation of +clexer+, written in Scheme.
+
+COPYRIGHT
+---------
+[verse]
+Copyright (C) 2010 http://gray.gnu.org.ua[Sergey Poznyakoff]
+License GPLv3+: GNU GPL version 3 or later http://gnu.org/licenses/gpl.html[<http://gnu.org/licenses/gpl.html>].
+This is free software: you are free  to  change  and  redistribute  it.
+There is NO WARRANTY, to the extent permitted by law.

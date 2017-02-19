@@ -1,0 +1,213 @@
+
+* Overview
+
+A compiled sieve program consists of a sequence of cells. Each cell
+is a pointer to sieve_op_t data, i.e. it points to an instruction handler
+(sieve_instr_t type) or to a memory location containing sieve_value_t
+structure. The exact interpretation of this pointer depends on the
+value of program counter. The very first entry in a sieve program
+(pc = 0) is always a NULL pointer. The next entry (pc = 1) is always
+expected to contain a valid instruction handler. When executing a
+program, the sieve runtime evaluator starts from pc = 1. It reads
+the cell contents, interprets it as address of an instruction handler,
+increments the program counter and executes the handler. The evaluator
+stops executing the program when it encounters a NULL pointer.
+
+When invoked, the instruction handler receives a single argument: a pointer
+to the sieve_machine_t structure, describing current runtime environment.
+If the handler needs any surplus arguments, it is its responsibility
+to retrieve them from the program cells immediately following the
+handler address and increment the pc value accordingly.
+
+* Existing handlers
+
+** Nop
+
+Name: instr_nop
+Arguments: None
+
+Does nothing
+
+** Push
+
+Name: instr_push
+Arguments: None
+
+Pushes current numeric register on stack.
+
+** Pop
+
+Name: instr_pop
+Arguments: None
+
+Pops the top of stack value into the numeric register.
+
+** Unconditional branch
+
+Name: instr_branch
+Arguments: [pc  ]  (number) Offset of the new cell.
+
+** Branch if zero
+
+Name: instr_brz
+Arguments: [pc  ]  (number) Offset of the new cell.
+
+** Branch if not zero
+
+Name: instr_brnz
+Arguments: [pc  ]  (number) Offset of the new cell.
+
+** Logical NOT
+
+Name: instr_not
+Arguments: none
+
+** Logical AND
+
+Name: instr_allof
+Arguments: [pc  ]  (number) Number of items to be popped from stack
+
+
+** Logical OR
+
+Name: instr_anyof
+Arguments: [pc  ]  (number) Number of items to be popped from stack
+
+** Action handler
+
+Name: instr_action
+Arguments: [pc  ]  (sieve_handler_t*) Pointer to the action handling function.
+           [pc+1]  (list_t of sieve_value_t) A list of required arguments.  
+           [pc+2]  (list_t of sieve_runtime_tag_t) A list of tags.
+	   [pc+3]  (string) Name of the action (for debugging purposes).
+
+** Test handler
+
+Name: instr_test
+Arguments: [pc  ]  (sieve_handler_t*) Pointer to the test handling function.
+           [pc+1]  (list_t of sieve_value_t) A list of required arguments.  
+           [pc+2]  (list_t of sieve_runtime_tag_t) A list of tags.
+	   [pc+3]  (string) Name of the test (for debugging purposes).
+
+* Conditional statement branching
+
+A simple statement
+
+	IF cond list1 ELSE list2
+
+is translated into the following program
+
+# Compute the condition
+	.	
+	.
+	.
+	brz	L_ELSE
+# Evaluate list1
+	.
+	.
+	.
+	br	L_END
+L_ELSE:
+# Evaluate list2
+	.
+	.
+	.
+L_END:
+	
+A more complex statement in the form:
+
+	IF cond1 list1 ELSIF cond2 list2 ELSE list3
+
+is translated into the following program
+
+# Compute the condition 1
+	.	
+	.
+	.
+	brz	L_ELSIF
+# Evaluate list1
+	.
+	.
+	.
+	br	L_END
+L_ELSIF:
+# Compute the condition 2
+	.
+	.
+	.	
+	brz	L_ELSE
+# Evaluate list 2
+	.
+	.
+	.
+	br	L_END
+L_ELSE:
+# Evaluate list 3
+	.
+	.
+	.
+L_END:
+
+Generally speaking, each ELSIF branch generates a code, similar to usual
+IF ... ELSE sequence.
+
+* Boolean shortcuts
+
+Boolean shortcuts are implemented for coding ALLOF and ANYOF conditions.
+The code these produce is shown in the next two subsections. Notice the
+insertion of the two Nop statement after the last condition. These replace
+the two slots used by the Brz or Brnz instruction, which would be useless,
+since the next statement after ALLOF or ANYOF is guaranteed to be a branch
+statement. This replacement speeds up the execution a little.
+
+** ALLOF
+
+ALLOF(cond1,cond2,cond3)
+
+# Evaluate cond1
+	.
+	.
+	.
+	brz	L_end
+# Evaluate cond2
+	.
+	.
+	.
+	brz	L_end
+# Evaluate cond3
+	.
+	.
+	.
+	nop
+	nop
+L_end:
+	.
+
+** ANYOF
+
+ALLOF(cond1,cond2,cond3)
+
+# Evaluate cond1
+	.
+	.
+	.
+	brnz	L_end
+# Evaluate cond2
+	.
+	.
+	.
+	brnz	L_end
+# Evaluate cond3
+	.
+	.
+	.
+	nop
+	nop
+L_end:
+	.
+
+
+Local variables:
+mode: outline
+paragraph-separate: "[ 	]*$"
+end:

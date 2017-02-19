@@ -1,0 +1,14 @@
+From gray@Mirddin.farlep.net Tue Jul 16 12:11:35 2002
+Organization: Mailutils-tests
+Received: from Mirddin.farlep.net (localhost [127.0.0.1]) 
+	by Mirddin.farlep.net with ESMTP id g6G9BZb00791
+	for <gray@mirddin.farlep.net>; Tue, 16 Jul 2002 12:11:35 +0300
+Message-Id: <200207160911.g6G9BZb00791@Mirddin.farlep.net>
+To: Bar <bar@dontmailme.org>
+Subject: MBOX
+Date: Tue, 16 Jul 2002 12:11:35 +0300
+From: Sergey Poznyakoff <gray@Mirddin.farlep.net>
+
+
+This is a sample user's mbox.
+

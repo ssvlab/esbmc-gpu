@@ -1,0 +1,107 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+The library @file{libmu_scm} provides an interface between Mailutils
+and Guile, allowing to access the Mailutils functionality from a
+Scheme program. For more information about Guile, refer to
+@ref{Top,,Overview,guile,The Guile Reference Manual}. For information
+about Scheme programming language, @xref{Top,,,r4rs,Revised(4) Report on
+the Algorithmic Language Scheme}.
+
+@menu
+Functions Provided by @file{libmu_scm}
+
+* Address Functions::
+* Mailbox Functions::
+* Message Functions::
+* MIME Functions::
+* Logging Functions::
+* Other Functions::
+
+Using @file{libmu_scm}
+
+* Direct Linking::
+* Dynamic Linking::
+@end menu
+
+@node Address Functions
+@subsection Address Functions
+
+@include mu_address.texi
+
+@node Mailbox Functions
+@subsection Mailbox Functions
+
+@include mu_mailbox.texi
+
+@node Message Functions
+@subsection Message Functions
+
+@include mu_message.texi
+@include mu_body.texi
+
+@node MIME Functions 
+@subsection MIME Functions
+
+@include mu_mime.texi
+
+@node Logging Functions
+@subsection Logging Functions
+
+@include mu_logger.texi
+
+@node Other Functions
+@subsection Other Functions
+
+@include mu_scm.texi
+
+@node Direct Linking
+@subsection Direct Linking
+
+If you plan to link your program directly to @file{libguile}, it will
+probably make sense to link @file{libmu_scm} directly as well. The
+arguments to the program loader may be obtained by running
+
+@smallexample
+mailutils-config --link guile
+@end smallexample
+@noindent
+
+@xref{mailutils-config}, for more information about this utility.
+
+Here is a sample Makefile fragment:
+
+@smallexample
+MU_LDFLAGS=`mailutils-config --link guile`
+MU_INCLUDES=`mailutils-config --include`
+
+myprog: myprog.c
+        $(CC) -omyprog $(CFLAGS) $(MU_INCLUDES) myprog.c $(MU_LDFLAGS)
+@end smallexample        
+
+@node Dynamic Linking
+@subsection Dynamic Linking
+
+Dynamic linking is the preferred method of using @file{libmu_scm}. It
+uses Guile ``use-modules'' mechanism. An interface module
+@file{mailutils.scm} is provided in order to facilitate using this
+method. This module is installed in the package data directory (by
+default it is @file{@var{prefix}/share/mailutils}). A sample use of
+this module is:
+
+@smallexample
+(set! %load-path (list "/usr/local/share/mailutils"))
+(use-modules (mailutils))
+
+# Now you may use mailutils functions:
+
+(let ((mb (mu-mailbox-open "/var/spool/mail/gray" "r")))
+...
+@end smallexample
+
+@emph{Note}, that you should explicitly modify the @code{%load-path}
+before calling @code{use-modules}, otherwise Guile will not be able to
+find @file{mailutils.scm}.

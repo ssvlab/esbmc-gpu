@@ -1,0 +1,476 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2005, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mail_start "--file=%mbox1"
+mail_command "set readonly"
+
+###########################################################################
+# Test `size' command
+#
+# Note: when counting lines and sizes, mailutils API does not count envelope
+# line and a delimiter line between headers and the body. Thus, number
+# of lines is always two less then reported by BSD mail.
+mail_test "size *" \
+"> 1  44/1255 "\
+"  2  13/535  "\
+"  3  42/1626 "\
+"  4  84/3484 "
+
+###########################################################################
+# `headers' and `print'
+mail_test "headers" \
+">N   1 Foo Bar            Fri Dec 28 22:18  44/1255  Jabberwocky" \
+" N   2 Bar                Fri Dec 28 23:28  13/535   Re: Jabberwocky" \
+" N   3 Sergey Poznyakoff  Sat Jul 13 00:43  42/1626  Simple MIME" \
+" N   4 Sergey Poznyakoff  Sat Jul 13 00:50  84/3484  Nested MIME" \
+
+mail_test "print"\
+	"Received: (from foobar@nonexistent.net) "\
+	"	by nonexistent.net id fBSKI8N04906"\
+	"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"From: Foo Bar <foobar@nonexistent.net>"\
+	"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"To: Bar <bar@dontmailme.org>"\
+	"Subject: Jabberwocky"\
+	""\
+	"`Twas brillig, and the slithy toves"\
+	"Did gyre and gimble in the wabe;"\
+	"All mimsy were the borogoves,"\
+	"And the mome raths outgrabe."\
+	""\
+	"`Beware the Jabberwock, my son!"\
+	"The jaws that bite, the claws that catch!"\
+	"Beware the Jujub bird, and shun"\
+	"The frumious Bandersnatch!'"\
+	""\
+	"He took his vorpal sword in hand:"\
+	"Long time the manxome foe he sought --"\
+	"So rested he by the Tumtum gree,"\
+	"And stood awhile in thought."\
+	""\
+	"And as in uffish thought he stood,"\
+	"The Jabberwock, with eyes of flame,"\
+	"Came whiffling through the tulgey wook,"\
+	"And burbled as it came!"\
+	""\
+	"One, two!  One, two!  And through and through"\
+	"The vorpal blade went snicker-snack!"\
+	"He left it dead, and with its head"\
+	"He went galumphing back."\
+	""\
+	"`And has thou slain the Jabberwock?"\
+	"Come to my arms, my beamish boy!"\
+	"O frabjous day!  Calloh!  Callay!"\
+	"He chortled in his joy."\
+	""\
+	"`Twas brillig, and the slithy toves"\
+	"Did gyre and gimble in the wabe;"\
+	"All mimsy were the borogoves,"\
+	"And the mome raths outgrabe."
+
+# Initially, `Print' must yield the same output as `print'
+mail_test "Print"\
+	"Received: (from foobar@nonexistent.net) "\
+	"	by nonexistent.net id fBSKI8N04906"\
+	"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"From: Foo Bar <foobar@nonexistent.net>"\
+	"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"To: Bar <bar@dontmailme.org>"\
+	"Subject: Jabberwocky"\
+	""\
+	"`Twas brillig, and the slithy toves"\
+	"Did gyre and gimble in the wabe;"\
+	"All mimsy were the borogoves,"\
+	"And the mome raths outgrabe."\
+	""\
+	"`Beware the Jabberwock, my son!"\
+	"The jaws that bite, the claws that catch!"\
+	"Beware the Jujub bird, and shun"\
+	"The frumious Bandersnatch!'"\
+	""\
+	"He took his vorpal sword in hand:"\
+	"Long time the manxome foe he sought --"\
+	"So rested he by the Tumtum gree,"\
+	"And stood awhile in thought."\
+	""\
+	"And as in uffish thought he stood,"\
+	"The Jabberwock, with eyes of flame,"\
+	"Came whiffling through the tulgey wook,"\
+	"And burbled as it came!"\
+	""\
+	"One, two!  One, two!  And through and through"\
+	"The vorpal blade went snicker-snack!"\
+	"He left it dead, and with its head"\
+	"He went galumphing back."\
+	""\
+	"`And has thou slain the Jabberwock?"\
+	"Come to my arms, my beamish boy!"\
+	"O frabjous day!  Calloh!  Callay!"\
+	"He chortled in his joy."\
+	""\
+	"`Twas brillig, and the slithy toves"\
+	"Did gyre and gimble in the wabe;"\
+	"All mimsy were the borogoves,"\
+	"And the mome raths outgrabe."
+
+###########################################################################
+# Test the `top' command
+
+mail_test "top" \
+	"Received: (from foobar@nonexistent.net) "\
+	"	by nonexistent.net id fBSKI8N04906"\
+	"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"From: Foo Bar <foobar@nonexistent.net>"
+
+mail_command "set toplines=10"
+mail_test -message "top (2)" "top" \
+	"Received: (from foobar@nonexistent.net) "\
+	"	by nonexistent.net id fBSKI8N04906"\
+	"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"From: Foo Bar <foobar@nonexistent.net>"\
+	"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"To: Bar <bar@dontmailme.org>"\
+	"Subject: Jabberwocky"\
+	""\
+	"`Twas brillig, and the slithy toves"
+
+###########################################################################
+# This checks if `headers' correctly reflects 'read' attribute
+
+mail_test -message "headers (2)" "headers" \
+">R   1 Foo Bar            Fri Dec 28 22:18  44/1255  Jabberwocky" \
+" N   2 Bar                Fri Dec 28 23:28  13/535   Re: Jabberwocky" \
+" N   3 Sergey Poznyakoff  Sat Jul 13 00:43  42/1626  Simple MIME" \
+" N   4 Sergey Poznyakoff  Sat Jul 13 00:50  84/3484  Nested MIME" \
+
+###########################################################################
+# `next' should display the 2nd message
+
+mail_test "next" \
+"Received: (from bar@dontmailme.org) "\
+"	by dontmailme.org id fERKR9N16790"\
+"	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."
+
+###########################################################################
+# Now check if the cursor is placed correctly
+
+mail_test -message "headers (3)" "headers" \
+" R   1 Foo Bar            Fri Dec 28 22:18  44/1255  Jabberwocky" \
+">R   2 Bar                Fri Dec 28 23:28  13/535   Re: Jabberwocky" \
+" N   3 Sergey Poznyakoff  Sat Jul 13 00:43  42/1626  Simple MIME" \
+" N   4 Sergey Poznyakoff  Sat Jul 13 00:50  84/3484  Nested MIME" \
+
+###########################################################################
+# Check for `prev'
+
+mail_test "prev"\
+	"Received: (from foobar@nonexistent.net)"\
+	"	by nonexistent.net id fBSKI8N04906"\
+	"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"From: Foo Bar <foobar@nonexistent.net>"\
+	"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"To: Bar <bar@dontmailme.org>"\
+	"Subject: Jabberwocky"\
+	""\
+	"`Twas brillig, and the slithy toves"\
+	"Did gyre and gimble in the wabe;"\
+	"All mimsy were the borogoves,"\
+	"And the mome raths outgrabe."
+
+###########################################################################
+# `headers' again
+
+mail_test -message "headers (4)" "headers" \
+">R   1 Foo Bar            Fri Dec 28 22:18  44/1255  Jabberwocky" \
+" R   2 Bar                Fri Dec 28 23:28  13/535   Re: Jabberwocky" \
+" N   3 Sergey Poznyakoff  Sat Jul 13 00:43  42/1626  Simple MIME" \
+" N   4 Sergey Poznyakoff  Sat Jul 13 00:50  84/3484  Nested MIME" \
+
+###########################################################################
+# print with an argument
+
+mail_test -message "print (2)" "print 2"\
+"Received: (from bar@dontmailme.org) "\
+"	by dontmailme.org id fERKR9N16790"\
+"	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."
+
+
+###########################################################################
+# Test `decode' command
+
+mail_test -message "decoding simple MIME messages" \
+	"decode 3" \
+"+------------------------------------------------------------------------------+"\
+"| Message=3\[1\]"\
+"| Type=text/plain; name=\"msg.1\"; charset=\"us-ascii\""\
+"| Encoding=7bit"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: text/plain; name=\"msg.1\"; charset=\"us-ascii\""\
+"Content-ID: <5082.1026510189.1@Mirddin.farlep.net>"\
+"Content-Description: How doth"\
+""\
+"How doth the little crocodile"\
+"Improve his shining tail,"\
+"And pour the waters of the Nile"\
+"On every golden scale!"\
+""\
+"`How cheerfully he seems to grin,"\
+"How neatly spread his claws,"\
+"And welcome little fishes in"\
+"With gently smiling jaws!"\
+"+------------------------------------------------------------------------------+"\
+"| Message=3\[2\]"\
+"| Type=application/octet-stream; name=\"msg.21\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.21\""\
+"Content-ID: <5082.1026510189.2@Mirddin.farlep.net>"\
+"Content-Description: Father William Part I"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old, Father William,' the young man said,"\
+"`And your hair has become very white;"\
+"And yet you incessantly stand on your head--"\
+"Do you think, at your age, it is right?'"\
+""\
+"`In my youth,' Father William replied to his son,"\
+"`I feared it might injure the brain;"\
+"But, now that I'm perfectly sure I have none,"\
+"Why, I do it again and again.'"
+
+mail_test -message "decoding nested MIME messages" \
+	"decode 4" \
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[1\]"\
+"| Type=text/plain; name=\"msg.21\"; charset=\"us-ascii\""\
+"| Encoding=7bit"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: text/plain; name=\"msg.21\"; charset=\"us-ascii\""\
+"Content-ID: <5122.1026510654.2@Mirddin.farlep.net>"\
+"Content-Description: Father William Part I"\
+""\
+"`You are old, Father William,' the young man said,"\
+"`And your hair has become very white;"\
+"And yet you incessantly stand on your head--"\
+"Do you think, at your age, it is right?'"\
+""\
+"`In my youth,' Father William replied to his son,"\
+"`I feared it might injure the brain;"\
+"But, now that I'm perfectly sure I have none,"\
+"Why, I do it again and again.'"\
+""\
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[1\]\]"\
+"| Type=application/octet-stream; name=\"msg.22\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.22\""\
+"Content-ID: <5122.1026510654.4@Mirddin.farlep.net>"\
+"Content-Description: Father William Part II"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `as I mentioned before,"\
+"And have grown most uncommonly fat;"\
+"Yet you turned a back-somersault in at the door--"\
+"Pray, what is the reason of that?'"\
+""\
+"`In my youth,' said the sage, as he shook his grey locks,"\
+"`I kept all my limbs very supple"\
+"By the use of this ointment--one shilling the box--"\
+"Allow me to sell you a couple?'"\
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[2\[1\]\]\]"\
+"| Type=application/octet-stream; name=\"msg.23\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.23\""\
+"Content-ID: <5122.1026510654.6@Mirddin.farlep.net>"\
+"Content-Description: Father William Part III"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `and your jaws are too weak"\
+"For anything tougher than suet;"\
+"Yet you finished the goose, with the bones and the beak--"\
+"Pray how did you manage to do it?'"\
+""\
+"`In my youth,' said his father, `I took to the law,"\
+"And argued each case with my wife;"\
+"And the muscular strength, which it gave to my jaw,"\
+"Has lasted the rest of my life.'"\
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[2\[2\]\]\]"\
+"| Type=application/octet-stream; name=\"msg.24\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.24\""\
+"Content-ID: <5122.1026510654.7@Mirddin.farlep.net>"\
+"Content-Description: Father William Part IV"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `one would hardly suppose"\
+"That your eye was as steady as ever;"\
+"Yet you balanced an eel on the end of your nose--"\
+"What made you so awfully clever?'"\
+""\
+"`I have answered three questions, and that is enough,'"\
+"Said his father; `don't give yourself airs!"\
+"Do you think I can listen all day to such stuff?"\
+"Be off, or I'll kick you down stairs!'"
+
+mail_test -message "Addressing parts of a MIME message" \
+	"decode 4\[2\[2\[1\]\]\]" \
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[2\[1\]\]\]"\
+"| Type=application/octet-stream; name=\"msg.23\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.23\""\
+"Content-ID: <5122.1026510654.6@Mirddin.farlep.net>"\
+"Content-Description: Father William Part III"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `and your jaws are too weak"\
+"For anything tougher than suet;"\
+"Yet you finished the goose, with the bones and the beak--"\
+"Pray how did you manage to do it?'"\
+""\
+"`In my youth,' said his father, `I took to the law,"\
+"And argued each case with my wife;"\
+"And the muscular strength, which it gave to my jaw,"\
+"Has lasted the rest of my life.'"
+
+mail_test -message "Addressing parts of a MIME message (2)" \
+	"decode 4\[2\[2\[1,2\]\]\]"\
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[2\[1\]\]\]"\
+"| Type=application/octet-stream; name=\"msg.23\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.23\""\
+"Content-ID: <5122.1026510654.6@Mirddin.farlep.net>"\
+"Content-Description: Father William Part III"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `and your jaws are too weak"\
+"For anything tougher than suet;"\
+"Yet you finished the goose, with the bones and the beak--"\
+"Pray how did you manage to do it?'"\
+""\
+"`In my youth,' said his father, `I took to the law,"\
+"And argued each case with my wife;"\
+"And the muscular strength, which it gave to my jaw,"\
+"Has lasted the rest of my life.'"\
+"+------------------------------------------------------------------------------+"\
+"| Message=4\[2\[2\[2\]\]\]"\
+"| Type=application/octet-stream; name=\"msg.24\""\
+"| Encoding=base64"\
+"+------------------------------------------------------------------------------+"\
+"Content-Type: application/octet-stream; name=\"msg.24\""\
+"Content-ID: <5122.1026510654.7@Mirddin.farlep.net>"\
+"Content-Description: Father William Part IV"\
+"Content-Transfer-Encoding: base64"\
+""\
+"`You are old,' said the youth, `one would hardly suppose"\
+"That your eye was as steady as ever;"\
+"Yet you balanced an eel on the end of your nose--"\
+"What made you so awfully clever?'"\
+""\
+"`I have answered three questions, and that is enough,'"\
+"Said his father; `don't give yourself airs!"\
+"Do you think I can listen all day to such stuff?"\
+"Be off, or I'll kick you down stairs!'"
+
+mail_test -message "Addressing non-existent MIME part" \
+	"decode 4\[3\]" \
+	"No such (sub)part in the message: 3"
+
+
+###########################################################################
+# Test `ignore', `retain' and their effect on other commands
+
+mail_test -message "default ignore output" "ignore"\
+	"No fields are currently being ignored"
+
+mail_command "ignore Received Message-Id"
+mail_test "print"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."
+
+mail_test -message "Print (2)" "Print 2"\
+"Received: (from bar@dontmailme.org)"\
+"	by dontmailme.org id fERKR9N16790"\
+"	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."
+
+mail_test -message "default retain output" "retain"\
+	"No fields are currently being retained"
+
+mail_command "retain from subject"
+mail_test -message "working retain" "print 2"\
+"From: Bar <bar@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."
+
+mail_stop
+return 0

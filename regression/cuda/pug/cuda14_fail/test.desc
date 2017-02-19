@@ -1,0 +1,3 @@
+main.cu
+--unwind 10 --no-unwinding-assertions --force-malloc-success -I ~/libraries/ --no-pointer-check
+^VERIFICATION FAILED$

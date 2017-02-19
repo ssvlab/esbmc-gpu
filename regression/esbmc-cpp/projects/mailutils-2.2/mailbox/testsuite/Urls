@@ -1,0 +1,629 @@
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2008 Free Software Foundation
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+#
+# NOTE: Expected lines must be indented with exactly one tab character.
+
+scheme: => SUCCESS
+	scheme <scheme>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <>
+
+scheme:/absolute/path => SUCCESS
+	scheme <scheme>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </absolute/path>
+
+scheme:relative/path => SUCCESS
+	scheme <scheme>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <relative/path>
+
+scheme:///absolute/path => SUCCESS
+	scheme <scheme>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </absolute/path>
+
+scheme://%75%73%65%72:%70%61%73%73@%68%6f%73%74 => SUCCESS
+	scheme <scheme>
+	user <user>
+	passwd <pass>
+	auth <>
+	host <host>
+	port 0
+	path <>
+
+ftp://user:pass@host//a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <pass>
+	auth <>
+	host <host>
+	port 0
+	path </a/path>
+
+ftp://:pass@host//a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <pass>
+	auth <>
+	host <host>
+	port 0
+	path </a/path>
+
+ftp://user:@host//a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <>
+	auth <>
+	host <host>
+	port 0
+	path </a/path>
+
+ftp://user:pass@//a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <pass>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://user:@//a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://:@host//a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <host>
+	port 0
+	path </a/path>
+
+ftp://:pass@//a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <pass>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://:@//a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://://a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://@//a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp:/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+ftp://user:pass@host/a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <pass>
+	auth <>
+	host <host>
+	port 0
+	path <a/path>
+
+ftp://:pass@host/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <pass>
+	auth <>
+	host <host>
+	port 0
+	path <a/path>
+
+ftp://user:@host/a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <>
+	auth <>
+	host <host>
+	port 0
+	path <a/path>
+
+ftp://user:pass@/a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <pass>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp://user:@/a/path => SUCCESS
+	scheme <ftp>
+	user <user>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp://:@host/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <host>
+	port 0
+	path <a/path>
+
+ftp://:pass@/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <pass>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp://:@/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp://:/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp://@/a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path <a/path>
+
+ftp:///a/path => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </a/path>
+
+pop://pop.example.net => SUCCESS
+	scheme <pop>
+	user <>
+	passwd <>
+	auth <>
+	host <pop.example.net>
+	port 0
+	path <>
+
+pop://user@pop.example.net => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <>
+	auth <>
+	host <pop.example.net>
+	port 0
+	path <>
+
+pop://user:passwd@pop.example.net => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <pop.example.net>
+	port 0
+	path <>
+
+pop://user;auth=*@pop.example.net => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <>
+	auth <*>
+	host <pop.example.net>
+	port 0
+	path <>
+
+pop://pop.example.net:111 => SUCCESS
+	scheme <pop>
+	user <>
+	passwd <>
+	auth <>
+	host <pop.example.net>
+	port 111
+	path <>
+
+pop://user@pop.example.net:111 => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <>
+	auth <>
+	host <pop.example.net>
+	port 111
+	path <>
+
+pop://user:passwd@pop.example.net:111 => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <pop.example.net>
+	port 111
+	path <>
+
+pop://user;auth=*@pop.example.net:111 => SUCCESS
+	scheme <pop>
+	user <user>
+	passwd <>
+	auth <*>
+	host <pop.example.net>
+	port 111
+	path <>
+
+imap://imap.example.net => SUCCESS
+	scheme <imap>
+	user <>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <>
+
+imap://user@imap.example.net => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <>
+
+imap://user:passwd@imap.example.net => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <>
+
+imap://user;auth=*@imap.example.net => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 0
+	path <>
+
+imap://imap.example.net:111 => SUCCESS
+	scheme <imap>
+	user <>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <>
+
+imap://user@imap.example.net:111 => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <>
+
+imap://user:passwd@imap.example.net:111 => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <>
+
+imap://user;auth=*@imap.example.net:111 => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 111
+	path <>
+
+imap://imap.example.net/mbox => SUCCESS
+	scheme <imap>
+	user <>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <mbox>
+
+imap://user@imap.example.net/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <mbox>
+
+imap://user:passwd@imap.example.net/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <mbox>
+
+imap://user;auth=*@imap.example.net/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 0
+	path <mbox>
+
+imap://imap.example.net:111/mbox => SUCCESS
+	scheme <imap>
+	user <>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <mbox>
+
+imap://user@imap.example.net:111/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <mbox>
+
+imap://user:passwd@imap.example.net:111/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <mbox>
+
+imap://user;auth=*@imap.example.net:111/mbox => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 111
+	path <mbox>
+
+imap://imap.example.net/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <imap.example.net/mbox/user>
+	passwd <>
+	auth <>
+	host <host>
+	port 0
+	path <>
+
+imap://user@imap.example.net/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <mbox/user@host>
+
+imap://user:passwd@imap.example.net/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 0
+	path <mbox/user@host>
+
+imap://user;auth=*@imap.example.net/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 0
+	path <mbox/user@host>
+
+imap://imap.example.net:111/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <imap.example.net>
+	passwd <111/mbox/user>
+	auth <>
+	host <host>
+	port 0
+	path <>
+
+imap://user@imap.example.net:111/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <mbox/user@host>
+
+imap://user:passwd@imap.example.net:111/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <passwd>
+	auth <>
+	host <imap.example.net>
+	port 111
+	path <mbox/user@host>
+
+imap://user;auth=*@imap.example.net:111/mbox/user@host => SUCCESS
+	scheme <imap>
+	user <user>
+	passwd <>
+	auth <*>
+	host <imap.example.net>
+	port 111
+	path <mbox/user@host>
+
+ftp://ftp.example.org/mbox/user%40host => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <ftp.example.org>
+	port 0
+	path <mbox/user@host>
+
+ftp://ftp.example.org:111/mbox/user%40host => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <ftp.example.org>
+	port 111
+	path <mbox/user@host>
+
+ftp://ftp.example.org:111/mbox/user%40host;type=pass => SUCCESS
+	scheme <ftp>
+	user <>
+	passwd <>
+	auth <>
+	host <ftp.example.org>
+	port 111
+	path <mbox/user@host>
+	param[0] <type=pass>
+
+mbox:/var/spool/mail;type=index;param=2;user=gray => SUCCESS
+	scheme <mbox>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </var/spool/mail>
+	param[0] <type=index>
+	param[1] <param=2>
+	param[2] <user=gray>
+
+mbox:///var/spool/mail;type=index;param=2;user=gray => SUCCESS
+	scheme <mbox>
+	user <>
+	passwd <>
+	auth <>
+	host <>
+	port 0
+	path </var/spool/mail>
+	param[0] <type=index>
+	param[1] <param=2>
+	param[2] <user=gray>
+
+http:///gnu.org.ua/home/gray?prog&arg1&arg2
+        scheme <http>
+        user <>
+        passwd <>
+        auth <>
+        host <gnu.org.ua>
+        port 0
+        path <home/gray>
+        query[0] <prog>
+        query[1] <arg1>
+        query[2] <arg2>
+
+http:///gnu.org.ua/home/gray;foo=bar;baz=qux?prog&arg%201&arg%202
+        scheme <http>
+        user <>
+        passwd <>
+        auth <>
+        host <gnu.org.ua>
+        port 0
+        path <home/gray>
+	param[0] <foo=bar>
+	param[1] <baz=qux>
+        query[0] <prog>
+        query[1] <arg 1>
+        query[2] <arg 2>
+
+# NOTE: This file must end with an empty line

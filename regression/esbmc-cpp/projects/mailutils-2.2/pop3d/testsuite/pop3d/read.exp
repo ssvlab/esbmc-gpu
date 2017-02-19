@@ -1,0 +1,257 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+pop3d_start 
+pop3d_auth "user!passwd" "guessme"
+
+## Test STAT command
+pop3d_test "STAT" "+OK 95 34469"
+
+## Test LIST command. This will be used twice.
+proc test_list {} {
+	pop3d_test "LIST" \
+	"+OK" \
+	"1 311" \
+	"2 321" \
+	"3 316" \
+	"4 345" \
+	"5 362" \
+	"6 378" \
+	"7 325" \
+	"8 368" \
+	"9 354" \
+        "10 323" \
+        "11 358" \
+        "12 307" \
+        "13 348" \
+        "14 379" \
+        "15 421" \
+        "16 397" \
+        "17 454" \
+        "18 340" \
+        "19 320" \
+        "20 307" \
+        "21 357" \
+        "22 321" \
+        "23 397" \
+        "24 332" \
+        "25 415" \
+        "26 358" \
+        "27 390" \
+        "28 334" \
+        "29 330" \
+        "30 337" \
+        "31 375" \
+        "32 329" \
+        "33 333" \
+        "34 325" \
+        "35 302" \
+        "36 417" \
+        "37 383" \
+        "38 332" \
+        "39 367" \
+        "40 369" \
+        "41 662" \
+        "42 341" \
+        "43 388" \
+        "44 390" \
+        "45 333" \
+        "46 548" \
+        "47 334" \
+        "48 424" \
+        "49 359" \
+        "50 437" \
+        "51 328" \
+        "52 383" \
+        "53 376" \
+        "54 389" \
+        "55 336" \
+        "56 336" \
+        "57 352" \
+        "58 438" \
+        "59 337" \
+        "60 408" \
+        "61 393" \
+        "62 335" \
+        "63 331" \
+        "64 386" \
+        "65 483" \
+        "66 324" \
+        "67 323" \
+        "68 362" \
+        "69 325" \
+        "70 348" \
+        "71 311" \
+        "72 341" \
+        "73 369" \
+        "74 327" \
+        "75 340" \
+        "76 345" \
+        "77 324" \
+        "78 324" \
+        "79 369" \
+        "80 375" \
+        "81 389" \
+        "82 321" \
+        "83 310" \
+        "84 362" \
+        "85 365" \
+        "86 413" \
+        "87 327" \
+        "88 332" \
+        "89 401" \
+        "90 316" \
+        "91 310" \
+        "92 500" \
+        "93 341" \
+        "94 321" \
+        "95 390" \
+	"."
+}
+
+## Actually test LIST
+test_list
+
+## Test RETRY on an existing message
+pop3d_test "RETR 1" \
+	"+OK" \
+	"Received: (from hare@wonder.land) "\
+	"	by wonder.land id 3301"\
+	"	for alice@wonder.land; Mon, 29 Jul 2002 22:00:06 +0100"\
+	"Date: Mon, 29 Jul 2002 22:00:01 +0100"\
+	"From: March Hare  <hare@wonder.land>"\
+	"Message-Id: <200207292200.3301@wonder.land>"\
+	"To: Alice  <alice@wonder.land>"\
+	"Subject: Invitation"\
+	""\
+	"Have some wine"\
+	"."
+
+## Test TOP command
+
+pop3d_test "TOP 48" \
+	"-ERR Invalid arguments"
+
+pop3d_test "TOP 48 2" \
+"+OK" \
+"Received: (from hatter@wonder.land) "\
+"	by wonder.land id 3348"\
+"	for alice@wonder.land; Mon, 29 Jul 2002 22:00:53 +0100"\
+"Date: Mon, 29 Jul 2002 22:00:48 +0100"\
+"From: Hatter  <hatter@wonder.land>"\
+"Message-Id: <200207292200.3348@wonder.land>"\
+"To: Alice  <alice@wonder.land>"\
+"Subject: Re: Discussing Time"\
+"" \
+"It goes on, you know in this way:--" \
+"" \
+"."
+
+pop3d_test "TOP 48 3" \
+"+OK" \
+"Received: (from hatter@wonder.land) "\
+"	by wonder.land id 3348"\
+"	for alice@wonder.land; Mon, 29 Jul 2002 22:00:53 +0100"\
+"Date: Mon, 29 Jul 2002 22:00:48 +0100"\
+"From: Hatter  <hatter@wonder.land>"\
+"Message-Id: <200207292200.3348@wonder.land>"\
+"To: Alice  <alice@wonder.land>"\
+"Subject: Re: Discussing Time"\
+"" \
+"It goes on, you know in this way:--" \
+"" \
+"\"Up above the world you fly," \
+"."
+
+
+pop3d_test "TOP 48 4" \
+"+OK" \
+"Received: (from hatter@wonder.land) "\
+"	by wonder.land id 3348"\
+"	for alice@wonder.land; Mon, 29 Jul 2002 22:00:53 +0100"\
+"Date: Mon, 29 Jul 2002 22:00:48 +0100"\
+"From: Hatter  <hatter@wonder.land>"\
+"Message-Id: <200207292200.3348@wonder.land>"\
+"To: Alice  <alice@wonder.land>"\
+"Subject: Re: Discussing Time"\
+"" \
+"It goes on, you know in this way:--" \
+"" \
+"\"Up above the world you fly," \
+"Like a tea-tray in the sky." \
+"."
+
+pop3d_test "TOP 48 1000" \
+"+OK" \
+"Received: (from hatter@wonder.land) "\
+"	by wonder.land id 3348"\
+"	for alice@wonder.land; Mon, 29 Jul 2002 22:00:53 +0100"\
+"Date: Mon, 29 Jul 2002 22:00:48 +0100"\
+"From: Hatter  <hatter@wonder.land>"\
+"Message-Id: <200207292200.3348@wonder.land>"\
+"To: Alice  <alice@wonder.land>"\
+"Subject: Re: Discussing Time"\
+"" \
+"It goes on, you know in this way:--" \
+"" \
+"\"Up above the world you fly," \
+"Like a tea-tray in the sky." \
+"Twinkle, twinkle--\"'" \
+"."
+
+## Test DELE -- RETR -- RSET -- RETR
+pop3d_test "DELE 2" \
+	"+OK Message 2 marked"
+
+pop3d_test "RETR 2" \
+	"-ERR Message has been deleted"
+
+pop3d_test "RSET" "+OK"
+
+pop3d_test "RETR 2" \
+"+OK" \
+"Received: (from alice@wonder.land) "\
+"	by wonder.land id 3302"\
+"	for hare@wonder.land; Mon, 29 Jul 2002 22:00:07 +0100"\
+"Date: Mon, 29 Jul 2002 22:00:02 +0100"\
+"From: Alice  <alice@wonder.land>"\
+"Message-Id: <200207292200.3302@wonder.land>"\
+"To: March Hare  <hare@wonder.land>"\
+"Subject: Re: Invitation"\
+""\
+"I don't see any wine"\
+"."
+
+## Delete all messages
+for {set i 1} {$i <= 95} {incr i} {
+    pop3d_test "DELE $i" "+OK Message $i marked"
+}
+
+## This should produce empty output
+pop3d_test "LIST" \
+	"+OK" \
+	"."
+
+## Restore deleted messages
+pop3d_test "RSET" "+OK"
+
+## Test LIST again
+test_list
+
+#end of read.exp

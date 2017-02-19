@@ -1,0 +1,21 @@
+; This is the default mhl.format file for Mailutils MH.
+;
+; GNU Mailutils -- a suite of utilities for electronic mail
+; Copyright (C) 2003, 2010 Free Software Foundation, Inc.
+; Distributed under GPL.
+;
+: -- using template mhl.format --
+overflowtext="***",overflowoffset=5
+leftadjust,compwidth=9
+ignores="msgid,message-id,received"
+Date:formatfield="%<(nodate{text})%{text}%|%(pretty{text})%>"
+To:
+cc:
+: 
+From:
+Subject:
+:
+extras:nocomponent
+:
+body:nocomponent,overflowtext="",overflowoffset=0,noleftadjust
+; End of mhl.format

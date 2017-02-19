@@ -1,0 +1,1570 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2007, 2008, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+The input language understood by the GNU Sieve Library
+is a superset of the Sieve language as described in RFC 3028.
+
+@menu
+* Lexical Structure::
+* Syntax::
+* Preprocessor::
+* Require Statement::
+* Comparators::
+* Tests::
+* Actions::
+* GNU Extensions::
+@end menu
+
+@node Lexical Structure
+@section Lexical Structure
+
+@subheading Whitespace and Comments
+
+Comments are semantically equivalent to whitespace and can be used
+anyplace that whitespace is (with one exception in multi-line strings,
+as described below).
+
+There are two kinds of comments: hash comments, that begin with a
+@samp{#} character that is not contained within a string and continue
+until the next newline, and C-style or bracketed comments, that are
+delimited by @samp{/*} and @samp{*/} tokens. The bracketed comments
+may span multiple lines. E.g.:
+
+@smallexample
+if size :over 100K
+  @{ # this is a comment
+    discard;
+  @}
+  
+if size :over 100K
+  @{ /* this is a comment
+       this is still a comment */ discard /* this is a comment again
+     */ ;
+  @}
+@end smallexample
+
+Like in C, bracketed comments do not nest.
+
+@subheading Lexical Tokens
+
+The basic lexical entities are @dfn{identifiers} and @dfn{literals}.
+
+An @dfn{identifier} is a sequence of letters, digits and underscores,
+that begins with a letter or underscore. For example, @code{header} and
+@code{check_822_again} are valid identifiers, whereas @code{1st} is not.
+A special form of identifier is @dfn{tag}: it is an identifier prefixed
+with a colon (@samp{:}), e.g.: @code{:comparator}. 
+
+A @dfn{literal} is a data that is not executed, merely evaluated ``as
+is'', to be used as arguments to commands. There are four kinds of
+literals:
+
+@itemize
+@item Number
+@cindex numbers, sieve
+
+@dfn{Numbers} are given as ordinary unsigned decimal numbers. An
+optional suffix may be used to indicate a multiple of a power of two.
+The suffixes are: @samp{K} specifying ``kibi-'', or 1,024 (2^10) times
+the value of the number; @samp{M} specifying ``mebi-'', or 1,048,576
+(2^20) times the value of the number; and @samp{G} specifying ``tebi-'',
+or 1,073,741,824 (2^30) times the value of the number.
+
+The numbers have 32 bits of magnitude.
+
+@item String
+@cindex strings, sieve
+A @dfn{string} is any sequence of characters enclosed in double quotes
+(@samp{"}). A string cannot contain newlines and double quote
+characters. This limitation will disappear in future releases.
+
+@item Multiline Strings
+@cindex multiline strings, sieve
+@kwindex text:
+A @dfn{multiline string} is used to represent large blocks of text
+with embedded newlines and special characters. It starts with the
+keyword @code{text:} followed by a newline and ends with a dot
+(@samp{.}) on a newline by itself. Any characters between these two
+markers are taken verbatim. For example:
+
+@smallexample
+text:
+** This is an automatic response from my message **
+** filtering program.                            **
+
+I can not attend your message right now. However it
+will be saved, and I will read it as soon as I am back.
+
+Regards,
+Fred
+.
+@end smallexample
+
+Notice that a hashed comment or whitespace may occur between
+@code{text:} and the newline. However, when used inside the multiline
+string a hash sign looses its special meaning (except in one case, see
+below) and is taken as is, as well as bracketed comment delimiters.
+In other words, no comments are allowed within a multiline string. E.g.:
+    
+@smallexample
+text: # This is a comment
+
+Sample text
+# This line is taken verbatim
+/* And this line too */
+.
+@end smallexample
+
+The only exception to this rule is that preprocessor @code{include}
+statement is expanded as usual when found within a multiline string
+(@pxref{Preprocessor}), e.g.:
+
+@smallexample
+text:
+#include <myresponse.txt>
+.
+@end smallexample
+
+This results in the contents of file @file{myresponse.txt} being read
+and interpreted as the contents of the multiline string.
+
+GNU libmu_sieve extends the described syntax as follows. If the keyword
+@code{text:} is immediately followed by a dash (@samp{-}), then all
+leading tab characters are stripped from input lines and the line
+containing delimiter (@samp{.}). This allows multiline strings within
+scripts to be indented in a natural fashion.
+
+Furthermore, if the @code{text:} (optionally followed by @samp{-}) is
+immediately followed by a word, this word will be used as ending
+delimiter of multiline string instead of the default dot. For
+example:        
+
+@smallexample
+@group
+if header "from" "me@@example.com"
+  @{
+    reject text:-EOT
+        I do not accept messages from
+        this address.
+        .
+        .
+        EOT
+     # Notice that this the multiline string ends here.
+     # The single dots above will be part of it.
+    ;
+  @}
+@end group  
+@end smallexample
+@noindent
+
+@item String Lists
+@cindex string list, sieve
+
+A @dfn{string list} is a comma-delimited list of quoted strings, enclosed
+in a pair of square brackets, e.g.:
+
+@smallexample
+["me@@example.com", "me00@@landru.example.edu"]
+@end smallexample
+
+For convenience, in any context where a list of strings is appropriate,
+a single string is allowed without being a member of a list: it is
+equivalent to a list with a single member. For example, the following
+two statements are equivalent:
+
+@smallexample
+exists "To";
+exists ["To"];
+@end smallexample
+
+@end itemize
+
+@node Syntax
+@section Syntax
+
+Being designed for the sole purpose of filtering mail, Sieve has a very
+simple syntax. 
+
+@menu
+* Commands::
+* Actions Described::
+* Control Flow::
+* Tests and Conditions::
+@end menu
+
+@node Commands
+@subsection Commands
+
+The basic syntax element is a @dfn{command}. It is defined as follows:
+
+@smallexample
+@var{command-name} [@var{tags}] @var{args}
+@end smallexample
+@noindent
+where @var{command-name} is an identifier representing the name of the
+command, @var{tags} is an optional list of @dfn{optional} or
+@dfn{tagged arguments} and @var{args} is a list of @dfn{required} or
+@dfn{positional arguments}.
+
+Positional arguments are literals delimited with whitespace. They
+provide the command with the information necessary to its proper
+functioning. Each command has a fixed number of positional arguments. It
+is an error to supply more arguments to the command or to give it fewer
+arguments than it accepts.
+
+Optional arguments allow to modify the behaviour of the command, like
+command line options in UNIX do. They are a list of @dfn{tags}
+(@pxref{Lexical Structure}) separated by whitespace. An optional
+argument may have at most one parameter.
+
+Each command understands a set of optional arguments. Supplying it tags
+that it does not understand results in an error.
+
+For example, consider the following command
+
+@smallexample
+header :mime :comparator "i;octet" ["to", "from"] "bug-mailutils@@gnu.org"
+@end smallexample
+
+@noindent
+Here, given that @code{header} takes two positional arguments:
+@code{header} is command name, the list @code{["to", "from"]} is first
+positional argument and the string @code{"bug-mailutils@@gnu.org"} is second
+positional argument. There are two optional arguments: @code{:mime} and
+@code{:comparator}. The latter has a string @code{"i;octet"} as its
+parameter.
+
+@node Actions Described
+@subsection Actions Described
+@cindex action, sieve
+
+An @dfn{action} is a Sieve command that performs some operation over
+a message. Actions do the main job in any Sieve
+program. Syntactically, an action is a command terminated with
+semicolon, e.g.:
+
+@smallexample
+keep;
+
+fileinto "mbox";
+@end smallexample
+
+GNU Sieve provides the full set of actions described in RFC 3028.
+It also allows to extend this set using loadable
+actions. @xref{Actions}, for detailed discussion of actions.
+
+@node Control Flow
+@subsection Control Flow
+@kwindex if, sieve
+
+The only control flow statement Sieve has is @code{if} statement. In its
+simplest form it is:
+
+@smallexample
+if @code{condition} @{ @dots{} @}
+@end smallexample
+
+The effect of this statement is that the sequence of actions between the
+curly braces is executed only if the @code{condition} evaluates to
+@code{true}.
+
+A more elaborate form of this statement allows to execute two
+different sets of actions depending on whether the condition is
+true or not:
+
+@smallexample
+if @code{condition} @{ @dots{} @} else @{ @dots{} @}
+@end smallexample
+
+The most advanced form of the ``if'' statement allows to select an
+action depending on what condition from the set of conditions is met.
+
+@smallexample
+if @code{cond1} @{ @dots{} @} elsif @code{cond2} @{ @dots{} @} else @{ @dots{} @}
+@end smallexample
+
+There may be any number of ``elsif'' branches in an ``if''
+statement. However it may have at most one ``else'' branch.
+Notes for C programmers:
+
+@enumerate
+@item The braces surrounding each branch of an ``if'' statement are
+required.
+@item The ``else if'' construct is disallowed. Use ``elsif'' keyword
+instead.
+@end enumerate
+
+Here's an example of ``if'' statement:
+
+@smallexample
+if header :contains "from" "coyote"
+  @{
+    discard;
+  @}
+elsif header :contains ["subject"] ["$$$"]
+  @{
+    discard;
+  @}
+else
+  @{
+    fileinto "INBOX";
+  @}
+@end smallexample
+
+The following section describes in detail conditions used in ``if''
+statements.
+
+@node Tests and Conditions
+@subsection Tests and Conditions
+@cindex test, sieve
+
+@dfn{Tests} are Sieve commands that return boolean value. E.g. the
+test
+
+@smallexample
+header :contains "from" "coyote"
+@end smallexample
+
+@noindent
+returns true only if the header ``From'' of the current message contains
+substring ``coyote''.
+
+The tests shipped with the GNU Sieve are described in @ref{Tests}.
+
+@cindex condition, sieve
+@dfn{Condition} is a Sieve expression that evaluates to @code{true} or
+@code{false}. In its simplest form, condition is just a Sieve test.
+
+@kwindex not, sieve
+To reverse the sense of a condition use keyword @code{not}, e.g.: 
+
+@smallexample
+not header :contains "from" "coyote"
+@end smallexample
+
+@kwindex and, sieve
+@kwindex or, sieve
+@kwindex allof
+@kwindex anyof
+The results of several conditions may be joined together by logical
+@code{and} and @code{or} operations. The special form @code{allof}
+takes several tests as its arguments and computes the logical @code{and}
+of their results. Similarly, the form @code{anyof} performs logical
+@code{or} over the results of its arguments. E.g.:
+
+@smallexample
+if anyof (not exists ["From", "Date"],
+          header :contains "from" "fool@@example.edu")
+  @{
+    discard;
+  @}
+@end smallexample
+                   
+@node Preprocessor
+@section Preprocessor
+@cindex preprocessor, sieve
+@cindex Sieve preprocessor statements
+
+Preprocessor statements are a GNU extension to the Sieve language.
+The syntax for a preprocessor statement is similar to that used in
+@code{C} programming language, i.e. a pound character (@samp{#})
+followed by a preprocessor directive and its arguments. Any amount of
+whitespace can be inserted between the @samp{#} and the directive.
+Currently implemented directives are @code{include} and @code{searchpath}.
+
+@menu
+* #include::        Include the contents of a file.
+* #searchpath::     Modify the current search path.
+@end menu
+
+@node #include
+@subheading Sieve #include directive
+@kwindex #include, sieve
+
+The @code{#include} directive reads in the contents of the given file.
+The contents is ``inserted'' into the text being parsed starting at the
+line where the directive appears. The directive takes two forms:
+
+@table @code
+@item #include "@var{filename}"
+The @var{filename} is taken relative to the current directory.
+
+@item #include <@var{filename}>"
+The @var{filename} is searched in the list of include directories
+as specified by the @option{-I} command line options.
+@end table
+
+If @var{filename} starts with a directory separator character
+(@samp{/}) both forms have the same effect.
+
+@node #searchpath
+@subheading Sieve #searchpath directive
+@kwindex #searchpath, sieve
+
+The @code{#searchpath} directive adds its argument to the list of
+directories searched for loadable modules. It has the same effect
+as @command{library-path} Sieve configuration statement
+(@pxref{Sieve Configuration, library-path}). 
+
+@node Require Statement
+@section Require Statement
+@kwindex require, sieve
+
+@smallexample
+Syntax:   require @var{string};
+          require @var{string-list};
+@end smallexample
+
+The require statement informs the parser that a script makes use of a certain
+extension. Multiple capabilities can be declared using the second form
+of the statement. The actual handling of a capability name depends on
+its suffix.
+
+If the name starts with @samp{comparator-}, it is understood
+as a request to use the specified comparator. The comparator name
+consists of the characters following the suffix.
+
+If the name starts with @samp{test-}, it means a request to use
+the given test. The test name consists of the characters following
+the suffix.
+
+Otherwise, the capability is understood as a name of an action to be
+used.
+
+The @code{require} statement, if present, must be used before any other
+statement that is using the required capability. As an extension, the GNU
+sieve allows the @code{require} and any other statements to be
+interspersed.
+
+By default the following actions and comparators need not be
+explicitly required:
+
+@itemize
+@item stop
+@item keep
+@item discard
+@item i;octet
+@item i;ascii-casemap
+@end itemize
+
+Example:
+
+@smallexample
+require ["fileinto", "reject"];
+
+require "fileinto";
+
+require "comparator-i;ascii-numeric";
+@end smallexample
+
+When processing arguments for @code{require} statement, GNU libmu_sieve
+uses the following algorithm:
+
+@enumerate 1
+@item Look up the name in a symbol table. If the name begins with
+@samp{comparator-} it is looked up in the comparator table. If it
+begins with @samp{test-}, the test table is used instead. Otherwise
+the name is looked up in the action table.
+
+@item If the name is found, the search is terminated.
+
+@item Otherwise, transform the name. First, any @samp{comparator-} or
+@samp{test-} prefix is stripped. Then, any character other than
+alphanumeric characters, @samp{.} and @samp{,} is replaced with
+dash (@samp{-}). The name thus obtained is used as a file name
+of an external loadable module. 
+
+@item Try to load the module. The module is searched in the
+following search paths (in the order given):
+
+@enumerate 1
+@item Mailutils module directory. By default it is
+@file{$prefix/lib/mailutils}.
+
+@item Sieve library path as given with the @option{-L} options in
+the command line
+
+@item Additional search directories specified with the
+@code{#searchpath} directive.
+
+@item The value of the environment variable @env{LTDL_LIBRARY_PATH}.
+
+@item System library search path: The system dependent library
+search path (e.g. on Linux it is set by the contents of the file
+@file{/etc/ld.so.conf} and the value of the environment variable
+@env{LD_LIBRARY_PATH}).
+@end enumerate
+
+@vindex LTDL_LIBRARY_PATH
+@vindex LD_LIBRARY_PATH
+The value of @env{LTDL_LIBRARY_PATH} and @env{LD_LIBRARY_PATH} must be a
+colon-separated list of absolute directories, for example,
+@samp{"/usr/lib/mypkg:/lib/foo"}.
+
+In any of these directories, @command{libmu_sieve} first attempts to find
+and load the given filename. If this fails, it tries to append the
+following suffixes to the file name:
+
+@enumerate 1
+@item the libtool archive extension @samp{.la}
+
+@item the extension used for native dynamic libraries on the host
+platform, e.g., @samp{.so}, @samp{.sl}, etc.
+@end enumerate
+
+@item If the module is found, @command{libmu_sieve} executes its
+initialization function (see below) and again looks up the name
+in the symbol table. If found, search terminates successfully.
+
+@item If either the module is not found, or the symbol wasn't
+found after execution of the module initialization function,
+search is terminated with an error status. @command{libmu_sieve} then
+issues the following diagnostic message:
+
+@smallexample
+source for the required action NAME is not available
+@end smallexample
+@end enumerate
+
+@node Comparators
+@section Comparators
+@cindex comparator, sieve
+
+GNU libmu_sieve supports the following built-in comparators:
+
+@table @code
+@item i;octet
+This comparator simply compares the two arguments octet by octet
+
+@item i;ascii-casemap
+It treats uppercase and lowercase characters in the @sc{ascii} subset of
+@sc{utf-8} as the same. This is the default comparator.
+
+@item i;ascii-numeric
+Treats the two arguments as @sc{ascii} representation of decimal
+numbers and compares their numeric values. This comparator must
+be explicitly required prior to use.
+@end table 
+
+@node Tests
+@section Tests
+@cindex test, sieve
+
+This section describes the built-in tests supported by GNU libmu_sieve.
+In the discussion below the following macro-notations are used:
+
+@table @var
+@item match-type
+This tag specifies the matching type to be used with the test. It can
+be one of the following:
+
+@table @code
+@kwindex :is, sieve 
+@kwindex is, sieve 
+@item :is
+The @code{:is} match type describes an absolute match; if the contents of
+the first string are absolutely the same as the contents of the
+second string, they match. Only the string ``frobnitzm'' is the string
+``frobnitzm''. The null key ``:is'' and only ``:is'' the null value.
+This is the default match-type.
+
+@kwindex :contains, sieve
+@kwindex contains, sieve
+@item :contains
+The @code{:contains} match type describes a substring match. If the value
+argument contains the key argument as a substring, the match is true.
+For instance, the string ``frobnitzm'' contains ``frob'' and ``nit'', but
+not ``fbm''. The null key ``'' is contained in all values.
+
+@kwindex :matches, sieve
+@kwindex matches, sieve
+@item :matches
+The @code{:matches} version specifies a wildcard match using the
+characters @samp{*} and @samp{?}. @samp{*} matches zero or more
+characters, and @samp{?} matches a single character. @samp{?} and
+@samp{*} may be escaped as @samp{\\?} and @samp{\\*} in strings to match
+against themselves. The first backslash escapes the second backslash;
+together, they escape the @samp{*}.
+
+@kwindex :regex, sieve
+@kwindex regex, sieve
+@item :regex
+The @code{:regex} version specifies a match using POSIX Extended Regular
+Expressions.
+
+@kwindex :value, sieve
+@kwindex value, sieve
+@item :value @var{relation}
+The @code{:value} match type does a relational comparison between
+strings. Valid values for @var{relation} are:
+
+@table @asis
+@item "eq"
+Equal
+
+@item "ne"
+Not Equal
+
+@item "gt"
+Greater Than
+
+@item "ge"
+Greater than or Equal
+
+@item "lt"
+Less Than
+
+@item "le"
+Less than or Equal
+@end table
+
+@kwindex :count, sieve
+@kwindex count, sieve
+@item :count @var{relation}
+This match type first determines the number of the specified entities
+(headers, addresses, etc.) in the message and does a relational
+comparison of the number of entities to the values specified in the
+test expression. The test expression must be a list of one element.
+@end table
+
+@kwindex :comparator, sieve
+@kwindex comparator, sieve
+@item comparator
+A @var{comparator} syntax item is defined as follows:
+
+@smallexample
+:comparator "@var{comparator-name}"
+@end smallexample
+@noindent
+It instructs sieve to use the given comparator with the test.
+If @var{comparator-name} is not one of @samp{i;octet},
+@samp{i;ascii-casemap} it must be required prior to using it.
+For example:
+
+@smallexample
+require "comparator-i;ascii-numeric";
+
+if header :comparator "i;ascii-numeric" :is "X-Num" "10"
+  @{
+    ...
+@end smallexample
+
+@item address-part
+This syntax item is used when testing structured Internet addresses. It
+specifies which part of an address must be used in comparisons.
+Exactly one of the following tags may be used:
+
+@table @code
+@kwindex :all, sieve
+@kwindex all, sieve
+@item :all
+Use the whole address. This is the default.
+
+@kwindex :localpart, sieve
+@kwindex localpart, sieve
+@item :localpart
+Use local part of the address.
+
+@kwindex :domain, sieve
+@kwindex domain, sieve
+@item :domain
+Use domain part of the address.
+@end table
+
+@end table
+
+@emph{Notice}, that @var{match-type} modifiers interact with
+comparators. Some comparators are not suitable for matching with
+@code{:contains} or @code{:matches}. If this occurs, sieve issues
+an appropriate error message. For example, the statement:
+
+@smallexample
+if header :matches :comparator "i;ascii-numeric"
+@end smallexample
+@noindent
+would result in the following error message:
+
+@smallexample
+comparator `i;ascii-numeric' is incompatible with match type `:matches'
+in call to `header'
+@end smallexample
+
+GNU Sieve supports two kinds of tests. @dfn{Built-in tests} are
+defined within the library and do not require any external files.
+@dfn{External tests} are loadable modules that can be linked in at run
+time using the @code{require} statement (@pxref{Require Statement}).
+
+@menu
+* Built-in Tests::
+* External Tests::
+@end menu
+
+@node Built-in Tests
+@subsection Built-in Tests
+
+@deffn Test false
+
+This test always evaluates to ``false''.
+@end deffn
+
+@deffn Test true
+
+This test always evaluates to ``true''.
+@end deffn
+
+@deftypefn Test {} address [@var{address-part}] @
+                           [@var{comparator}] @
+                           [@var{match-type}] @
+                           @var{header-names} @var{key-list}
+
+@noindent
+Tagged arguments:
+
+@table @var
+@item address-part
+Selects the address part to compare. Default is the whole email address
+(@code{:all}).
+
+@item comparator
+Specifies the comparator to be used instead of the default @code{i;ascii-casemap}.
+
+@item match-type
+Specifies the match type to be used instead of the default @code{:is}.
+@end table
+
+@noindent
+Required arguments:
+
+@table @var
+@item header-names
+A list of header names.
+
+@item key-list
+A list of address values.
+@end table
+@noindent
+
+The @code{address} test matches Internet addresses in structured headers
+that contain addresses. It returns @code{true} if any header contains any
+key in the specified part of the address, as modified by 
+@var{comparator} and @var{match-type} optional arguments.
+
+This test returns @code{true} if any combination of the
+@var{header-names} and @var{key-list} arguments match.
+
+The @code{address} primitive never acts on the phrase part of an email
+address, nor on comments within that address. Use the @code{header} test
+instead. It also never acts on group names, although it does act on the
+addresses within the group construct.
+
+Example:
+
+@smallexample
+if address :is :all "from" "tim@@example.com"
+  @{
+     discard;
+  @} 
+@end smallexample
+@end deftypefn
+
+@deftypefn Test {} size [:over | :under] @var{limit}(number)
+The @code{size} test deals with the size of a message. The required
+argument @var{limit} represents the size of the message in bytes. It
+may be suffixed with the following quantifiers:
+
+@table @samp
+@item k
+@itemx K
+The number is expressed in kilobytes.
+@item m
+@itemx M
+The number is expressed in megabytes.
+@item g
+@itemx G
+The number is expressed in gigabytes.
+@end table
+
+@kwindex :over
+If the tagged argument is @samp{:over}, and the size of the message is greater
+than @var{number}, the test is true; otherwise, it is false.
+
+@kwindex :under
+If the argument is @samp{:under}, and the size of the message is less than
+the @var{number}, the test is true; otherwise, it is false.
+
+Otherwise, the test is true only if the size of the message equals
+exactly @var{number}. This is a GNU extension.
+
+The size of a message is defined to be the number of octets from the
+initial header until the last character in the message body.
+@end deftypefn
+
+@deftypefn Test {} envelope [@var{address-part}] @
+                            [@var{comparator}] @
+                            [@var{match-type}] @
+                            @var{envelope-part}(string-list) @
+                            @var{key-list}(string-list)
+@noindent
+
+Tagged arguments:
+
+@table @var
+@item address-part
+Selects the address part to compare. Default is the whole email address
+(@code{:all}).
+
+@item comparator
+Specifies the comparator to be used instead of the default @code{i;ascii-casemap}.
+
+@item match-type
+Specifies the match type to be used instead of the default @code{:is}.
+@end table
+@noindent
+Required arguments:
+
+@table @var
+@item envelope-parts
+A list of envelope parts to operate upon.
+
+@item key-list
+A list of address values.
+@end table
+@noindent
+
+The @code{envelope} test is true if the specified part of the @sc{smtp}
+envelope matches the specified key.
+
+If the envelope-part strings is (case insensitive) @samp{from},
+then matching occurs against the FROM address used in the
+@command{SMTP MAIL} command.  
+
+@emph{Notice}, that due to the limitations imposed by @sc{smtp} envelope
+structure the use of any other values in @var{envelope-parts} header is
+meaningless.
+@end deftypefn
+
+@deftypefn Test {} exists @var{header-names}(string-list)
+@noindent
+
+Required arguments:
+
+@table @var
+@item header-names
+List of message header names.
+@end table
+
+@sp 1
+@noindent
+The @code{exists} test is @code{true} if the headers listed in
+@var{header-names} argument exist within the message. All of the headers
+must exist or the test is false.
+
+The following example throws out mail that doesn't have a From header
+and a Date header:
+
+@smallexample
+if not exists ["From","Date"]
+  @{
+     discard;
+  @}
+@end smallexample
+@end deftypefn
+
+@deftypefn Test {} header [@var{comparator}] @
+                          [@var{match-type}] @
+                          [:mime] @
+                          @var{header-names}(string-list) @
+                          @var{key-list}(string-list)
+@sp 1
+@noindent
+Tagged arguments:
+
+@table @asis
+@item @var{comparator}
+Specifies the comparator to be used instead of the default @code{i;ascii-casemap}.
+
+@item @var{match-type}
+Specifies the match type to be used instead of the default @code{:is}.
+
+@kwindex :mime
+@item :mime
+This tag instructs @code{header} to search through the mime headers in
+multipart messages as well.
+
+@end table
+@sp 1
+@noindent
+Required arguments:
+
+@table @var
+@item header-names
+A list of header names.
+
+@item key-list
+A list of header values.
+@end table
+@sp 1
+@noindent
+The @code{header} test evaluates to true if any header name matches any
+key. The type of match is specified by the optional match argument,
+which defaults to ":is" if not explicitly given.
+
+The test returns @code{true} if any combination of the @var{header-names}
+and @var{key-list} arguments match.
+
+If a header listed in @var{header-names} exists, it contains the null
+key (@samp{""}). However, if the named header is not present, it
+does not contain the null key. So if a message contained the header
+
+@smallexample
+X-Caffeine: C8H10N4O2
+@end smallexample
+@sp 1
+@noindent
+these tests on that header evaluate as follows:
+
+@smallexample 
+header :is ["X-Caffeine"] [""] @result{} false
+header :contains ["X-Caffeine"] [""] @result{} true
+@end smallexample
+@end deftypefn
+
+@node External Tests
+@subsection External Tests
+
+@deftypefn Test {} numaddr [:over | :under] @
+                           @var{header-names}(string-list) @
+                           @var{count}(number)
+@noindent
+@subsubheading Synopsis
+@smallexample
+require "test-numaddr";
+@dots{}
+if numaddr @var{args}
+  @{
+    @dots{}
+  @}
+@end smallexample
+@subsubheading Description  
+This test is provided as an example of loadable extension tests. You
+must use @samp{require "test-numaddr"} statement before actually using
+it.
+
+The @code{numaddr} test counts Internet addresses in structured headers
+that contain addresses. It returns true if the total number of
+addresses satisfies the requested relation.
+
+@kwindex :over
+If the tagged argument is @samp{:over} and the number of addresses is
+greater than @var{count}, the test is true; otherwise, it is false.
+
+@kwindex :under
+If the tagged argument is @samp{:under} and the number of addresses is
+less than @var{count}, the test is true; otherwise, it is false.
+
+If the tagged argument is not given, @samp{:over} is assumed. 
+@end deftypefn
+
+@deftypefn Test {} spamd [:host @var{tcp-host}(string)] @
+                         [:port @var{tcp-port}(number)] @
+                         [:socket @var{unix-socket}(string)] @
+                         [:user @var{name}(string)] @
+                         [:over | :under @var{limit}(string)]
+@subsubheading Synopsis
+@smallexample
+require "test-spamd";
+@dots{}
+if spamd @var{args}
+  @{
+    # @r{This is spam}
+    @dots{}
+  @}
+@end smallexample
+  
+@subsubheading Description  
+This test is an interface to SpamAssassin filter. It connects to the
+@command{spamd} daemon using connection parameters specified by tagged
+arguments @code{:host} and @code{:port} (if the daemon is listening on
+an INET socket), or @code{:socket} (if the daemon is listening on a
+UNIX socket) and returns true, if SpamAssassin qualifies the message
+as spam. Tagged argument @var{limit} alters the default behavior. Its
+value is a string representation of a floating point number. If
+the tag @code{:over} is used, then the test returns true if the spam
+score returned from SpamAssassin is greater than @var{limit}.
+Otherwise, if @code{:under} is used, the test returns true if the spam
+score is less than @var{limit}. The comparison takes into account
+three decimal digits.
+
+Tagged argument @code{:user} allows to select a specific user profile.
+If it is not given, the user name is determined using the effective
+UID.
+
+Before returning, the @code{spamd} test adds the following headers to
+the message:
+
+@table @asis
+@item X-Spamd-Status
+@samp{YES} or @samp{NO}, depending on whether the message is qualified
+as spam or ham.
+
+@item X-Spamd-Score
+Actual spam score value.
+
+@item X-Spamd-Threshold
+Spam score threshold, as configured in SpamAssassin settings.
+
+@item X-Spamd-Keywords
+Comma-separated list of keywords, describing the spam checks that
+succeeded for this message.
+@end table
+
+@subsubheading Example
+@smallexample
+request "test-spamd";
+
+if spamd :host 127.0.0.1 :port 3333
+  @{
+     discard;
+  @}
+@end smallexample
+  
+@end deftypefn
+
+@deftypefn Test {} list [@var{comparator}] [@var{match-type}] @
+                        [ :delim @var{delimiters}(string) ] @
+                @var{headers}(string-list) @var{keys}(string-list)
+@subsubheading Synopsis
+@smallexample
+require "test-list";
+if list @var{args}
+  @{
+     @dots{} 
+  @}
+@end smallexample  
+@subsubheading Description  
+The @code{list} test evaluates to true if any of @var{headers} match any
+key from @var{keys}. Each header is regarded as containing a list of
+keywords. By default, comma is assumed as list separator. This can be
+overridden by specifying the @code{:delim} tag, whose value is a
+string consisting of valid list delimiter characters.
+
+@subsubheading Example
+This test can be used in conjunction with the @code{spamd} test
+described above:
+
+@smallexample
+require ["fileinto", "test-spamd", "test-list"];
+
+if spamd :host 127.0.0.1 :port 3333
+  @{
+     if list :matches :delim " ,"
+             "X-Spamd-Keywords" [ "HTML_*", "FORGED_*" ]
+       @{      
+          fileinto "~/mail/spam";
+       @}
+     else
+       @{
+          discard;
+       @}
+  @}
+@end smallexample
+@end deftypefn
+
+@deftypefn Test {} timestamp  [:before | :after] @
+                   @var{header}(string) @var{date}(string)
+@subsubheading Synopsis
+@smallexample
+require "test-timestamp";
+
+if timestamp @var{arg}
+  @{
+     @dots{}
+  @}
+@end smallexample
+@subsubheading Description
+The @code{timestamp} test compares the value of a structured date header
+field (@var{header}) with the given date (@var{date}).
+
+If the tagged argument is @code{:after} and the date from the header is
+after the specified date the result is true, otherwise, if the header
+date is before the given date, the result is false. 
+
+If the tagged argument is @code{:before} and the date from the header is
+before the specified date the result is true, otherwise, if the header
+date is after the given date, the result is false.
+
+If no tagged argument is supplied, @code{:after} is assumed.
+
+Almost any date format is understood. @xref{Date Input Formats}, for
+a detailed information on date formats.
+
+@subsubheading Example
+The test below succeeds if the date in @samp{X-Expire-Timestamp}
+header is more than 5 days older than the current date:
+
+@smallexample
+require "test-timestamp";
+
+if timestamp :before "X-Expire-Timestamp" "now - 5 days"
+  @{
+     discard;
+  @}
+@end smallexample
+@end deftypefn
+
+@node Actions
+@section Actions
+There are two groups of GNU Sieve actions: @dfn{built-in actions},
+which are defined within the library, and @dfn{external actions}, i.e.
+loadable modules that can be linked in at run time using the
+@code{require} statement (@pxref{Require Statement}).
+
+@menu
+* Built-in Actions::
+* External Actions::
+@end menu
+
+@node Built-in Actions
+@subsection Built-in Actions
+
+The GNU libmu_sieve supports the following built-in actions:
+
+@itemize
+@item stop
+@item keep
+@item discard
+@item fileinto
+@item reject
+@item redirect
+@end itemize
+
+Among them the first three actions do not need to be explicitly required
+by a @code{require} statement, while the others do.
+
+These actions are described in detail below.
+
+@deffn Action stop
+
+The @code{stop} action ends all processing. If no actions have been
+executed, then the @code{keep} action is taken.
+@end deffn
+
+@deffn Action keep
+
+The effect of this action is to preserve the current message in the
+mailbox. This action is executed if no other action has been executed.
+@end deffn
+
+@deffn Action discard
+
+@code{Discard} silently throws away the current message. No notification
+is returned to the sender, the message is deleted from the mailbox.
+
+Example:
+@smallexample
+if header :contains ["from"] ["idiot@@example.edu"]
+  @{
+    discard;
+  @}
+@end smallexample
+@end deffn
+
+@anchor{fileinto}
+@deffn Action fileinto [:permissions @var{mode}] @var{folder}
+@noindent
+
+Required arguments:
+
+@table @var
+@item folder
+A string representing the folder name
+@end table
+
+@noindent
+Tagged arguments:
+
+@table @code
+@item :permissions @var{mode}
+Specifies the permissions to use, if the mailbox is created.
+@end table
+
+The @code{fileinto} action delivers the message into the specified
+folder. If the folder is local, it is created using permissions
+@samp{0600}, for regular files, and @samp{0700} for directories. This
+default can be changed by using the @code{:permissions} tag. Its
+argument is a mode specification, similar to that used by
+@command{chmod} shell utility. It is a list of permissions settings
+separated by commas. Each setting begins with one of the following
+letters:
+
+@table @asis
+@item g
+Set permissions for the users in the file group.
+
+@item o
+Set permissions for users not in the file's group.
+@end table
+
+This letter must be followed by either @samp{+} or @samp{=} and the
+list of permissions to be set. This latter list is a string
+containing any one or both of the following characters:
+
+@table @asis
+@item r
+Grant permission to read.
+
+@item w
+Grant permission to write.
+@end table
+
+For example, the following instruction creates the mailbox
+@file{~/shared} which will be world readable and writable
+for the group:
+
+@smallexample
+  fileinto :permissions "g=rw,o=r" "~/shared"
+@end smallexample
+
+Notice that:
+
+@enumerate 1
+@item
+The @code{:permissions} setting are affected by the current umask
+value.
+
+@item
+Only @code{r} and @code{w} permissions can be set, since other
+permissions do not seem to be useful for mailboxes. However, for
+mailboxes that have a directory structure (such as maildir and MH),
+any settings in @samp{g} and @samp{o} sets imply setting the
+executable bit.
+
+@item
+Owner's permissions cannot be set. The owner always has all
+permissions on the mailbox he created.
+
+@item
+The @code{:permissions} settings apply only to local mailboxes. They
+are ignored for remote mailboxes.
+@end enumerate
+
+@end deffn
+
+@deffn Action reject @var{reason}
+
+The optional @code{reject} action refuses delivery of a message by sending
+back a message delivery notification to the sender. It resends the
+message to the sender, wrapping it in a ``reject'' form, noting that it
+was rejected by the recipient. The required argument @var{reason} is
+a string specifying the reason for rejecting the message.
+
+Example:
+
+If the message contained
+@smallexample
+Date: Tue, 1 Apr 1997 09:06:31 -0800 (PST)
+From: coyote@@desert.example.org
+To: roadrunner@@acme.example.com
+Subject: I have a present for you
+
+I've got some great birdseed over here at my place.
+Want to buy it?
+@end smallexample
+@noindent
+@sp 1
+and the user's script contained:
+
+@smallexample
+if header :contains "from" "coyote@@desert.example.org"
+  @{
+    reject "I am not taking mail from you, and I don't want
+            your birdseed, either!";
+  @}
+@end smallexample
+@noindent
+then the original sender <coyote@@desert.example.org> would receive the
+following notification:
+
+@smallexample
+To: <coyote@@desert.example.org>
+X-Authentication-Warning: roadrunner set sender using -f flag
+Content-Type: multipart/mixed; boundary=----- =_aaaaaaaaaa0
+MIME-Version: 1.0
+----- =_aaaaaaaaaa0
+The original message was received at
+Tue, 1 Apr 1997 09:07:15 -0800 from
+coyote@@desert.example.org.
+Message was refused by recipient's mail filtering program.
+Reason given was as follows:
+
+I am not taking mail from you, and I don't want your
+birdseed, either!
+
+----- =_aaaaaaaaaa0
+Content-Type: message/delivery-status
+
+Reporting-UA: sieve; GNU Mailutils 0.1.3
+Arrival-Date: Tue, 1 Apr 1997 09:07:15 -0800
+Final-Recipient: RFC822; roadrunner@@acme.example.com
+Action: deleted
+Disposition: automatic-action/MDN-sent-automatically;deleted
+Last-Attempt-Date: Tue, 1 Apr 1997 09:07:15 -0800
+
+----- =_aaaaaaaaaa0
+Content-Type: message/rfc822
+
+From: coyote@@desert.example.org
+To: roadrunner@@acme.example.com
+Subject: I have a present for you
+
+I've got some great birdseed over here at my place.
+Want to buy it?
+----- =_aaaaaaaaaa0
+@end smallexample
+
+If the @var{reason} argument is rather long, the common approach is
+to use the combination of the @code{text:} and @code{#include} keywords,
+e.g.:
+
+@smallexample
+if header :mime :matches "Content-Type"
+          [ "*application/msword;*", "*audio/x-midi*" ]
+  @{
+    reject text:
+#include "nomsword.txt"
+    .
+    ;
+  @}
+@end smallexample      
+
+@end deffn
+
+@deffn Action redirect @var{address}
+The @code{redirect} action is used to send the message to another user at
+a supplied @var{address}, as a mail forwarding feature does. This action
+makes no changes to the message body or existing headers, but it may add
+new headers. It also modifies the envelope recipient.
+
+The @code{redirect} command performs an MTA-style ``forward'' --- that
+is, what you get from a @file{.forward} file using @code{sendmail} under
+@sc{unix}. The address on the SMTP envelope is replaced with the one on
+the @code{redirect} command and the message is sent back
+out. @emph{Notice}, that it differs from the MUA-style forward, which
+creates a new message with a different sender and message ID, wrapping
+the old message in a new one.
+@end deffn
+
+@node External Actions
+@subsection External Actions
+@UNREVISED
+  GNU Mailutils is shipped with a set of external Sieve
+actions. These actions are compiled as loadable modules and must be
+required prior to use (@pxref{Require Statement}).
+
+@deftypefn Action {}  moderator [:keep] [:address @var{address}(string)] @
+                                [:source @var{sieve-file}(string)]
+@subsubheading Synopsis
+@smallexample
+require "moderator"
+moderator @var{args};
+@end smallexample
+@subsubheading Description
+@cindex mailman
+This action is a moderator robot for Mailman-driven mail archives.
+A Mailman moderation request is a MIME message consisting of the
+following three parts:
+
+@multitable @columnfractions 0.2 0.4 0.4
+@headitem N @tab Content-Type @tab Description
+@item 1 @tab  text/plain      @tab Introduction for the human reader.
+@item 2 @tab  message/rfc822  @tab Original submission.
+@item 3 @tab  message/rfc822  @tab Mailman control message.
+@end multitable
+
+Replying to part 3 (keeping the subject intact) instructs Mailman to
+discard the original submission.
+
+Replying to part 3 while adding an `Approved:' header with the list
+password in it approves the submission.
+
+The @code{moderator} action spawns an inferior Sieve machine and
+filters the original submission (part 2) through it. If the inferior
+machine marks the message as deleted, the action replies to the
+control message, thereby causing the submission to be discarded. The
+@samp{From:} address of the reply can be modified using
+@code{:address} tag. After discarding the message, @code{moderator}
+marks it as deleted, unless it is given @code{:keep} tag. 
+
+The argument of @code{:source} tag, if given, specifies the Sieve
+source file to be used on the message. If @code{:tag} is not present,
+@code{moderator} will create and use a copy of the existing Sieve machine.
+
+The action checks the message structure: it will bail out if the message
+does not have exactly 3 MIME parts, or if parts 2 and 3 are not of
+@samp{message/rfc822} type. It is the responsibility of the caller to
+make sure the message is actually a valid Mailman moderation request
+(see the example below).
+
+@subsubheading Example
+@smallexample
+if allof(header :is "Sender" "mailman-bounces@@gnu.org",
+         header :is "X-List-Administrivia" "yes")
+  @{
+     moderator :source "~/.sieve/mailman.sv";
+  @}
+@end smallexample
+@end deftypefn
+
+@deftypefn Action {} pipe [:envelope] @var{command}(string)
+@subsubheading Synopsis
+@smallexample
+require "pipe";
+if pipe @var{args}
+  @{
+     @dots{}
+  @}
+@end smallexample
+@subsubheading Description
+The @code{pipe} action sends executes a command specified by its
+argument and sends the entire message to its standard input. The
+@var{command} argument supplies the command line.
+
+The envelope of the message is included, if the @code{:envelope} tag
+is given. 
+
+@subsubheading Example
+The example below uses the @command{maidag} utility
+(@pxref{maidag}) to forward the message to user @samp{gray} on
+the machine @samp{mail.gnu.org}.
+
+@smallexample
+require "pipe";
+
+pipe "/usr/sbin/maidag --url smtp://gray@@mail.gnu.org"
+@end smallexample
+@end deftypefn
+
+@deftypefn Action {} vacation [:days @var{ndays}(number)] @
+                          [:subject @var{subject}(string)] @
+                          [:aliases @var{addrlist}(string-list)] @
+                          [:addresses @var{noreply-address}(string-list)] @
+                          [:reply_regex @var{expr}(string)] @
+                          [:reply_prefix @var{prefix}(string)] @
+                          @var{reply-text}(string)
+@subsubheading Syntax
+@smallexample
+require "vacation";
+vacation @var{args};
+@end smallexample
+@subsubheading Description
+The @code{vacation} action returns a message with @var{reply-text} to
+the sender. It is intended to inform the sender that the recipient is
+not currently reading his mail.
+
+If the @code{:subject} tag is given, its argument sets the subject of
+the message. Otherwise, the subject is formed by prefixing original
+subject with @samp{Re:}, or @var{prefix}, given with the
+@code{:reply_prefix} tag. Before prefixing, any original prefixes
+matching extended regular expression @var{expr} (@code{:reply_regex}
+tag) are stripped from the subject line. If @code{:reply_regex} is not
+specified, the default regexp is @samp{^re: *}. 
+
+The @code{:aliases} tag instructs @code{vacation} to handle messages
+for any address in @var{addrlist} in the same manner as those received
+for the user's principal email.
+
+Before processing, @code{vacation} compares the sender address with
+its @dfn{address exclusion list}. Elements of this list are extended
+case-insensitive regular expressions. If the sender address matches
+any of these expressions, the message will not be replied. The default
+exclusion list is:
+
+@smallexample
+    .*-REQUEST@@.*
+    .*-RELAY@@.*
+    .*-OWNER@@.*
+    ^OWNER-.*
+    ^postmaster@@.*
+    ^UUCP@@.*
+    ^MAILER@@.*
+    ^MAILER-DAEMON@@.*
+@end smallexample
+
+New entries can be added to this list using @code{:addresses} tag.
+
+The @code{:days} tag sets the @dfn{reply interval}. A reply is sent to
+each sender once in @var{ndays} days. GNU Sieve keeps track of
+sender addresses and dates in a DBM file @file{.vacation} stored in
+the user's home directory. This tag is available only if Mailutils is
+compiled with DBM support.
+@end deftypefn
+
+@node GNU Extensions
+@section GNU Extensions
+
+This section summarizes the GNU extensions to the sieve language
+
+@enumerate 1
+@item Multiline strings syntax
+
+GNU libmu_sieve understands the following multiline string syntax:
+
+@smallexample
+@group
+text:[-][@var{delimiter}]
+....
+@var{delimiter}
+@end group
+@end smallexample
+
+The meaning of optional flags is the same as in shell ``here document''
+construct: the dash strips all leading tab characters from the string body,
+thus allowing it to be indented in a natural fashion; @var{delimiter}
+introduces the new end-of-text delimiter instead of the default
+dot. If @var{delimiter} starts with a backslash, no preprocessing will
+be performed within a string.
+
+@item Handling of the @code{require} statement.
+
+@itemize
+@item According to the RFC an error must occur if a @code{require} appears
+after a command other than @code{require}. The GNU sieve library allows
+interspersing the @code{require} and other statements. The only
+requirement is that @code{require} must occur before a statement that is
+using the required capability (@pxref{Require Statement}).
+
+@item Prefixing the required capability with ``test'' requires the use
+of an extension test.
+@end itemize
+
+@item @code{header} test
+
+The @code{header} takes an optional argument @code{:mime}, meaning to
+scan the headers from each part of a multipart message.
+
+@item @code{size} test
+
+The @code{size} test allows to omit the optional argument
+(:over|:under). In this case exact equality is assumed.
+
+@item @code{envelope} test
+
+The only value that can be meaningfully used as the first required
+argument of an @code{envelope} test is @samp{from}. This limitation
+may disappear from the subsequent releases.
+
+@item @code{fileinto} action
+
+The @code{fileinto} action allows to specify permissions on the mailbox,
+in case it is created (@pxref{fileinto}).
+
+@item Match type optional argument.
+
+Along with the usual @code{:is}, @code{:matches} and @code{contains}
+matching type, GNU sieve library understands @code{:regex} type. This
+matching type toggles POSIX Extended Regular Expression matching.
+@end enumerate
+

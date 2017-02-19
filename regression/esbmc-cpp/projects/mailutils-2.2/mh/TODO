@@ -1,0 +1,69 @@
+The GNU implementation of MH is primarily aiming to provide an interface
+between Mailutils and Emacs using mh-e module. Therefore, a subset of MH
+utilities has been selected that would provide such basic functionality.
+When this functionality is achieved, other utilities may be implemented.
+
+Utilities Ordered by Importance
+===============================
+
+The `State' column gives the state of the given utility:
+
+- Not implemented
++ Fully implemented
+* Partially implemented. The `Comments' column lists the missing features.
+
+The `Nice' column gives aproximate priority of the utility in the terms
+of unix nice level (-20 the highest, +20 the lowest)
+
+State	Nice	Utility		Comments
+-------------------------------------------
++	-20	scan
++	-20	inc
+*	-20	repl		--inplace,--whatnowproc
++	-20	comp		Interactive prompting.
+*	-20	forw		--inplace,--whatnowproc
+*	-20	send		--alias,--filter,--format,--forward,--mime,
+				--width
+*	-20	refile		--link copies messages.
+*	-20	rmm		rmproc:	
++	-15	folder(s)	
++	-15	mhn		
++	-10	rmf
++	0	install-mh	
+*	4	mhl		Following format variables are ignored:
+				center,split,datefield
++	5	mark
++	5	pick		See the README entry.
++	10	anno
++	10	burst		See the README entry.
+*	10	whom		--check 
++	10	mhpath
++	10	whatnow		
++	20	sortm
+
+Utilities In Alphabetical Order
+===============================
+
+anno
+burst
+comp
+folder(s)
+forw
+install-mh
+mark
+mhl
+mhn
+mhpath
+pick
+refile
+repl
+rmf
+rmm
+send
+sortm
+whatnow
+whom
+
+Individual TODOs
+================
+* Add support for RFC 2231 to mhn

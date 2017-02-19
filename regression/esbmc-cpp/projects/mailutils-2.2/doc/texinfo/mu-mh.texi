@@ -1,0 +1,401 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+The primary aim of this implementation is to provide an interface
+between Mailutils and Emacs using mh-e module. 
+
+To use Mailutils MH with Emacs, add the following line to your
+site-start.el or .emacs file:
+
+(load "mailutils-mh")
+
+For the information about the current state of Mailutils MH
+implementation please refer to file @file{mh/TODO} in the Mailutils
+distribution directory.
+
+[FIXME]
+
+@menu
+* Diffs::      Major differences between Mailutils MH and other MH
+               implementations.
+@end menu
+
+@node Diffs
+@subsection Major differences between Mailutils MH and other MH implementations
+
+@enumerate 1
+@item All programs use usual GNU long options. The support for MH single-dash
+options is provided for backward compatibility;
+
+@item UUCP addresses are not supported;
+
+@item Mailutils supports a set of new format specifications
+(@pxref{Format String Diffs});
+
+@item Mailutils provides a set of new profile variables
+(@pxref{Profile Variable Diffs});
+
+@item Several programs behave differently (@pxref{Program
+Diffs});
+
+@end enumerate
+
+@menu
+* Format String Diffs::
+* Profile Variable Diffs::
+* Program Diffs::
+@end menu
+
+@node Format String Diffs
+@subsubsection New and Differing MH Format Specifications
+
+@anchor{decode function}
+@deftypefn {MH Format} string decode (string @var{str})
+
+Decodes the input string @var{str} as per RFC 2047. Useful in printing
+@samp{From:}, @samp{To:} and @samp{Subject:} headers.
+
+Notice that, unlike the similar NMH function, @code{decode} checks the value
+of the global profile variable @code{Charset} (@pxref{Charset variable})
+to determine the charset to output the result in. If this variable is
+not set, @code{decode} returns its argument without any change. If
+this variable is set to @code{auto}, @code{decode} tries to determine
+the charset name from the setting of @env{LC_ALL} environment
+variable. Otherwise, the value of @code{Charset} is taken to be the
+name of the character set.
+@end deftypefn
+
+@deftypefn {MH Format} string package ()
+
+Returns package name (string @samp{mailutils}).
+@end deftypefn
+
+@deftypefn {MH Format} string package_string ()
+
+Returns full package string (e.g. @samp{GNU Mailutils 2.1})
+@end deftypefn
+
+@deftypefn {MH Format} string version ()
+
+Returns mailutils version.
+@end deftypefn
+
+@deftypefn {MH Format} string unre (string @var{str})
+
+The function removes any leading whitespace and eventual @samp{Re:} prefix
+from its argument. Useful for creating subjects in reply messages:
+
+@smallexample
+  %<@{subject@}Subject: Re: %(unre@{subject@})\\n%>
+@end smallexample
+@end deftypefn
+
+@anchor{reply_regex function}
+@deftypefn {MH Format} void reply_regex (string @var{r})
+
+Sets the regular expression used to recognize reply messages. The
+argument @var{r} should be a POSIX extended regular expression. 
+Matching is case insensitive. 
+
+For example, the following invocation
+
+@smallexample
+  %(reply_regex ^\(re|aw|ang|odp\)\(\\[[0-9]+\\]\)?:[[:blank:]])
+@end smallexample
+
+@noindent
+corresponds to English @samp{Re}, Polish @samp{Odp}, Norwegian @samp{Aw} or
+German @samp{Ang}, optionally followed by a number in brackets, followed
+by colon and any amount of whitespace. Notice proper quoting of the
+regex metacharacters.
+
+See also @code{Reply-Regex} (@pxref{Reply-Regex variable}) and
+@code{isreply} (@pxref{isreply MH function}) below.
+
+@end deftypefn
+
+@anchor{isreply MH function}
+@deftypefn {MH Format} boolean isreply ([string @var{str}])
+
+If @var{str} is not given, the value of @samp{Subject:} header is taken.
+
+The function returns true if its argument matches the ``reply subject''
+regular expression. This expression is set via the global profile variable
+@code{Reply-Regex} (@pxref{Reply-Regex variable}) or via the format
+function @code{reply_regex}. 
+
+This function is useful for creating @samp{Subject:} headers in reply
+messages. For example, consider the following construction:
+
+@smallexample
+@group
+%<@{subject@}%(lit)%<(isreply)%?\
+(profile reply-prefix)%(concat)%|%(concat Re:)%>\
+%(concat@{subject@})%(printhdr Subject: )\n%>
+@end group
+@end smallexample
+
+If the @samp{Subject:} header already contained reply prefix, this construct
+leaves it unchanged. Otherwise it prepends to it the value of
+@code{Reply-Prefix} profile variable, or, if it is unset, the string
+@samp{Re:}. 
+
+This expression is used in default @file{replcomps} and
+@file{replgroupcomps} files.
+@end deftypefn
+
+@deftypefn {MH Format} boolean rcpt (@samp{to} | @samp{cc} | @samp{me} | @samp{all})
+
+This function returns true if the given element is present in the
+recipient mask (as modified by @option{--cc} or @option{--nocc} options) and
+false otherwise. It is used in default formats for @command{repl} and
+@command{comp}, e.g.: 
+
+@smallexample
+%(lit)%<(rcpt to)%(formataddr@{to@})%>
+@end smallexample
+
+Notice that this means that usual @file{replcomps} file will be ignoring
+@option{--cc} and @option{--nocc} options, unless it has been modified
+as shown above. 
+@end deftypefn
+
+@deftypefn {MH Format} string concat ()
+
+Appends whitespace + arg to string register.
+@end deftypefn
+
+@deftypefn {MH Format} string printhdr (string @var{str})
+
+Prints the value of string register, prefixed by @var{str}.
+The output is formatted as a RFC 822 header, i.e.
+it is split at whitespace characters nearest to the width boundary
+and each subsequent segment is prefixed with horizontal tabulation.
+@end deftypefn
+
+@deftypefn {MH Format} string in_reply_to ()
+
+Generates the value for @samp{In-reply-to:} header according to RFC
+2822. 
+@end deftypefn
+
+@deftypefn {MH Format} string references ()
+
+Generates the value for @samp{References:} header according to RFC 2822.
+@end deftypefn
+
+@node Profile Variable Diffs
+@subsubsection New MH Profile Variables
+
+@anchor{Charset variable}
+@deftypevar {MH Variable} string Charset
+
+Controls the character set in which the components decoded via
+the @code{decode} (@pxref{decode function}) format function should be
+output.
+@end deftypevar
+
+@anchor{Reply-Regex variable}
+@deftypevar {MH Variable} string Reply-Regex
+
+Keeps the regular expression used to recognize reply messages. The
+argument should be a POSIX extended regular expression. Matching
+is case insensitive. 
+
+For more information, please see @xref{reply_regex function}.
+@end deftypevar
+
+@node Program Diffs
+@subsubsection Differences in MH Program Behavior
+
+@table @command
+@item burst
+
+The utility is able to burst both RFC 934 digest messages and MIME
+multipart messages. It provides two additional command line options:
+@option{--recurse} and @option{--length}.
+
+The @option{--recurse} option instructs the utility to recursively
+expand the digest.
+
+The @option{--length} option can be used to set the minimal encapsulation
+boundary length for RFC 934 digests. Default length is 1,
+i.e. encountering one dash immediately following a newline triggers
+digest decoding. It is OK for messages that follow RFC 934
+specification. However, many user agents do not precisely follow it,
+in particular, they often do not escape lines starting with a dash by
+@samp{- } sequence. @command{Mailman} is one of such agents. To cope
+with such digests you can set encapsulation boundary length to a higher
+value. For example, @command{bounce --length=8} has been found to be
+sufficient for most Mailman-generated digests.
+
+@item comp
+
+Understands @option{--build} option.
+
+@item fmtdump
+
+This command is not provided. Use @option{fmtcheck} instead.
+
+@item mhl
+
+If the argument to @code{ignores} contains more than one component name
+it must be enclosed in double-quotes. Dangling equal sign is an error,
+to set a string variable to the empty value assign it an empty string, e.g.:
+@code{overflowtext=""} (see the supplied @file{mhl.format} file).
+
+Interactive prompting is not yet implemented.
+
+@item mhn
+
+@itemize @bullet
+
+@item New option
+New option @option{--compose} forces @command{mhn} editing mode. This
+is also the default mode. This differs from the standard
+@command{mhn}, which switches to the editing mode only if no other
+options were given and the input file name coincides with the value of
+@env{mhdraft} environment variable.  
+
+@item Show mode (@option{--show})
+If an appropriate mhn-show-type[/subtype] was not found, GNU @command{mhn}
+prints the decoded message content using @code{moreproc}
+variable. Standard @command{mhn} in this case used to print @samp{don't
+know how to display content} diagnostic. 
+
+The default behaviour is to pipe the content to the standard input
+of the mhn-show-type[/subtype] command. This is altered to using a
+temporary file if the command contains @code{%f} or @code{%F} escapes.
+
+@item Store mode (@option{--store})
+If the @code{Content-Disposition} header contains @samp{filename=},
+and @command{mhn} is invoked with @option{--auto} switch, it
+transforms the file name into the absolute notation and uses it only
+if it lies below the current mhn-storage directory. Standard
+@command{mhn} only requires that the file name do not begin with @samp{/}.
+
+Before saving a message part, GNU @command{mhn} checks if the file already
+exists. If so, it asks whether the user wishes to rewrite it. This
+behaviour is disabled when @option{--quiet} option was given.
+@end itemize
+
+@item mhparam
+
+The @option{--all} mode does not display commented out entries.
+
+@item repl
+
+Understands @option{--use} option. Disposition shell provides
+@code{use} command. 
+
+@item rmm
+
+@enumerate 1
+@item
+Different behaviour if one of the messages in the list does not exist:
+
+Mailutils @command{rmm} does not delete any messages. Standard
+@command{rmm} in this case deletes all messages preceding the
+non-existent one. 
+
+@item
+The @code{rmmproc} profile component is not used.
+@end enumerate
+
+@item pick
+
+The non-standard command line syntax @option{--@var{field}
+@var{string}}), where @var{field} is any string, is deprecated. It is
+recognized only if @command{pick} is called from within another
+program, so that existing application continue to work. Please use the
+following syntax instead:
+
+@smallexample
+pick --component @var{field} --pattern @var{string}
+@end smallexample
+
+New command line option @option{--cflags} allows to control the type of 
+regular expressions used. The option must occur right before
+@option{--pattern} or @option{--component} option (or one of its
+aliases, like @option{--cc}, @option{--from}, etc.)
+
+The argument to this option is a string of type specifications:
+
+@multitable @columnfractions 0.20 0.80
+@item B @tab Use basic regular expressions
+@item E @tab Use extended regular expressions
+@item I @tab Ignore case
+@item C @tab Case sensitive
+@end multitable
+
+Default is @samp{EI}.
+
+The flags remain in effect until the next occurrence of @option{--cflags}
+option.
+
+Sample usage:
+
+@smallexample
+pick --cflag BC --subject '*a string' 
+@end smallexample
+
+The date comparison options (@option{--before} and @option{--after}
+accept date specifications in a wide variety of formats, e.g.:
+
+@smallexample
+pick --after 20030301
+pick --after 2003-03-01
+pick --after 01-mar-2003
+pick --after 2003-mar-01
+pick --before '1 year ago'
+etc...
+@end smallexample
+
+@item refile
+
+@enumerate
+@item
+Linking messages between folders goes against the logic of Mailutils,
+so @command{refile} never makes links even if called with
+@option{--link} option. The latter is actually a synonym for @option{--copy},
+which preserves the original message.
+
+@item
+The @option{--preserve} option is not implemented. It is retained for backward
+compatibility only.
+
+@item
+Message specs and folder names may be interspersed.
+@end enumerate
+
+@item sortm
+
+New option @option{--numfield} specifies numeric comparison for the
+given field. 
+
+Any number of @option{--datefield}, @option{--textfield} and
+@option{--numfield} options may be given, thus allowing to build sort
+criteria of arbitrary complexity. 
+
+The order of @option{--.*field} options sets the ordering priority. This
+differs from the behaviour of the standard @command{sortm}, which
+always orders datefield-major, textfield-minor.
+
+Apart from sorting the mailfolder the following actions may be
+specified:
+
+@table @option
+@item --list
+List the ordered messages using a format string given by
+@option{--form} or @option{--format} option.
+
+@item --dry-run
+Do not actually sort messages, rather print what would have been
+done. This is useful for debugging purposes.
+@end table
+
+@end table
+
+

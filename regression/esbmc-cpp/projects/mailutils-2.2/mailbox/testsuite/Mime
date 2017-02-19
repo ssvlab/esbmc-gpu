@@ -1,0 +1,212 @@
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+#
+# NOTE: Apart from this comment, the contents of this file is taken verbatim.
+#       Please be sure you don't add any extra newlines.
+Message: 1
+From: Foo Bar <foobar@nonexistent.net>
+Subject: Jabberwocky
+Number of parts in message - 1
+Total message size - 1255/44
+Type of part 1 = 
+Message part size - 1255/44: 318/9, 937/35
+Text Message
+Begin
+`Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe;
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+
+`Beware the Jabberwock, my son!
+The jaws that bite, the claws that catch!
+Beware the Jujub bird, and shun
+The frumious Bandersnatch!'
+
+He took his vorpal sword in hand:
+Long time the manxome foe he sought --
+So rested he by the Tumtum gree,
+And stood awhile in thought.
+
+And as in uffish thought he stood,
+The Jabberwock, with eyes of flame,
+Came whiffling through the tulgey wook,
+And burbled as it came!
+
+One, two!  One, two!  And through and through
+The vorpal blade went snicker-snack!
+He left it dead, and with its head
+He went galumphing back.
+
+`And has thou slain the Jabberwock?
+Come to my arms, my beamish boy!
+O frabjous day!  Calloh!  Callay!
+He chortled in his joy.
+
+`Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe;
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+
+
+End
+Message: 2
+From: Bar <bar@dontmailme.org>
+Subject: Re: Jabberwocky
+Number of parts in message - 1
+Total message size - 535/13
+Type of part 1 = 
+Message part size - 535/13: 320/9, 215/4
+Text Message
+Begin
+It seems very pretty, but it's *rather* hard to understand!'
+Somehow it seems to fill my head with ideas -- only I don't
+exactly know what they are!  However, SOMEBODY killed SOMETHING:
+that's clear, at any rate...
+
+End
+Message: 3
+From: Sergey Poznyakoff <gray@Mirddin.farlep.net>
+Subject: Simple MIME
+Number of parts in message - 2
+Total message size - 1626/42
+Type of part 1 = text/plain
+Message part size - 371/13: 141/4, 230/9
+Text Message
+Begin
+How doth the little crocodile
+Improve his shining tail,
+And pour the waters of the Nile
+On every golden scale!
+
+`How cheerfully he seems to grin,
+How neatly spread his claws,
+And welcome little fishes in
+With gently smiling jaws!
+
+End
+Type of part 2 = application/octet-stream
+Message part size - 645/11: 183/5, 462/6
+Attachment - saving [msg.21]
+Begin
+`You are old, Father William,' the young man said,
+`And your hair has become very white;
+And yet you incessantly stand on your head--
+Do you think, at your age, it is right?'
+
+`In my youth,' Father William replied to his son,
+`I feared it might injure the brain;
+But, now that I'm perfectly sure I have none,
+Why, I do it again and again.'
+
+
+End
+Message: 4
+From: Sergey Poznyakoff <gray@Mirddin.farlep.net>
+Subject: Nested MIME
+Number of parts in message - 2
+Total message size - 3484/84
+Type of part 1 = text/plain
+Message part size - 496/14: 155/4, 341/10
+Text Message
+Begin
+`You are old, Father William,' the young man said,
+`And your hair has become very white;
+And yet you incessantly stand on your head--
+Do you think, at your age, it is right?'
+
+`In my youth,' Father William replied to his son,
+`I feared it might injure the brain;
+But, now that I'm perfectly sure I have none,
+Why, I do it again and again.'
+
+
+End
+Type of part 2 = multipart/mixed
+Message part size - 2378/52: 114/3, 2264/49
+Encapsulated message : 	
+Begin
+Type of part 1 = application/octet-stream
+Message part size - 663/12: 184/5, 479/7
+Attachment - saving [msg.22]
+Begin
+`You are old,' said the youth, `as I mentioned before,
+And have grown most uncommonly fat;
+Yet you turned a back-somersault in at the door--
+Pray, what is the reason of that?'
+
+`In my youth,' said the sage, as he shook his grey locks,
+`I kept all my limbs very supple
+By the use of this ointment--one shilling the box--
+Allow me to sell you a couple?'
+
+End
+Type of part 2 = multipart/mixed
+Message part size - 1531/32: 114/3, 1417/29
+Encapsulated message : 	
+Begin
+Type of part 1 = application/octet-stream
+Message part size - 668/12: 185/5, 483/7
+Attachment - saving [msg.23]
+Begin
+`You are old,' said the youth, `and your jaws are too weak
+For anything tougher than suet;
+Yet you finished the goose, with the bones and the beak--
+Pray how did you manage to do it?'
+
+`In my youth,' said his father, `I took to the law,
+And argued each case with my wife;
+And the muscular strength, which it gave to my jaw,
+Has lasted the rest of my life.'
+
+End
+Type of part 2 = application/octet-stream
+Message part size - 679/12: 184/5, 495/7
+Attachment - saving [msg.24]
+Begin
+`You are old,' said the youth, `one would hardly suppose
+That your eye was as steady as ever;
+Yet you balanced an eel on the end of your nose--
+What made you so awfully clever?'
+
+`I have answered three questions, and that is enough,'
+Said his father; `don't give yourself airs!
+Do you think I can listen all day to such stuff?
+Be off, or I'll kick you down stairs!'
+
+End
+
+End
+
+End
+Message: 5
+From: Sergey Poznyakoff <gray@Mirddin.farlep.net>
+Subject: Empty MIME Parts
+Number of parts in message - 2
+Total message size - 914/27
+Type of part 1 = text/plain
+Message part size - 143/4: 143/4, 0/0
+Text Message
+Begin
+
+End
+Type of part 2 = text/plain
+Message part size - 156/5: 155/4, 1/1
+Text Message
+Begin
+
+
+End

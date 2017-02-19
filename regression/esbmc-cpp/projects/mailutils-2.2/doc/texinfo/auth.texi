@@ -1,0 +1,142 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefixes @emph{mu_authority_}, @emph{mu_ticket_}, and @emph{mu_wicket_} are reserved. */}
+@code{#include <mailutils/auth.h>}
+
+@end smallexample
+
+There are many ways to authenticate to a server. To be flexible the
+authentication process is provided by three objects @code{mu_authority_t},
+@code{mu_ticket_t}, and @code{mu_wicket_t}. The @code{mu_authority_t} can implement
+different protocol like APOP, MD5-AUTH, One Time Passwd, etc. By default
+if a mailbox does not understand or know how to authenticate it falls back
+to user/passwd authentication. The @code{mu_ticket_t} is a way for
+Mailboxes and Mailers provide a way to authenticate when the URL does not
+contain enough information. The default action is to call the function
+@code{mu_authority_authenticate()} which will get the @emph{user} and @emph{passwd}
+if not set, this function can be overridden by a custom method.
+
+@c
+@c Ticket
+@c
+
+@deftypefun  int mu_ticket_create (mu_ticket_t *, void *@var{owner})
+@end deftypefun
+
+@deftypefun void mu_ticket_destroy (mu_ticket_t *, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_ticket_set_destroy (mu_ticket_t, void (*) (mu_ticket_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun void* mu_ticket_get_owner (mu_ticket_t)
+@end deftypefun
+
+@deftypefun  int mu_ticket_set_pop (mu_ticket_t, int (*@var{_pop}) (mu_ticket_t, url_t, const char *, char **), void *)
+@end deftypefun
+
+@deftypefun  int mu_ticket_pop (mu_ticket_t, url_t, const char *, char **)
+@end deftypefun
+
+@deftypefun  int mu_ticket_set_data (mu_ticket_t, void *, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_ticket_get_data (mu_ticket_t, void **)
+@end deftypefun
+
+@c
+@c Authority
+@c
+
+@sp 1
+
+@deftypefun  int mu_authority_create (mu_authority_t *, mu_ticket_t, void *)
+@end deftypefun
+
+@deftypefun void mu_authority_destroy (mu_authority_t *, void *)
+@end deftypefun
+
+@deftypefun void* mu_authority_get_owner (mu_authority_t)
+@end deftypefun
+
+@deftypefun  int mu_authority_set_ticket (mu_authority_t, mu_ticket_t)
+@end deftypefun
+
+@deftypefun  int mu_authority_get_ticket (mu_authority_t, mu_ticket_t *)
+@end deftypefun
+
+@deftypefun  int mu_authority_authenticate (mu_authority_t)
+@end deftypefun
+
+@deftypefun  int mu_authority_set_authenticate (mu_authority_t, int (*@var{_authenticate}) (mu_authority_t), void *)
+@end deftypefun
+
+@deftypefun  int mu_authority_create_null (mu_authority_t *@var{authority}, void *@var{owner})
+@end deftypefun
+
+@c
+@c Wicket
+@c
+
+@sp 1
+
+@deftypefun  int mu_wicket_create (mu_wicket_t *, const char *)
+@end deftypefun
+
+@deftypefun void mu_wicket_destroy (mu_wicket_t *)
+@end deftypefun
+
+@deftypefun  int mu_wicket_set_filename (mu_wicket_t, const char *)
+@end deftypefun
+
+@deftypefun  int mu_wicket_get_filename (mu_wicket_t, char *, size_t, size_t *)
+@end deftypefun
+
+@deftypefun  int mu_wicket_set_ticket (mu_wicket_t, int (*) (mu_wicket_t, const char *, const char *, mu_ticket_t *))
+@end deftypefun
+
+@deftypefun  int mu_wicket_get_ticket (mu_wicket_t, mu_ticket_t *, const char *, const char *)
+@end deftypefun
+
+@c
+@c An example.
+@c
+
+@sp 1
+A simple example of an authenticate function:
+
+@smallexample
+#include <stdio.h>
+#include <string.h>
+#include <mailutils/auth.h>
+
+int
+my_authenticate (auth_t auth, char **user, char **passwd)
+@{
+  char u[128] = "";
+  char p[128] = "";
+
+  /* prompt the user name */
+  printf ("User: ");
+  fflush (stdout);
+  fgets (u, sizeof (u), stdin);
+  u[strlen (u) - 1] = '\0'; /* nuke the trailing NL */
+
+  /* prompt the passwd */
+  printf ("Passwd: "); fflush (stdout);
+  echo_off ();
+  fgets (p, sizeof(p), stdin);
+  echo_on ();
+  p[strlen (p) - 1] = '\0';
+
+  /* duplicate */
+  *user = strdup (u);
+  *passwd = strdup (p);
+  return 0;
+@}
+@end smallexample

@@ -1,0 +1,3 @@
+main.cu
+--unwind 9 --force-malloc-success -I ~/libraries/ -DGPU_threads=1 --state-hashing
+^VERIFICATION SUCCESSFUL$

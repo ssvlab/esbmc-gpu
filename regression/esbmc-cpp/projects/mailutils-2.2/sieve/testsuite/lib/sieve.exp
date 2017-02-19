@@ -1,0 +1,153 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+source $top_srcdir/testsuite/lib/mailutils.exp
+set sieve_source_dir "${srcdir}/scripts"
+
+mu_init -noflags
+set env(MAIL) $MU_SPOOL_DIR/sieve.mbox
+set env(FOLDER) $env(MAIL)
+
+set SIEVE_ETC_DIR "$MU_DATA_DIR/etc"
+
+mu_makespool "$MU_RC_DIR" "$SIEVE_ETC_DIR"
+
+# sieve_test [-retcode N][-message MESSAGE][-default (FAIL|XFAIL)]
+#            [-reuse-spool]
+#            [ARGS...][-pattern PATTERN...]
+proc sieve_test {args} {
+    global sieve_source_dir
+    global top_builddir
+    global SIEVE_ETC_DIR
+    global MU_SPOOL_DIR
+    
+    set default ""
+    set sw [list "--config-file=$SIEVE_ETC_DIR/mailutils.rc" \
+	         "--verbose" \
+                 "--line-info=no" \
+                 "--no-program-name" \
+                 "-M sendmail:$top_builddir/examples/mta" \
+	         "--email foobar@nonexistent.net"]
+    set reuse_spool 0
+    set retcode 0
+    set mailbox "$MU_SPOOL_DIR/sieve.mbox"
+    for {set i 0} {$i < [llength $args]} {incr i} {
+	set a [lindex $args $i]
+	if {"$a" == "-default"} {
+	    incr i
+	    set default [lindex $args $i]
+	} elseif {"$a" == "-message"} {
+	    incr i
+	    set message [lindex $args $i]
+	} elseif {"$a" == "-pattern"} {
+	    incr i
+	    set pattern [lrange $args $i end]
+	    break
+	} elseif {"$a" == "-reuse-spool"} {
+	    set reuse_spool 1
+	    break
+	} elseif {"$a" == "-retcode"} {
+	    incr i
+	    set retcode [lindex $args $i]
+	} elseif {"$a" == "-f"} {
+	    incr i
+	    set mailbox [lindex $args $i]
+	} else {
+	    set sw [concat $sw [lindex $args $i]]
+	}
+    }
+
+    switch -- "[lindex $sw end]" {
+	^/.*   { }
+	default {
+	    set sw [concat [lrange $sw 0 [expr [llength $sw] - 2]] \
+			[list "${sieve_source_dir}/[lindex $sw end]"]]
+	}
+    }
+    
+    set sw [concat "-f$mailbox" $sw]
+
+    if {![info exists message]} {
+	set message "[lindex $sw end]"
+    }
+    
+    if {!$reuse_spool} {
+	mu_prepare_spools
+    }
+
+    if [info exists pattern] {
+	mu_exec -default $default -message $message -arg-list $sw \
+		-pattern $pattern -retcode $retcode
+    } else {
+	mu_exec -default $default -message $message -arg-list $sw \
+		-retcode $retcode
+    }
+    #FIXME: examine the output mailbox
+}
+
+proc sieve_driver_test {name mailer diag} {
+    global srcdir
+    set chan [open "${srcdir}/$name" r]
+
+    set state 0
+    set command ""
+    for {gets $chan line} {![eof $chan]} {gets $chan line} {
+	verbose "LINE $line" 1
+	switch -regexp -- "$line" {
+	    "^#.*" { }
+	    "^TEST END" {
+		verbose "ARGS $args" 1
+		verbose "PATTERN $pattern" 1
+		verbose "OUTPUT $output" 1
+		eval sieve_test $args -pattern $pattern
+		eval mu_test_file "$diag" $output		
+		set state 0
+	    }
+	    "^TEST" {
+		regexp "^TEST (.*)" $line dummy args
+	        set pattern [list]
+		set output [list]
+	        set state 1
+	    }
+	    "^PATTERN BEGIN" {
+		set state 2
+	    }
+	    "^PATTERN END" {
+		set state 1
+	    }
+	    "^FILE BEGIN" {
+		set state 3
+	    }
+	    "^FILE END" {
+		set state 1
+	    }
+	    "^STOP" {
+		break
+	    }
+	    default {
+		if {$state == 2} {
+		    lappend pattern $line
+		} elseif {$state == 3} {
+		    lappend output $line
+		}
+	    }
+	}
+    }
+    close $chan
+}

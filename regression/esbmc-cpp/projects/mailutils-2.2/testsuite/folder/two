@@ -1,0 +1,12 @@
+From foobar@nonexistent.net  Fri Dec 28 22:18:09 2001
+Received: (from foobar@nonexistent.net) 
+	by nonexistent.net id fBSKI8N04906
+	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200
+Date: Fri, 28 Dec 2001 22:18:08 +0200
+From: Foo Bar <foobar@nonexistent.net>
+Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>
+To: Bar <bar@dontmailme.org>
+Subject: Mailbox 2
+
+This is the second folder mailbox
+

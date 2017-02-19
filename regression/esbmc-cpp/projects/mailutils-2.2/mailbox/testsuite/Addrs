@@ -1,0 +1,644 @@
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
+#
+test; abc <sascha@silbe.org>=> error MU_ERR_BAD_822_FORMAT
+
+Sam <@[matrix (smtp)], @[nexus: \[node 12\]]:sroberts@[10].[1]> ;=> error MU_ERR_BAD_822_FORMAT
+
+a@b,z@y=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+,a@b,z@y=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a@b,z@y,=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+,a@b,z@y,=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a@b,,z@y=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a@b,,,z@y=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+,,,a@b,,,=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+,a@b=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+a@b,=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+,=> error MU_ERR_EMPTY_ADDRESS
+
+,,=> error MU_ERR_EMPTY_ADDRESS
+
+,,,=> error MU_ERR_EMPTY_ADDRESS
+
+a group: a@b,z@y ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: ,a@b,z@y ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: a@b,z@y, ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: ,a@b,z@y, ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: a@b,,z@y ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: a@b,,,z@y ;=> pcount 2
+1 email <a@b>
+   local-part <a> domain <b>
+2 email <z@y>
+   local-part <z> domain <y>
+
+a group: ,,,a@b,,, ;=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+a group: ,a@b ;=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+a group: a@b, ;=> pcount 1
+1 email <a@b>
+   local-part <a> domain <b>
+
+a group: , ;=> error MU_ERR_EMPTY_ADDRESS
+
+a group: ,, ;=> error MU_ERR_EMPTY_ADDRESS
+
+a group: ,,, ;=> error MU_ERR_EMPTY_ADDRESS
+
+Sam <@[matrix (smtp)], @[nexus: \[node 12\]]:sroberts@[10].[1]> ;=> error MU_ERR_BAD_822_FORMAT
+
+Aliens: Sam <@[matrix (smtp)]: sam@sam>, sroberts@[10].[1];=> pcount 2
+1 email <sam@sam>
+   personal <Sam>
+   local-part <sam> domain <sam>
+   route <@[matrix (smtp)]>
+2 email <sroberts@[10].[1]>
+   local-part <sroberts> domain <[10].[1]>
+
+lo@hi, Aliens: Sam <@[matrix (smtp)]: sam@sam>, sroberts@[10].[1];=> pcount 3
+1 email <lo@hi>
+   local-part <lo> domain <hi>
+2 email <sam@sam>
+   personal <Sam>
+   local-part <sam> domain <sam>
+   route <@[matrix (smtp)]>
+3 email <sroberts@[10].[1]>
+   local-part <sroberts> domain <[10].[1]>
+
+Aliens: Sam <@[matrix (smtp)]: sam@sam>, sroberts@[10].[1];, hi@lo=> pcount 3
+1 email <sam@sam>
+   personal <Sam>
+   local-part <sam> domain <sam>
+   route <@[matrix (smtp)]>
+2 email <sroberts@[10].[1]>
+   local-part <sroberts> domain <[10].[1]>
+3 email <hi@lo>
+   local-part <hi> domain <lo>
+
+lo@hi, Aliens: Sam <@[matrix (smtp)]: sam@sam>, sroberts@[10].[1];, hi@lo=> pcount 4
+1 email <lo@hi>
+   local-part <lo> domain <hi>
+2 email <sam@sam>
+   personal <Sam>
+   local-part <sam> domain <sam>
+   route <@[matrix (smtp)]>
+3 email <sroberts@[10].[1]>
+   local-part <sroberts> domain <[10].[1]>
+4 email <hi@lo>
+   local-part <hi> domain <lo>
+
+Sam <@mail2.uniserve.com:sroberts@uniserve.com>=> pcount 1
+1 email <sroberts@uniserve.com>
+   personal <Sam>
+   local-part <sroberts> domain <uniserve.com>
+   route <@mail2.uniserve.com>
+
+< (hey) @ (hey, )smtp1.sympatico.ca, mail2.uniserve.com (hoo!):sroberts@uniserve.com>=> error MU_ERR_BAD_822_FORMAT
+
+hw@570.com (Hardware Support Account)=> pcount 1
+1 email <hw@570.com>
+   personal <Hardware Support Account>
+   local-part <hw> domain <570.com>
+
+list-ietf-wg-apps-drums@faerber.muc.de (=?ISO-8859-1?Q?Claus_F=E4rber?=)=> pcount 1
+1 email <list-ietf-wg-apps-drums@faerber.muc.de>
+   personal <=?ISO-8859-1?Q?Claus_F=E4rber?=>
+   local-part <list-ietf-wg-apps-drums> domain <faerber.muc.de>
+
+<mutt-dev@mutt.org>(mutt #369), guug-bugs-closed@guug.de (#369)=> pcount 2
+1 email <mutt-dev@mutt.org>
+   local-part <mutt-dev> domain <mutt.org>
+2 email <guug-bugs-closed@guug.de>
+   personal <#369>
+   local-part <guug-bugs-closed> domain <guug.de>
+
+"'Aernoudt Bottemanne'"	 <Aernoudt.Bottemanne@Informix.com>=> pcount 1
+1 email <Aernoudt.Bottemanne@Informix.com>
+   personal <'Aernoudt Bottemanne'>
+   local-part <Aernoudt.Bottemanne> domain <Informix.com>
+
+"'Haag, Ullrich - MBDC'" <Ullrich.Haag@MBDC.com>,=> pcount 1
+1 email <Ullrich.Haag@MBDC.com>
+   personal <'Haag, Ullrich - MBDC'>
+   local-part <Ullrich.Haag> domain <MBDC.com>
+
+"'Michael C. Ibarra'" <ibarra@hawk.com>, arl@q7.net, Al <arl@q7.net>=> pcount 3
+1 email <ibarra@hawk.com>
+   personal <'Michael C. Ibarra'>
+   local-part <ibarra> domain <hawk.com>
+2 email <arl@q7.net>
+   local-part <arl> domain <q7.net>
+3 email <arl@q7.net>
+   personal <Al>
+   local-part <arl> domain <q7.net>
+
+"'Sam Roberts'" <sam@cogent.ca>=> pcount 1
+1 email <sam@cogent.ca>
+   personal <'Sam Roberts'>
+   local-part <sam> domain <cogent.ca>
+
+"'paul@pitbull-productions.com'" <paul@pitbull-productions.com>,=> pcount 1
+1 email <paul@pitbull-productions.com>
+   personal <'paul@pitbull-productions.com'>
+   local-part <paul> domain <pitbull-productions.com>
+
+"'sam@cogent.ca'" <sam@cogent.ca>, "'sroberts@uniserve.com'"=> error MU_ERR_BAD_822_FORMAT
+
+"'sroberts\@certicom\.ca'" <sroberts@certicom.ca>=> pcount 1
+1 email <sroberts@certicom.ca>
+   personal <'sroberts@certicom.ca'>
+   local-part <sroberts> domain <certicom.ca>
+
+"=?iso-8859-1?Q?Juan_Carlos_Marcos_Rodr=EDguez?=" <jcmarcos@datavoice.es>=> pcount 1
+1 email <jcmarcos@datavoice.es>
+   personal <=?iso-8859-1?Q?Juan_Carlos_Marcos_Rodr=EDguez?=>
+   local-part <jcmarcos> domain <datavoice.es>
+
+"Christian Edward Gruber" <christian.edward.gruber@gmx.net>,=> pcount 1
+1 email <christian.edward.gruber@gmx.net>
+   personal <Christian Edward Gruber>
+   local-part <christian.edward.gruber> domain <gmx.net>
+
+"D. J. Bernstein" <"djb-   "@cr.yp.to>=> pcount 1
+1 email <"djb-   "@cr.yp.to>
+   personal <D. J. Bernstein>
+   local-part <djb-   > domain <cr.yp.to>
+
+"D. J. Bernstein" <djb@cr.yp.to>, drums@cs.utk.edu=> pcount 2
+1 email <djb@cr.yp.to>
+   personal <D. J. Bernstein>
+   local-part <djb> domain <cr.yp.to>
+2 email <drums@cs.utk.edu>
+   local-part <drums> domain <cs.utk.edu>
+
+"Dave Sill <de5-drums" <de5-drums@sws5.ctd.ornl.gov>=> pcount 1
+1 email <de5-drums@sws5.ctd.ornl.gov>
+   personal <Dave Sill <de5-drums>
+   local-part <de5-drums> domain <sws5.ctd.ornl.gov>
+
+"Dave \(work\) Baerg \(E-mail\)" <Dave.Baerg@SUMMedia.com>=> pcount 1
+1 email <Dave.Baerg@SUMMedia.com>
+   personal <Dave (work) Baerg (E-mail)>
+   local-part <Dave.Baerg> domain <SUMMedia.com>
+
+"Demian" <damient@wave.home.com>=> pcount 1
+1 email <damient@wave.home.com>
+   personal <Demian>
+   local-part <damient> domain <wave.home.com>
+
+"Detailed Revision/Update of Message Standards" <drums@cs.utk.edu>=> pcount 1
+1 email <drums@cs.utk.edu>
+   personal <Detailed Revision/Update of Message Standards>
+   local-part <drums> domain <cs.utk.edu>
+
+"Fred" <fprog@__nowhere__.users.sourceforge.net>=> pcount 1
+1 email <fprog@__nowhere__.users.sourceforge.net>
+   personal <Fred>
+   local-part <fprog> domain <__nowhere__.users.sourceforge.net>
+
+"Haag, Ullrich - MBDC" <Ullrich.Haag@MBDC.com>=> pcount 1
+1 email <Ullrich.Haag@MBDC.com>
+   personal <Haag, Ullrich - MBDC>
+   local-part <Ullrich.Haag> domain <MBDC.com>
+
+"Jacob Palme" <jpalme@dsv.su.se>, <drums@cs.utk.edu>=> pcount 2
+1 email <jpalme@dsv.su.se>
+   personal <Jacob Palme>
+   local-part <jpalme> domain <dsv.su.se>
+2 email <drums@cs.utk.edu>
+   local-part <drums> domain <cs.utk.edu>
+
+"Jakob 'sparky' Kaivo" <jkaivo@elijah.nodomainname.net>=> pcount 1
+1 email <jkaivo@elijah.nodomainname.net>
+   personal <Jakob 'sparky' Kaivo>
+   local-part <jkaivo> domain <elijah.nodomainname.net>
+
+"Lee R. Copp" <Lee.R.Copp@MichiganScientific.com>=> pcount 1
+1 email <Lee.R.Copp@MichiganScientific.com>
+   personal <Lee R. Copp>
+   local-part <Lee.R.Copp> domain <MichiganScientific.com>
+
+"Lionel Johnson" <ljohnson**nospam**@sterling1.com>=> pcount 1
+1 email <ljohnson**nospam**@sterling1.com>
+   personal <Lionel Johnson>
+   local-part <ljohnson**nospam**> domain <sterling1.com>
+
+"Martin \[Keso\] Keseg" <Martin.Keseg@slovakia.sun.com>=> pcount 1
+1 email <Martin.Keseg@slovakia.sun.com>
+   personal <Martin [Keso] Keseg>
+   local-part <Martin.Keseg> domain <slovakia.sun.com>
+
+#FIXME: there is no way to send } to the remote program...
+"]\{ristoph" <news2@kristoph.net>=> pcount 1
+1 email <news2@kristoph.net>
+   personal <]{ristoph>
+   local-part <news2> domain <kristoph.net>
+
+"fmartens-2000" <fmartens-2000@planet.nl>=> pcount 1
+1 email <fmartens-2000@planet.nl>
+   personal <fmartens-2000>
+   local-part <fmartens-2000> domain <planet.nl>
+
+"g'o'tz ohnesorge" <gohnesorge@lh-computertechnik.de>=> pcount 1
+1 email <gohnesorge@lh-computertechnik.de>
+   personal <g'o'tz ohnesorge>
+   local-part <gohnesorge> domain <lh-computertechnik.de>
+
+"gao jie" <jiegi@public.wh.hb.cn>=> pcount 1
+1 email <jiegi@public.wh.hb.cn>
+   personal <gao jie>
+   local-part <jiegi> domain <public.wh.hb.cn>
+
+"gnupg-devel@gnupg.org" <gnupg-devel%gnupg.org@f48.n48.z2.fidonet.org>=> pcount 1
+1 email <gnupg-devel%gnupg.org@f48.n48.z2.fidonet.org>
+   personal <gnupg-devel@gnupg.org>
+   local-part <gnupg-devel%gnupg.org> domain <f48.n48.z2.fidonet.org>
+
+"gpg-devel" <gnupg-devel@gnupg.org>=> pcount 1
+1 email <gnupg-devel@gnupg.org>
+   personal <gpg-devel>
+   local-part <gnupg-devel> domain <gnupg.org>
+
+"jigang" <jigang@jinglun.com.cn>=> pcount 1
+1 email <jigang@jinglun.com.cn>
+   personal <jigang>
+   local-part <jigang> domain <jinglun.com.cn>
+
+"misc@openbsd.org" <misc@openbsd.org>=> pcount 1
+1 email <misc@openbsd.org>
+   personal <misc@openbsd.org>
+   local-part <misc> domain <openbsd.org>
+
+"misc@openbsd.org" <misc@openbsd.org>, brian@Awfulhak.org=> pcount 2
+1 email <misc@openbsd.org>
+   personal <misc@openbsd.org>
+   local-part <misc> domain <openbsd.org>
+2 email <brian@Awfulhak.org>
+   local-part <brian> domain <Awfulhak.org>
+
+"mutt-dev @ mutt . orgThomas Roessler" <roessler@does-not-exist.org>=> pcount 1
+1 email <roessler@does-not-exist.org>
+   personal <mutt-dev @ mutt . orgThomas Roessler>
+   local-part <roessler> domain <does-not-exist.org>
+
+"zwk@f36.n480.z2.fidonet.org" <zwk%f36.n480.z2.fidonet.org@f36.n480.z2.fidonet.org>=> pcount 1
+1 email <zwk%f36.n480.z2.fidonet.org@f36.n480.z2.fidonet.org>
+   personal <zwk@f36.n480.z2.fidonet.org>
+   local-part <zwk%f36.n480.z2.fidonet.org> domain <f36.n480.z2.fidonet.org>
+
+'Dan Dall'Acqua' <ddallacqua@noetic.ab.ca>, 'Dave Shyong'=> error MU_ERR_BAD_822_FORMAT
+
+0xdeadbeef-request@petting-zoo.net=> pcount 1
+1 email <0xdeadbeef-request@petting-zoo.net>
+   local-part <0xdeadbeef-request> domain <petting-zoo.net>
+
+102023-00406421@cnxt19932218.conexant.com=> pcount 1
+1 email <102023-00406421@cnxt19932218.conexant.com>
+   local-part <102023-00406421> domain <cnxt19932218.conexant.com>
+
+218164.24.43@jobcontrolcenter.com=> pcount 1
+1 email <218164.24.43@jobcontrolcenter.com>
+   local-part <218164.24.43> domain <jobcontrolcenter.com>
+
+<0xdeadbeef-request@petting-zoo.net>=> pcount 1
+1 email <0xdeadbeef-request@petting-zoo.net>
+   local-part <0xdeadbeef-request> domain <petting-zoo.net>
+
+<>=> pcount 1
+1 email <>
+
+<Christia.Roberts@nrc.ca>=> pcount 1
+1 email <Christia.Roberts@nrc.ca>
+   local-part <Christia.Roberts> domain <nrc.ca>
+
+<Nick_Shelness@motorcity2.lotus.com>=> pcount 1
+1 email <Nick_Shelness@motorcity2.lotus.com>
+   local-part <Nick_Shelness> domain <motorcity2.lotus.com>
+
+<all: >=> error MU_ERR_BAD_822_FORMAT
+
+<fyi-admin@emyr.net>=> pcount 1
+1 email <fyi-admin@emyr.net>
+   local-part <fyi-admin> domain <emyr.net>
+
+<gary.stefanov@medtronic.com>, <HdeVisse@husky.ca>,=> pcount 2
+1 email <gary.stefanov@medtronic.com>
+   local-part <gary.stefanov> domain <medtronic.com>
+2 email <HdeVisse@husky.ca>
+   local-part <HdeVisse> domain <husky.ca>
+
+<gnu-pop-list@nodomainname.net>=> pcount 1
+1 email <gnu-pop-list@nodomainname.net>
+   local-part <gnu-pop-list> domain <nodomainname.net>
+
+<mutt-dev-owner-sroberts=uniserve.com@ns.gbnet.net>=> pcount 1
+1 email <mutt-dev-owner-sroberts=uniserve.com@ns.gbnet.net>
+   local-part <mutt-dev-owner-sroberts=uniserve.com> domain <ns.gbnet.net>
+
+=?ISO-8859-1?Q?Kolbj=F8rn_Barmen?= <kolla@nvg.ntnu.no>=> pcount 1
+1 email <kolla@nvg.ntnu.no>
+   personal <=?ISO-8859-1?Q?Kolbj=F8rn_Barmen?=>
+   local-part <kolla> domain <nvg.ntnu.no>
+
+=?ISO-8859-1?Q?Patrik_F=E4ltstr=F6m?= <paf@cisco.com>=> pcount 1
+1 email <paf@cisco.com>
+   personal <=?ISO-8859-1?Q?Patrik_F=E4ltstr=F6m?=>
+   local-part <paf> domain <cisco.com>
+
+=?ISO-8859-1?Q?Patrik_F=E4ltstr=F6m?= <paf@cisco.com>,=> pcount 1
+1 email <paf@cisco.com>
+   personal <=?ISO-8859-1?Q?Patrik_F=E4ltstr=F6m?=>
+   local-part <paf> domain <cisco.com>
+
+=?US-ASCII?Q?gary=5Fc?= <gary_c@cunningham-lee.com>=> pcount 1
+1 email <gary_c@cunningham-lee.com>
+   personal <=?US-ASCII?Q?gary=5Fc?=>
+   local-part <gary_c> domain <cunningham-lee.com>
+
+=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E?= Meunier <0@pervalidus.net>=> pcount 1
+1 email <0@pervalidus.net>
+   personal <=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E?= Meunier>
+   local-part <0> domain <pervalidus.net>
+
+=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E?= Meunier <0@pervalidus.net>,=> pcount 1
+1 email <0@pervalidus.net>
+   personal <=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E?= Meunier>
+   local-part <0> domain <pervalidus.net>
+
+=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E_Meunier?= <0@pervalidus.net>=> pcount 1
+1 email <0@pervalidus.net>
+   personal <=?iso-8859-1?Q?Fr=E9d=E9ric_L_=2E_W_=2E_Meunier?=>
+   local-part <0> domain <pervalidus.net>
+
+=?iso-8859-1?Q?J=F8rgen_Thomsen?= <jth@postfix.jth.net>=> pcount 1
+1 email <jth@postfix.jth.net>
+   personal <=?iso-8859-1?Q?J=F8rgen_Thomsen?=>
+   local-part <jth> domain <postfix.jth.net>
+
+=?iso-8859-1?Q?Jos=3F_C=2E_Garc=EDa_Sogo?= <jose@jaimedelamo.eu.org>=> pcount 1
+1 email <jose@jaimedelamo.eu.org>
+   personal <=?iso-8859-1?Q?Jos=3F_C=2E_Garc=EDa_Sogo?=>
+   local-part <jose> domain <jaimedelamo.eu.org>
+
+=?iso-8859-1?Q?Mikko_H=E4nninen?= <Mikko.Hanninen@dna.fi>=> pcount 1
+1 email <Mikko.Hanninen@dna.fi>
+   personal <=?iso-8859-1?Q?Mikko_H=E4nninen?=>
+   local-part <Mikko.Hanninen> domain <dna.fi>
+
+=?iso-8859-1?Q?Mikko_H=E4nninen?= <Mikko.Hanninen@iki.fi>=> pcount 1
+1 email <Mikko.Hanninen@iki.fi>
+   personal <=?iso-8859-1?Q?Mikko_H=E4nninen?=>
+   local-part <Mikko.Hanninen> domain <iki.fi>
+
+=?iso-8859-1?Q?R=E9mi_Guyomarch?= <rguyom@321.net>=> pcount 1
+1 email <rguyom@321.net>
+   personal <=?iso-8859-1?Q?R=E9mi_Guyomarch?=>
+   local-part <rguyom> domain <321.net>
+
+=?iso-8859-1?Q?Ulf_M=F6ller?= <ulf@fitug.de>=> pcount 1
+1 email <ulf@fitug.de>
+   personal <=?iso-8859-1?Q?Ulf_M=F6ller?=>
+   local-part <ulf> domain <fitug.de>
+
+ANDREW MARTIN <amartin@ee.ryerson.ca>=> pcount 1
+1 email <amartin@ee.ryerson.ca>
+   personal <ANDREW MARTIN>
+   local-part <amartin> domain <ee.ryerson.ca>
+
+Abhay Ghaisas <abhay@sobolev.does-not-exist.org>, mutt-dev@mutt.org=> pcount 2
+1 email <abhay@sobolev.does-not-exist.org>
+   personal <Abhay Ghaisas>
+   local-part <abhay> domain <sobolev.does-not-exist.org>
+2 email <mutt-dev@mutt.org>
+   local-part <mutt-dev> domain <mutt.org>
+
+Brian Salter-Duke <b_duke@lacebark.ntu.edu.au>=> pcount 1
+1 email <b_duke@lacebark.ntu.edu.au>
+   personal <Brian Salter-Duke>
+   local-part <b_duke> domain <lacebark.ntu.edu.au>
+
+Catharine Shyong <shyong@t-iii.com>=> pcount 1
+1 email <shyong@t-iii.com>
+   personal <Catharine Shyong>
+   local-part <shyong> domain <t-iii.com>
+
+DRUMS-Last-Call:;=> error MU_ERR_EMPTY_ADDRESS
+
+Detailed Revision/Update of Message Standards <drums@cs.utk.edu>=> pcount 1
+1 email <drums@cs.utk.edu>
+   personal <Detailed Revision/Update of Message Standards>
+   local-part <drums> domain <cs.utk.edu>
+
+Eric Allman <eric+ietf@Sendmail.ORG>=> pcount 1
+1 email <eric+ietf@Sendmail.ORG>
+   personal <Eric Allman>
+   local-part <eric+ietf> domain <Sendmail.ORG>
+
+Gary <Gary@e-c-s-uk.com>=> pcount 1
+1 email <Gary@e-c-s-uk.com>
+   personal <Gary>
+   local-part <Gary> domain <e-c-s-uk.com>
+
+IETF working group on revision of mail standards <drums@cs.utk.edu>=> pcount 1
+1 email <drums@cs.utk.edu>
+   personal <IETF working group on revision of mail standards>
+   local-part <drums> domain <cs.utk.edu>
+
+IETF-Announce:;=> error MU_ERR_EMPTY_ADDRESS
+
+IETF-Announce:;, drums@cs.utk.edu=> pcount 1
+1 email <drums@cs.utk.edu>
+   local-part <drums> domain <cs.utk.edu>
+
+Jean-Baptiste Marchand <Jean-Baptiste.Marchand@epita.fr>=> pcount 1
+1 email <Jean-Baptiste.Marchand@epita.fr>
+   personal <Jean-Baptiste Marchand>
+   local-part <Jean-Baptiste.Marchand> domain <epita.fr>
+
+Jonathan Rozes <jrozes+969649116.89117462@vinton.com>=> pcount 1
+1 email <jrozes+969649116.89117462@vinton.com>
+   personal <Jonathan Rozes>
+   local-part <jrozes+969649116.89117462> domain <vinton.com>
+
+Jose "C." Garcia Sogo<jose@jaimedelamo.eu.org>=> pcount 1
+1 email <jose@jaimedelamo.eu.org>
+   personal <Jose C. Garcia Sogo>
+   local-part <jose> domain <jaimedelamo.eu.org>
+
+Marco d'Itri <md@Linux.IT>=> pcount 1
+1 email <md@Linux.IT>
+   personal <Marco d'Itri>
+   local-part <md> domain <Linux.IT>
+
+No_Reply-To@mapquest.com=> pcount 1
+1 email <No_Reply-To@mapquest.com>
+   local-part <No_Reply-To> domain <mapquest.com>
+
+OSULLIE@rte.ie, skidswam@hotmail.com, boot=> pcount 3
+1 email <OSULLIE@rte.ie>
+   local-part <OSULLIE> domain <rte.ie>
+2 email <skidswam@hotmail.com>
+   local-part <skidswam> domain <hotmail.com>
+3 email <boot@localhost>
+   local-part <boot>
+
+Paul Hoffman / IMC <phoffman@imc.org>=> pcount 1
+1 email <phoffman@imc.org>
+   personal <Paul Hoffman / IMC>
+   local-part <phoffman> domain <imc.org>
+
+Sam=> pcount 1
+1 email <Sam@localhost>
+   local-part <Sam>
+
+Sam Roberts <sam@cogent.ca>=> pcount 1
+1 email <sam@cogent.ca>
+   personal <Sam Roberts>
+   local-part <sam> domain <cogent.ca>
+
+Sam_Roberts/Certicom%Certicom@certicom.com=> pcount 1
+1 email <Sam_Roberts/Certicom%Certicom@certicom.com>
+   local-part <Sam_Roberts/Certicom%Certicom> domain <certicom.com>
+
+Thomas Roessler <roessler@does-not-exist.org>, 490@bugs.guug.de=> pcount 2
+1 email <roessler@does-not-exist.org>
+   personal <Thomas Roessler>
+   local-part <roessler> domain <does-not-exist.org>
+2 email <490@bugs.guug.de>
+   local-part <490> domain <bugs.guug.de>
+
+Thomas Roessler <roessler@does-not-exist.org>, g10@gnupg.org=> pcount 2
+1 email <roessler@does-not-exist.org>
+   personal <Thomas Roessler>
+   local-part <roessler> domain <does-not-exist.org>
+2 email <g10@gnupg.org>
+   local-part <g10> domain <gnupg.org>
+
+ddickey@ip-12-22-50-150.hqglobal.net=> pcount 1
+1 email <ddickey@ip-12-22-50-150.hqglobal.net>
+   local-part <ddickey> domain <ip-12-22-50-150.hqglobal.net>
+
+ktb <x.y.f@home.com>=> pcount 1
+1 email <x.y.f@home.com>
+   personal <ktb>
+   local-part <x.y.f> domain <home.com>
+
+mcaustin@eudoramail.com, aposner@usaid.gov, Kieran.O'Leary@anpost.ie,=> pcount 3
+1 email <mcaustin@eudoramail.com>
+   local-part <mcaustin> domain <eudoramail.com>
+2 email <aposner@usaid.gov>
+   local-part <aposner> domain <usaid.gov>
+3 email <Kieran.O'Leary@anpost.ie>
+   local-part <Kieran.O'Leary> domain <anpost.ie>
+
+rfunk@wks.uts.ohio-state.eduofflinemailer-bounce@dikke.penguin.nl=> error MU_ERR_BAD_822_FORMAT
+
+root=> pcount 1
+1 email <root@localhost>
+   local-part <root>
+
+srr <sam@localhost>=> error MU_ERR_BAD_822_FORMAT
+
+whom it may concern: ;;whom.it.may.concern: ;=> error MU_ERR_BAD_822_FORMAT
+
+whom it may concern: mutt-dev@mutt.org, mutt-users@mutt.org;=> pcount 2
+1 email <mutt-dev@mutt.org>
+   local-part <mutt-dev> domain <mutt.org>
+2 email <mutt-users@mutt.org>
+   local-part <mutt-users> domain <mutt.org>
+
+Sergey V. Poznyakoff <gray@gnu.org>=> pcount 1
+1 email <gray@gnu.org>
+   personal <Sergey V. Poznyakoff>
+   local-part <gray> domain <gnu.org>
+
+P. D. Q. Bach <bach@somewhere.org>=> pcount 1
+1 email <bach@somewhere.org>
+   personal <P. D. Q. Bach>
+   local-part <bach> domain <somewhere.org>
+
+"A bad quote\" <devnull@localhost>=> error MU_ERR_BAD_822_FORMAT
+
+# NOTE: This file must end with an empty line

@@ -1,0 +1,10 @@
+@c snarfed from "mu_body.c":106
+@deffn {Scheme procedure} mu-body-read-line body
+Read next line from the @var{body}.
+@end deffn
+
+@c snarfed from "mu_body.c":167
+@deffn {Scheme procedure} mu-body-write body text
+Append @var{text} to message @var{body}.
+@end deffn
+

@@ -1,0 +1,27 @@
+# A sample per-user biff configuration file. It should be stored
+# in user home directory and named .biffrc. It must be owned by
+# the user and have permissions 0600
+# Each line specifies an action to be taken upon arrival of
+# a message. A backslash can be used to escape the newlines.
+# Actions could be:
+#  beep              --  Produce audible signal
+#  echo STRING       --  Output STRING to the user's tty
+#  exec PROG ARGS... --  Execute given program 
+#
+
+# This is the default action
+echo "Mail to \a$u@$h\a\n---\n\
+From: $H{from}\n\
+Subject: $H{Subject}\n\
+---\n\
+$B(,5)\n\
+---\n"
+
+# For users of X windows system: produce a bell and open an xmessage window
+beep
+exec /usr/X11R6/bin/xmessage -display :0.0 -timeout 10 "Mail to $u@$h \n---\n\
+From: $H{from}\n\
+Subject: $H{Subject}\n\
+---\n\
+$B(,5)\n\
+---\n"

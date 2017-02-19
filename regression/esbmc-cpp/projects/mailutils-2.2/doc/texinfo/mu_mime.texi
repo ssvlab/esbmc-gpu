@@ -1,0 +1,34 @@
+@c snarfed from "mu_mime.c":95
+@deffn {Scheme procedure} mu-mime-create flags mesg
+Creates a new @acronym{MIME} object. Both arguments are optional.
+@var{flags} specifies the type of the object to create (@samp{0} is a reasonable
+value). @var{mesg} gives the message to create the @acronym{MIME} object from.
+@end deffn
+
+@c snarfed from "mu_mime.c":131
+@deffn {Scheme procedure} mu-mime-multipart? mime
+Returns @code{#t} if @var{mime} is a multipart object.
+
+@end deffn
+
+@c snarfed from "mu_mime.c":141
+@deffn {Scheme procedure} mu-mime-get-num-parts mime
+Returns number of parts in the @sc{mime} object @var{mime}.
+@end deffn
+
+@c snarfed from "mu_mime.c":160
+@deffn {Scheme procedure} mu-mime-get-part mime num
+Returns @var{num}th part from the @sc{mime} object @var{mime}.
+@end deffn
+
+@c snarfed from "mu_mime.c":182
+@deffn {Scheme procedure} mu-mime-add-part mime mesg
+Adds @var{mesg} to the @sc{mime} object @var{mime}.
+@end deffn
+
+@c snarfed from "mu_mime.c":208
+@deffn {Scheme procedure} mu-mime-get-message mime
+Converts @sc{mime} object @var{mime} to a message.
+
+@end deffn
+

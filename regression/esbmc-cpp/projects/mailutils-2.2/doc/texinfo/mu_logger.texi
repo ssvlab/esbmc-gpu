@@ -1,0 +1,16 @@
+@c snarfed from "mu_logger.c":26
+@deffn {Scheme procedure} mu-openlog ident option facility
+Opens a connection to the system logger for Guile program.
+@var{ident}, @var{option} and @var{facility} have the same meaning as in openlog(3)
+@end deffn
+
+@c snarfed from "mu_logger.c":61
+@deffn {Scheme procedure} mu-logger prio text
+Distributes @var{text} via syslogd priority @var{prio}.
+@end deffn
+
+@c snarfed from "mu_logger.c":83
+@deffn {Scheme procedure} mu-closelog
+Closes the channel to the system logger opened by @code{mu-openlog}.
+@end deffn
+

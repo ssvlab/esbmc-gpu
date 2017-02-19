@@ -1,0 +1,4 @@
+main_struct.cu
+-I ~/libraries/ --context-switch 2 --force-malloc-success --unwind 9 --state-hashing
+^VERIFICATION SUCCESSFUL$
+#VERIFICATION SUCCESSFUL$

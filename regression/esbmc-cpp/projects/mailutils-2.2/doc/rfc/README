@@ -1,0 +1,55 @@
+This is a list of RFCs used when designing GNU Mailutils. To read any
+of them, visit http://tools.ietf.org/html/rfcNNNN, replacing NNNN with
+the actual RFC number.
+
+821	SIMPLE MAIL TRANSFER PROTOCOL
+822	STANDARD FOR THE FORMAT OF ARPA INTERNET TEXT MESSAGES
+934	Proposed Standard for Message Encapsulation
+1413	Identification Protocol
+1521	MIME  Part One: Mechanisms for Specifying and Describing the Format of Internet Message Bodies
+1731	IMAP4 Authentication Mechanisms
+1734	POP3 AUTHentication command
+1738	Uniform Resource Locators (URL)
+1870	SMTP Service Extension for Message Size Declaration
+1891	SMTP Service Extension for Delivery Status Notifications
+1892	The Multipart/Report Content Type for the Reporting of Mail System Administrative Messages
+1893	Enhanced Mail System Status Codes
+1894	An Extensible Message Format for Delivery Status Notifications
+1939	Post Office Protocol - Version 3
+1957	Some Observations on Implementations  of the Post Office Protocol (POP3)
+2045	MIME Part One: Format of Internet Message Bodies
+2046	MIME Part Two: Media Types
+2047	MIME Part Three: Message Header Extensions for Non-ASCII Text
+2049	MIME Part Five: Conformance Criteria and Examples
+2060	INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1 (+ rfc2060-errata)
+2087	IMAP4 QUOTA extension
+2088	IMAP4 non-synchronizing literals
+2111	Content-ID and Message-ID Uniform Resource Locators
+2177	IMAP4 IDLE command
+2180	IMAP4 Multi-Accessed Mailbox Practice
+2192	IMAP URL Scheme
+2193	IMAP4 Mailbox Referrals
+2195	IMAP/POP AUTHorize Extension for Simple Challenge/Response
+2221	IMAP4 Login Referrals
+2222	Simple Authentication and Security Layer (SASL)
+2231	MIME Parameter Value and Encoded Word Extensions: Character Sets, Languages, and Continuations
+2245	Anonymous SASL Mechanism
+2298	An Extensible Message Format for Message Disposition Notifications
+2342	IMAP4 Namespace
+2368	The mailto URL scheme
+2384	POP URL Scheme
+2444	The One-Time-Password SASL Mechanism
+2449	POP3 Extension Mechanism
+2595	Using TLS with IMAP, POP3 and ACAP
+2683	IMAP4 Implementation Recommendations
+2808	The SecurID(r) SASL Mechanism
+2821	Simple Mail Transfer Protocol
+2822	Internet Message Format
+2831	Using Digest Authentication as a SASL Mechanism
+3028	Sieve: A Mail Filtering Language
+3206	The SYS and AUTH POP Response Codes
+3348	The Internet Message Action Protocol (IMAP4) Child Mailbox Extension
+3431	Sieve Extension: Relational Tests
+3501	INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1
+3691	Internet Message Access Protocol (IMAP) UNSELECT command
+4314	IMAP4 Access Control List (ACL) Extension

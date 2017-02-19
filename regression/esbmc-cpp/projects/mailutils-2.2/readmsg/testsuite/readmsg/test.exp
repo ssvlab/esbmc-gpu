@@ -1,0 +1,309 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+source $top_srcdir/testsuite/lib/mailutils.exp
+
+mu_init -noflags
+set env(MAIL) $MU_SPOOL_DIR/mbox1
+set env(FOLDER) $env(MAIL)
+
+mu_prepare_spools
+
+mu_exec -message "readmsg *" -arg "\\*" \
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"From: Foo Bar <foobar@nonexistent.net>"\
+"To: Bar <bar@dontmailme.org>"\
+"Subject: Jabberwocky"\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+"`Beware the Jabberwock, my son!"\
+"The jaws that bite, the claws that catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword in hand:"\
+"Long time the manxome foe he sought --"\
+"So rested he by the Tumtum gree,"\
+"And stood awhile in thought."\
+""\
+"And as in uffish thought he stood,"\
+"The Jabberwock, with eyes of flame,"\
+"Came whiffling through the tulgey wook,"\
+"And burbled as it came!"\
+""\
+"One, two!  One, two!  And through and through"\
+"The vorpal blade went snicker-snack!"\
+"He left it dead, and with its head"\
+"He went galumphing back."\
+""\
+"`And has thou slain the Jabberwock?"\
+"Come to my arms, my beamish boy!"\
+"O frabjous day!  Calloh!  Callay!"\
+"He chortled in his joy."\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+""\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+""\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Simple MIME"\
+"Date: Sat, 13 Jul 2002 00:43:18 +0300"\
+"From: Sergey Poznyakoff <gray@Mirddin.farlep.net>"\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: text/plain; name=\"msg.1\"; charset=\"us-ascii\""\
+"Content-ID: <5082.1026510189.1@Mirddin.farlep.net>"\
+"Content-Description: How doth"\
+""\
+"How doth the little crocodile"\
+"Improve his shining tail,"\
+"And pour the waters of the Nile"\
+"On every golden scale!"\
+""\
+"`How cheerfully he seems to grin,"\
+"How neatly spread his claws,"\
+"And welcome little fishes in"\
+"With gently smiling jaws!"\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: application/octet-stream; name=\"msg.21\""\
+"Content-ID: <5082.1026510189.2@Mirddin.farlep.net>"\
+"Content-Description: Father William Part I"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCBGYXRoZXIgV2lsbGlhbSwnIHRoZSB5b3VuZyBtYW4gc2FpZCwKYEFuZCB5"\
+"b3VyIGhhaXIgaGFzIGJlY29tZSB2ZXJ5IHdoaXRlOwpBbmQgeWV0IHlvdSBpbmNlc3NhbnRseSBz"\
+"dGFuZCBvbiB5b3VyIGhlYWQtLQpEbyB5b3UgdGhpbmssIGF0IHlvdXIgYWdlLCBpdCBpcyByaWdo"\
+"dD8nCgpgSW4gbXkgeW91dGgsJyBGYXRoZXIgV2lsbGlhbSByZXBsaWVkIHRvIGhpcyBzb24sCmBJ"\
+"IGZlYXJlZCBpdCBtaWdodCBpbmp1cmUgdGhlIGJyYWluOwpCdXQsIG5vdyB0aGF0IEknbSBwZXJm"\
+"ZWN0bHkgc3VyZSBJIGhhdmUgbm9uZSwKV2h5LCBJIGRvIGl0IGFnYWluIGFuZCBhZ2Fpbi4nCgo="\
+""\
+-- "------- =_aaaaaaaaaa0--"\
+""\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Nested MIME"\
+"Date: Sat, 13 Jul 2002 00:50:58 +0300"\
+"From: Sergey Poznyakoff <gray@Mirddin.farlep.net>"\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: text/plain; name=\"msg.21\"; charset=\"us-ascii\""\
+"Content-ID: <5122.1026510654.2@Mirddin.farlep.net>"\
+"Content-Description: Father William Part I"\
+""\
+"`You are old, Father William,' the young man said,"\
+"`And your hair has become very white;"\
+"And yet you incessantly stand on your head--"\
+"Do you think, at your age, it is right?'"\
+""\
+"`In my youth,' Father William replied to his son,"\
+"`I feared it might injure the brain;"\
+"But, now that I'm perfectly sure I have none,"\
+"Why, I do it again and again.'"\
+""\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: multipart/mixed; boundary=\"----- =_aaaaaaaaaa1\""\
+"Content-ID: <5122.1026510654.3@Mirddin.farlep.net>"\
+""\
+-- "------- =_aaaaaaaaaa1"\
+"Content-Type: application/octet-stream; name=\"msg.22\""\
+"Content-ID: <5122.1026510654.4@Mirddin.farlep.net>"\
+"Content-Description: Father William Part II"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBhcyBJIG1lbnRpb25lZCBiZWZvcmUsCkFu"\
+"ZCBoYXZlIGdyb3duIG1vc3QgdW5jb21tb25seSBmYXQ7CllldCB5b3UgdHVybmVkIGEgYmFjay1z"\
+"b21lcnNhdWx0IGluIGF0IHRoZSBkb29yLS0KUHJheSwgd2hhdCBpcyB0aGUgcmVhc29uIG9mIHRo"\
+"YXQ/JwoKYEluIG15IHlvdXRoLCcgc2FpZCB0aGUgc2FnZSwgYXMgaGUgc2hvb2sgaGlzIGdyZXkg"\
+"bG9ja3MsCmBJIGtlcHQgYWxsIG15IGxpbWJzIHZlcnkgc3VwcGxlCkJ5IHRoZSB1c2Ugb2YgdGhp"\
+"cyBvaW50bWVudC0tb25lIHNoaWxsaW5nIHRoZSBib3gtLQpBbGxvdyBtZSB0byBzZWxsIHlvdSBh"\
+"IGNvdXBsZT8nCg=="\
+""\
+-- "------- =_aaaaaaaaaa1"\
+"Content-Type: multipart/mixed; boundary=\"----- =_aaaaaaaaaa2\""\
+"Content-ID: <5122.1026510654.5@Mirddin.farlep.net>"\
+""\
+-- "------- =_aaaaaaaaaa2"\
+"Content-Type: application/octet-stream; name=\"msg.23\""\
+"Content-ID: <5122.1026510654.6@Mirddin.farlep.net>"\
+"Content-Description: Father William Part III"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBhbmQgeW91ciBqYXdzIGFyZSB0b28gd2Vh"\
+"awpGb3IgYW55dGhpbmcgdG91Z2hlciB0aGFuIHN1ZXQ7CllldCB5b3UgZmluaXNoZWQgdGhlIGdv"\
+"b3NlLCB3aXRoIHRoZSBib25lcyBhbmQgdGhlIGJlYWstLQpQcmF5IGhvdyBkaWQgeW91IG1hbmFn"\
+"ZSB0byBkbyBpdD8nCgpgSW4gbXkgeW91dGgsJyBzYWlkIGhpcyBmYXRoZXIsIGBJIHRvb2sgdG8g"\
+"dGhlIGxhdywKQW5kIGFyZ3VlZCBlYWNoIGNhc2Ugd2l0aCBteSB3aWZlOwpBbmQgdGhlIG11c2N1"\
+"bGFyIHN0cmVuZ3RoLCB3aGljaCBpdCBnYXZlIHRvIG15IGphdywKSGFzIGxhc3RlZCB0aGUgcmVz"\
+"dCBvZiBteSBsaWZlLicK"\
+""\
+-- "------- =_aaaaaaaaaa2"\
+"Content-Type: application/octet-stream; name=\"msg.24\""\
+"Content-ID: <5122.1026510654.7@Mirddin.farlep.net>"\
+"Content-Description: Father William Part IV"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBvbmUgd291bGQgaGFyZGx5IHN1cHBvc2UK"\
+"VGhhdCB5b3VyIGV5ZSB3YXMgYXMgc3RlYWR5IGFzIGV2ZXI7CllldCB5b3UgYmFsYW5jZWQgYW4g"\
+"ZWVsIG9uIHRoZSBlbmQgb2YgeW91ciBub3NlLS0KV2hhdCBtYWRlIHlvdSBzbyBhd2Z1bGx5IGNs"\
+"ZXZlcj8nCgpgSSBoYXZlIGFuc3dlcmVkIHRocmVlIHF1ZXN0aW9ucywgYW5kIHRoYXQgaXMgZW5v"\
+"dWdoLCcKU2FpZCBoaXMgZmF0aGVyOyBgZG9uJ3QgZ2l2ZSB5b3Vyc2VsZiBhaXJzIQpEbyB5b3Ug"\
+"dGhpbmsgSSBjYW4gbGlzdGVuIGFsbCBkYXkgdG8gc3VjaCBzdHVmZj8KQmUgb2ZmLCBvciBJJ2xs"\
+"IGtpY2sgeW91IGRvd24gc3RhaXJzIScK"\
+""\
+-- "------- =_aaaaaaaaaa2--"\
+""\
+-- "------- =_aaaaaaaaaa1--"\
+""\
+-- "------- =_aaaaaaaaaa0--"\
+""\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Empty MIME Parts"\
+"Date: Sat, 13 Jul 2002 00:43:18 +0300"\
+"From: Sergey Poznyakoff <gray@Mirddin.farlep.net>"\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: text/plain; name=\"empty\"; charset=\"us-ascii\""\
+"Content-ID: <5082.1026510189.1@Mirddin.farlep.net>"\
+"Content-Description: Empty part"\
+""\
+""\
+-- "------- =_aaaaaaaaaa0"\
+"Content-Type: text/plain; name=\"single.line\"; charset=\"us-ascii\""\
+"Content-ID: <5082.1026510189.2@Mirddin.farlep.net>"\
+"Content-Description: Single line part"\
+""\
+""\
+""\
+-- "------- =_aaaaaaaaaa0--"\
+""\
+""
+
+
+mu_exec -message "readmsg 1 2" -arg 1 -arg 2 \
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"From: Foo Bar <foobar@nonexistent.net>"\
+"To: Bar <bar@dontmailme.org>"\
+"Subject: Jabberwocky"\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+"`Beware the Jabberwock, my son!"\
+"The jaws that bite, the claws that catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword in hand:"\
+"Long time the manxome foe he sought --"\
+"So rested he by the Tumtum gree,"\
+"And stood awhile in thought."\
+""\
+"And as in uffish thought he stood,"\
+"The Jabberwock, with eyes of flame,"\
+"Came whiffling through the tulgey wook,"\
+"And burbled as it came!"\
+""\
+"One, two!  One, two!  And through and through"\
+"The vorpal blade went snicker-snack!"\
+"He left it dead, and with its head"\
+"He went galumphing back."\
+""\
+"`And has thou slain the Jabberwock?"\
+"Come to my arms, my beamish boy!"\
+"O frabjous day!  Calloh!  Callay!"\
+"He chortled in his joy."\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+""\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+""\
+""
+
+mu_exec -message "readmsg -h SOMETHING" -arg -h -arg SOMETHING \
+"From bar@dontmailme.org  Fri Dec 28 23:28:09 2001"\
+"Received: (from bar@dontmailme.org) "\
+"	by dontmailme.org id fERKR9N16790"\
+"	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+""\
+""
+
+mu_exec -message "readmsg -n SOMETHING" -arg -n -arg SOMETHING \
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+""\
+""
+
+mu_exec -message "readmsg -w date,subject SOMETHING" -arg "-w date,subject" \
+	-arg SOMETHING \
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"Subject: Re: Jabberwocky"\
+""\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+""\
+""
+
+#end of test.exp
+
+	

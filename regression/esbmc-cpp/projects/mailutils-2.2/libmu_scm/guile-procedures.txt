@@ -1,0 +1,392 @@
+This is guile-procedures.txt, produced by makeinfo version 4.13 from
+guile-procedures.texi.
+
+mu-address-get-personal
+
+ -- Scheme Procedure: mu-address-get-personal address [num]
+     Return personal part of the NUMth email address from ADDRESS.
+
+
+   mu-address-get-comments
+
+ -- Scheme Procedure: mu-address-get-comments address [num]
+     Return comment part of the NUMth email address from ADDRESS.
+
+
+   mu-address-get-email
+
+ -- Scheme Procedure: mu-address-get-email address [num]
+     Return email part of the NUMth email address from ADDRESS.
+
+
+   mu-address-get-domain
+
+ -- Scheme Procedure: mu-address-get-domain address [num]
+     Return domain part of the NUMth email address from ADDRESS.
+
+
+   mu-address-get-local
+
+ -- Scheme Procedure: mu-address-get-local address [num]
+     Return local part of the NUMth email address from ADDRESS.
+
+
+   mu-address-get-count
+
+ -- Scheme Procedure: mu-address-get-count address
+     Return number of parts in email address ADDRESS.
+
+
+   mu-username->email
+
+ -- Scheme Procedure: mu-username->email [name]
+     Deduce user's email address from his username. If NAME is omitted,
+     current username is assumed
+
+
+   mu-body-read-line
+
+ -- Scheme Procedure: mu-body-read-line body
+     Read next line from the BODY.
+
+   mu-body-write
+
+ -- Scheme Procedure: mu-body-write body text
+     Append TEXT to message BODY.
+
+   mu-mail-directory
+
+ -- Scheme Procedure: mu-mail-directory [url]
+     Do not use this function. Use mu-user-mailbox-url instead.
+
+   mu-user-mailbox-url
+
+ -- Scheme Procedure: mu-user-mailbox-url user
+     Return URL of the default mailbox for user USER.
+
+   mu-folder-directory
+
+ -- Scheme Procedure: mu-folder-directory [url]
+     If URL is given, sets it as a name of the user's folder directory.
+     Returns the current value of the folder directory.
+
+   mu-mailbox-open
+
+ -- Scheme Procedure: mu-mailbox-open url mode
+     Opens the mailbox specified by URL. MODE is a string, consisting of
+     the characters described below, giving the access mode for the
+     mailbox
+
+     MODE          Meaning
+     -------------------------------------------------------------- 
+     r             Open for reading.
+     w             Open for writing.
+     a             Open for appending to the end of the mailbox.
+     c             Create the mailbox if it does not exist.
+
+
+   mu-mailbox-close
+
+ -- Scheme Procedure: mu-mailbox-close mbox
+     Closes mailbox MBOX.
+
+   mu-mailbox-get-url
+
+ -- Scheme Procedure: mu-mailbox-get-url mbox
+     Returns URL of the mailbox MBOX.
+
+   mu-mailbox-get-port
+
+ -- Scheme Procedure: mu-mailbox-get-port mbox mode
+     Returns a port associated with the contents of the MBOX, which is
+     a string defining operation mode of the stream. It may contain any
+     of the two characters: `r' for reading, `w' for writing.
+
+
+   mu-mailbox-get-message
+
+ -- Scheme Procedure: mu-mailbox-get-message mbox msgno
+     Retrieve from message #MSGNO from the mailbox MBOX.
+
+   mu-mailbox-messages-count
+
+ -- Scheme Procedure: mu-mailbox-messages-count mbox
+     Returns number of messages in the mailbox MBOX.
+
+   mu-mailbox-expunge
+
+ -- Scheme Procedure: mu-mailbox-expunge mbox
+     Expunges deleted messages from the mailbox MBOX.
+
+   mu-mailbox-append-message
+
+ -- Scheme Procedure: mu-mailbox-append-message mbox mesg
+     Appends message MESG to the mailbox MBOX.
+
+   mu-mailbox-first-message
+
+ -- Scheme Procedure: mu-mailbox-first-message mbox
+     Returns first message from the mailbox MBOX.
+
+   mu-mailbox-next-message
+
+ -- Scheme Procedure: mu-mailbox-next-message mbox
+     Returns next message from the mailbox MBOX.
+
+   mu-mailbox-more-messages?
+
+ -- Scheme Procedure: mu-mailbox-more-messages? mbox
+     Returns `#t' if there are more messages in the mailbox MBOX ahead
+     of current iterator position.  Usually this function is used after
+     a call to `mu-mailbox-first-message' or `mu-mailbox-next-message'.
+     If not, it initializes the iterator and points it to the first
+     message innthe mailbox.
+
+   mu-mailbox-get-size
+
+ -- Scheme Procedure: mu-mailbox-get-size mbox
+     Return size of the mailbox MBOX.
+
+   mu-message-create
+
+ -- Scheme Procedure: mu-message-create
+     Creates an empty message.
+
+
+   mu-message-copy
+
+ -- Scheme Procedure: mu-message-copy mesg
+     Creates a copy of the message MESG.
+
+
+   mu-message-destroy
+
+ -- Scheme Procedure: mu-message-destroy mesg
+     Destroys the message MESG.
+
+   mu-message-set-header
+
+ -- Scheme Procedure: mu-message-set-header mesg header value [replace]
+     Sets header HEADER of the message MESG to new VALUE.  If HEADER is
+     already present in the message, its value is replaced with the
+     suplied one iff the optional REPLACE is `#t'. Otherwise, a new
+     header is created and appended.
+
+   mu-message-get-size
+
+ -- Scheme Procedure: mu-message-get-size mesg
+     Returns size of the message MESG .
+
+   mu-message-get-lines
+
+ -- Scheme Procedure: mu-message-get-lines mesg
+     Returns number of lines in the message MSG.
+
+
+   mu-message-get-envelope
+
+ -- Scheme Procedure: mu-message-get-envelope mesg
+     Returns envelope date of the message MESG.
+
+
+   mu-message-get-envelope-date
+
+ -- Scheme Procedure: mu-message-get-envelope-date mesg
+     Returns envelope date of the message MESG.
+
+
+   mu-message-get-sender
+
+ -- Scheme Procedure: mu-message-get-sender mesg
+     Returns email address of the sender of the message MESG.
+
+
+   mu-message-get-header
+
+ -- Scheme Procedure: mu-message-get-header mesg header
+     Returns value of the header HEADER from the message MESG.
+
+
+   mu-message-get-header-fields
+
+ -- Scheme Procedure: mu-message-get-header-fields mesg [headers]
+     Returns list of headers in the message MESG. optional argument
+     HEADERS gives a list of header names to restrict return value to.
+
+
+   mu-message-set-header-fields
+
+ -- Scheme Procedure: mu-message-set-header-fields mesg list [replace]
+     Set headers in the message MESG to those listed in LIST, which is
+     a list of conses `(cons HEADER VALUE)'.
+
+     Optional parameter REPLACE specifies whether new header values
+     should replace the headers already present in the message.
+
+   mu-message-delete
+
+ -- Scheme Procedure: mu-message-delete mesg [flag]
+     Mark message MESG as deleted. Optional argument FLAG allows to
+     toggle the deletion mark. The message is deleted if it is `#t' and
+     undeleted if it is `#f'.
+
+   mu-message-get-flag
+
+ -- Scheme Procedure: mu-message-get-flag mesg flag
+     Return the value of the attribute FLAG of the message MESG.
+
+   mu-message-set-flag
+
+ -- Scheme Procedure: mu-message-set-flag mesg flag [value]
+     Set the attribute FLAG in message MESG. If optional VALUE is `#f',
+     the attribute is unset.
+
+
+   mu-message-get-user-flag
+
+ -- Scheme Procedure: mu-message-get-user-flag mesg flag
+     Return value of the user-defined attribute FLAG from the message
+     MESG.
+
+   mu-message-set-user-flag
+
+ -- Scheme Procedure: mu-message-set-user-flag mesg flag [value]
+     Set user-defined attribute FLAG in the message MESG.  If optional
+     argumen VALUE is `#f', the attribute is unset.
+
+   mu-message-get-port
+
+ -- Scheme Procedure: mu-message-get-port mesg mode [full]
+     Returns a port associated with the message MESG. The MODE is a
+     string defining operation mode of the stream. It may contain any
+     of the two characters: `r' for reading, `w' for writing.  If
+     optional argument FULL is specified, it should be a boolean value.
+     If it is `#t' then the returned port will allow access to any part
+     of the message (including headers). If it is `#f' then the port
+     accesses only the message body (the default).
+
+
+   mu-message-get-body
+
+ -- Scheme Procedure: mu-message-get-body mesg
+     Returns message body for the message MESG.
+
+   mu-message-multipart?
+
+ -- Scheme Procedure: mu-message-multipart? mesg
+     Returns `#t' if MESG is a multipart MIME message.
+
+   mu-message-get-num-parts
+
+ -- Scheme Procedure: mu-message-get-num-parts mesg
+     Returns number of parts in a multipart MIME message MESG.  Returns
+     `#f' if the argument is not a multipart message.
+
+   mu-message-get-part
+
+ -- Scheme Procedure: mu-message-get-part mesg part
+     Returns part #PART of a multipart MIME message MESG.
+
+   mu-message-send
+
+ -- Scheme Procedure: mu-message-send mesg [mailer [from [to]]]
+     Sends message MESG. Optional MAILER overrides default mailer
+     settings. Optional FROM and TO give sender and recever addresses,
+     respectively.
+
+
+   mu-message-get-uid
+
+ -- Scheme Procedure: mu-message-get-uid mesg
+     Returns UID of the message MESG
+
+
+   mu-mime-create
+
+ -- Scheme Procedure: mu-mime-create [flags [mesg]]
+     Creates a new MIME object.  Both arguments are optional.  FLAGS
+     specifies the type of the object to create (`0' is a reasonable
+     value).  MESG gives the message to create the MIME object from.
+
+   mu-mime-multipart?
+
+ -- Scheme Procedure: mu-mime-multipart? mime
+     Returns `#t' if MIME is a multipart object.
+
+
+   mu-mime-get-num-parts
+
+ -- Scheme Procedure: mu-mime-get-num-parts mime
+     Returns number of parts in the MIME object MIME.
+
+   mu-mime-get-part
+
+ -- Scheme Procedure: mu-mime-get-part mime num
+     Returns NUMth part from the MIME object MIME.
+
+   mu-mime-add-part
+
+ -- Scheme Procedure: mu-mime-add-part mime mesg
+     Adds message MESG to the MIME object MIME.
+
+   mu-mime-get-message
+
+ -- Scheme Procedure: mu-mime-get-message mime
+     Converts MIME object MIME to a message.
+
+
+   mu-openlog
+
+ -- Scheme Procedure: mu-openlog ident option facility
+     Opens a connection to the system logger for Guile program.  IDENT,
+     OPTION and FACILITY have the same meaning as in openlog(3)
+
+   mu-logger
+
+ -- Scheme Procedure: mu-logger prio text
+     Distributes TEXT via the syslog priority PRIO.
+
+   mu-closelog
+
+ -- Scheme Procedure: mu-closelog
+     Closes the channel to the system logger opened by `mu-openlog'.
+
+   mu-register-format
+
+ -- Scheme Procedure: mu-register-format . rest
+     Registers desired mailutils formats.  Any number of arguments can
+     be given.  Each argument must be one of the following strings:
+
+     Argument             Meaning
+     -------------------------------------------------------------- 
+     `mbox'               Regular UNIX mbox format
+     `mh'                 MH mailbox format
+     `maildir'            Maildir mailbox format
+     `pop'                POP mailbox format
+     `imap'               IMAP mailbox format
+     `sendmail'           sendmail mailer format
+     `smtp'               SMTP mailer format
+
+     If called without arguments, the function registers all available
+     formats
+
+
+   mu-strerror
+
+ -- Scheme Procedure: mu-strerror err
+     Return the error message corresponding to ERR, which must be an
+     integer value.
+
+
+   mu-getpwuid
+
+ -- Scheme Procedure: mu-getpwuid user
+     Look up an entry in the user database. USER can be an integer, or
+     a string, giving the behaviour of `mu_get_auth_by_uid' or
+     `mu_get_auth_by_name' respectively.
+
+     Returns a vector with fields corresponding to those of the
+     `mu_auth_data' entry in question. If no matching entry was found,
+     returns `#f'.
+
+

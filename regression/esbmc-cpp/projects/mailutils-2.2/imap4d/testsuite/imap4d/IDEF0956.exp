@@ -1,0 +1,47 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2005, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Mailutils versions prior to 0.6.1 missed check for integer overflow
+# in fetch_io. 
+# Reported: by idefense.com on Thu, 12 May 2005 13:30:04 -0400
+# References: <FB24803D1DF2A34FA59FC157B77C9705043322C0@IDSERV04.idef.com>
+
+if { $MU_ULONG_MAX > 0 } {
+    imap4d_start 
+    imap4d_auth "user!passwd" "guessme"
+
+    imap4d_test "SELECT mbox1" \
+	"5 EXISTS"\
+	"5 RECENT"\
+	-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+	"OK \[UIDNEXT 6\] Predicted next uid"\
+	"OK \[UNSEEN 1\] first unseen messsage"\
+	"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+	"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags" \
+	"OK"
+
+    set limit [expr $MU_ULONG_MAX - 1]
+    verbose "LIMIT is $limit"
+    
+    imap4d_test "FETCH 1 BODY\[TEXT\]<0.$limit>" \
+	"BAD FETCH Completed"
+} else {
+    unsupported "IDEF0956"
+}
+# End of IDEF0956.exp

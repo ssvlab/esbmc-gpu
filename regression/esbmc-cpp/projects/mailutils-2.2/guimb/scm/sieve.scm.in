@@ -1,0 +1,1104 @@
+#! %GUILE_BINDIR%/guile -s
+# Emacs, it's -*- scheme -*-
+!#
+;;;; GNU Mailutils -- a suite of utilities for electronic mail
+;;;; Copyright (C) 1999, 2000, 2001, 2006, 2007, 2009, 2010 Free
+;;;; Software Foundation, Inc.
+;;;;
+;;;; GNU Mailutils is free software; you can redistribute it and/or modify
+;;;; it under the terms of the GNU General Public License as published by
+;;;; the Free Software Foundation; either version 3, or (at your option)
+;;;; any later version.
+;;;; 
+;;;; GNU Mailutils is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU General Public License for more details.
+;;;; 
+;;;; You should have received a copy of the GNU General Public License along
+;;;; with GNU Mailutils; if not, write to the Free Software Foundation,
+;;;; Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+;;;;
+
+;;;; This is a Sieve to Scheme translator.
+;;;;
+;;;; To convert a sieve script into equivalent Scheme program, run:
+;;;;
+;;;;  guile -s sieve.scm --file <sieve-script-name> --output <output-file-name>
+;;;;
+;;;; To compile and execute a sieve script upon a mailbox, run:
+;;;;
+;;;;  guile -s sieve.scm --file <sieve-script-name> [mailbox-name]
+;;;; or
+;;;;  guimb [--mailbox mailbox-name] -s sieve.scm --file <sieve-script-name> 
+
+(if (not (member "%GUILE_SITE%" %load-path))
+    (set! %load-path (cons "%GUILE_SITE%" %load-path)))
+(use-modules (ice-9 getopt-long)
+	     (ice-9 rdelim)
+	     (mailutils sieve-core))
+
+(set! sieve-parser #t)
+
+(define sieve-debug 0)
+(define sieve-libdir "%LIBDIR%")
+(define sieve-load-files '())
+(define sieve-script-args '())
+(define request-verbose #f)
+
+(define error-count 0)
+(define current-token #f)
+(define putback-list '())
+(define input-port #f)
+(define input-file "")
+(define input-line-number 0)
+(define input-line "")
+(define input-index 0)
+(define input-length 0)
+(define nesting-level 0)
+(define recovery-line-number -1)
+(define recovery-index -1)
+
+(define (DEBUG level . rest)
+  (if (>= sieve-debug level)
+      (begin
+	(display "DEBUG(")
+	(display level)
+	(display "):")
+	(for-each (lambda (x)
+		    (display x))
+		  rest)
+	(newline))))
+
+;;;; Lexical scanner
+(define (delimiter? c)
+  (or (member c (list #\[ #\] #\{ #\} #\, #\; #\( #\)))
+      (char-whitespace? c)))
+
+(define (lex-error . rest)
+  (set! error-count (1+ error-count))
+  (with-output-to-port
+      (current-error-port)
+    (lambda ()
+      (display input-file)
+      (display ":")
+      (display input-line-number)
+      (display ": ")
+      (for-each (lambda (x)
+		  (display x))
+		rest)
+      (newline)))
+  #t)
+
+(define (syntax-error . rest)
+  (set! error-count (1+ error-count))
+  (with-output-to-port
+      (current-error-port)
+    (lambda ()
+      (display input-file)
+      (display ":")
+      (display input-line-number)
+      (display ": ")
+      (for-each (lambda (x)
+		  (display x))
+		rest)
+      (newline)))
+  (throw 'syntax-error))
+
+;;; If current input position points to end of line or to a start of
+;;; # comment, return #f. Otherwise return cons whose car contains
+;;; token type and cdr contains token itself (string). 
+(define (next-token)
+  (let ((start (do ((i input-index (1+ i)))
+		   ((or (>= i input-length)
+			(not (char-whitespace? (string-ref input-line i))))
+		    i))))
+;    (DEBUG 100 "START " start ": " (substring input-line start)) 
+    (if (< start input-length)
+	(let ((char (string-ref input-line start)))
+	  (DEBUG 100 "CHAR " char)
+	  (case char
+	    ((#\#)
+	     (set! input-index input-length)
+	     #f)
+	    ((#\[ #\] #\{ #\} #\( #\) #\, #\;)
+	     (set! input-index (1+ start))
+	     (cons 'delimiter char))
+	    ((#\")
+	     (let ((end (do ((end (1+ start) (1+ end)))
+			    ((or (>= end input-length)
+				 (char=? (string-ref input-line end) #\"))
+			     end))))
+	       (if (>= end input-length)
+		   (lex-error "Unterminated string constant"))
+		  (set! input-index (1+ end))
+		  (cons 'string (substring input-line (1+ start) end))))
+	    (else
+	     (DEBUG 100 "MATCH else")
+	     (cond
+	      ((and (char=? (string-ref input-line start) #\/)
+		    (< (1+ start) input-length)
+		    (char=? (string-ref input-line (1+ start)) #\*))
+	       (set! input-index (+ start 2))
+	       (cons 'bracket-comment "/*"))
+	      ((char-numeric? char)
+	       (let* ((end (do ((end start (1+ end)))
+			       ((or
+				 (>= end (1- input-length))
+				 (not (char-numeric?
+				       (string-ref input-line end))))
+
+				(cond
+				 ((char-numeric? (string-ref input-line end))
+				  (1+ end))
+				 (else
+				  end)))))
+		      (num (string->number (substring input-line start end))) 
+		      (q (if (< end input-length)
+			     (string-ref input-line end)
+			 #f))
+		      (k 1))
+		 (case q
+		   ((#f) #f) ;; nothing
+		   ((#\K)
+		    (set! end (1+ end))
+		    (set! k 1024))
+		   ((#\M)
+		    (set! end (1+ end))
+		    (set! k 1048576))
+		   ((#\G)
+		    (set! end (1+ end))
+		    (set! k 1073741824))
+		   (else
+		    (if (not (delimiter? q))
+		      (lex-error "Unknown qualifier (" q ")"))))
+		 (set! input-index end)
+		 (cons 'number (* num k))))
+	      (else
+	       (let ((end (do ((end start (1+ end)))
+			      ((or (>= end input-length)
+				   (delimiter? (string-ref input-line end)))
+			       end))))
+		 (DEBUG 100 "END " end)
+		 (set! input-index end)
+		 (cond
+		  ((char=? char #\:)
+		   (cons 'tag (substring input-line (1+ start) end)))
+		  (else
+		   (cons 'identifier (substring input-line start end))))))))))
+	#f)))
+
+(define (end-of-line?)
+  (do ((i input-index (1+ i)))
+      ((or (>= i input-length)
+	   (not (char-whitespace? (string-ref input-line i))))
+       (>= i input-length))))
+
+(define (read-input-line port)
+  (set! input-line (read-line port))
+  (if (not (eof-object? input-line))
+      (begin
+	(set! input-line-number (1+ input-line-number))
+	(set! input-length (string-length input-line))
+	(set! input-index 0)))
+  input-line)
+
+(define (next-token-from-port port)
+  (let ((tok (or (next-token)
+		 (begin
+		   (DEBUG 100 "2nd")
+		   (set! input-line (read-line port))
+		   (if (not (eof-object? input-line))
+		       (begin
+                         (set! input-line-number (1+ input-line-number))
+			 (set! input-length (string-length input-line))
+			 (set! input-index 0)
+			 (next-token))
+		       input-line)))))
+    (cond
+     ((or (not tok) (eof-object? tok))
+      tok)
+     ((and (eq? (car tok) 'identifier)
+	   (string=? (cdr tok) "text:")
+	   (end-of-line?))
+      (let ((text "")
+	    (string-start input-line-number))
+	(do ((line (read-line port) (read-line port)))
+	    ((or (and
+		  (eof-object? line)
+		  (lex-error
+		   "Unexpected end of file in multiline string started on line "
+		   string-start)
+		  (throw 'end-of-file))
+		 (let ((len (string-length line)))
+		   (and (> len 0)
+			(char=? (string-ref line 0) #\.)
+			(do ((i 1 (1+ i)))
+			    ((or (>= i len)
+				 (not
+				  (char-whitespace?
+				   (string-ref line i))))
+			     (>= i len))))))
+	     #f)
+          (set! input-line-number (1+ input-line-number))
+	  (if (and (not (string-null? line))
+                   (char=? (string-ref line 0) #\.)
+		   (char=? (string-ref line 1) #\.))
+	      (set! line (substring line 1)))
+	  (set! text (string-append text "\n" line)))
+	(set! input-length 0)
+	(set! input-index 0)
+	(cons 'string text)))
+     ((eq? (car tok) 'bracket-comment)
+      (let ((comment-start input-line-number))
+	(set! input-length (- input-length input-index))
+	   (if (> input-length 0)
+	       (begin
+		 (set! input-line
+		       (substring input-line input-index input-length))
+		 (set! input-index 0))
+	       (read-input-line port))
+	   (do ()
+	       ((> input-index 0) #f)
+	     (cond
+	      ((eof-object? input-line)
+	       (lex-error
+		"Unexpected end of file in comment started on line "
+		comment-start)
+	       (throw 'end-of-file))
+	      (else
+	       (let ((t (string-index input-line #\*)))
+		 (if (and t
+			  (< (1+ t) input-length)
+			  (char=? (string-ref input-line (1+ t)) #\/))
+		     (set! input-index (+ t 2))
+		     (read-input-line port))))))))
+     (else
+	tok))))
+
+(define (delimiter token c)
+  (and (pair? token)
+       (eq? (car token) 'delimiter)
+       (char=? (cdr token) c)))
+
+(define (identifier token c)
+  (and (eq? (car token) 'identifier)
+       (string=? (cdr token) c)))
+
+(define (putback-token)
+  (set! putback-list (append (list current-token)
+			     putback-list)))
+
+(define (read-token)
+  (cond
+   ((not (null? putback-list))
+    (set! current-token (car putback-list))
+    (set! putback-list (cdr putback-list)))
+   (else
+    (set! current-token (do ((token (next-token-from-port input-port)
+				    (next-token-from-port input-port)))
+			    (token token)))))
+  current-token)
+
+(define (require-semicolon . read)
+  (if (null? read)
+      (read-token))
+  (if (or (eof-object? current-token)
+	  (not (delimiter current-token #\;)))
+      (syntax-error "Missing ;")
+      current-token))
+
+(define (require-tag . read)
+  (if (null? read)
+      (read-token))
+  (cond
+   ((eof-object? current-token)
+    (syntax-error "Expected tag but found " current-token))
+   ((not (eq? (car current-token) 'tag))
+    (syntax-error "Expected tag but found " (car current-token))))
+  current-token)
+
+(define (require-string . read)
+  (if (null? read)
+      (read-token))
+  (cond
+   ((eof-object? current-token)
+    (syntax-error "Expected string but found " current-token))
+   ((not (eq? (car current-token) 'string))
+    (syntax-error "Expected string but found " (car current-token))))
+  current-token)
+
+(define (require-number . read)
+  (if (null? read)
+      (read-token))
+  (cond
+   ((eof-object? current-token)
+    (syntax-error "Expected number but found " current-token))
+   ((not (eq? (car current-token) 'number))
+    (syntax-error "Expected number but found " (car current-token))))
+  current-token)
+
+(define (require-string-list . read)
+  (if (null? read)
+      (read-token))
+  (cond
+   ((eof-object? current-token)
+    (syntax-error "Expected string-list but found " current-token))
+   ((eq? (car current-token) 'string)
+    (list 'string-list (cdr current-token)))
+   ((not (eq? (car current-token) 'delimiter))
+    (syntax-error "Expected string-list but found " (car current-token)))
+   ((char=? (cdr current-token) #\[)
+    (do ((slist '())
+	 (token (read-token) (read-token)))
+	((if (not (eq? (car token) 'string))
+	     (begin
+	       (syntax-error "Expected string but found " (car token))
+	       #t)
+	     (begin
+	       (set! slist (append slist (list (cdr token))))
+	       (read-token)
+	       (cond
+		((eof-object? current-token)
+		 (syntax-error "Unexpected end of file in string list")
+		 #t) ;; break;
+		((eq? (car current-token) 'delimiter)
+		 (cond
+		  ((char=? (cdr current-token) #\,) #f) ;; continue
+		  ((char=? (cdr current-token) #\]) #t) ;; break
+		  (else
+		   (lex-error "Expected ',' or ']' but found "
+			      (cdr current-token))
+		   #t)))
+		(else
+		 (lex-error "Expected delimiter but found "
+			    (car current-token))
+		 #t))))
+	 (cons 'string-list slist))))
+   (else
+    (syntax-error "Expected '[' but found " (car current-token)))))
+  
+(define (require-identifier . read)
+  (if (null? read)
+      (read-token))
+  (cond
+   ((eof-object? current-token)
+    (syntax-error "1. Expected identifier but found " current-token))
+   ((not (eq? (car current-token) 'identifier))
+    (syntax-error "2. Expected identifier but found " (car current-token))))
+  current-token)
+
+;;;;
+
+;;; Syntax tables.
+;;; A syntax table is a list of 
+;;; Each entry is: (list NAME FUNCTION OPT-ARG-LIST REQ-ARG-LIST)
+;;; NAME is a string representing the input language keyword,
+;;; FUNCTION is a corresponding function:
+;;;       (define (foo [arg [arg...]] . opt-args)
+;;; OPT-ARG-LIST is a list of optional arguments (tags),
+;;; REQ-ARG-LIST is a list of required (positional) arguments
+
+(define (sieve-syntax-table-lookup table name)
+  (let ((entry (assoc name table)))
+    (if entry
+	(cdr entry)
+	#f)))
+
+(define-macro (sieve-syntax-table-add table name function req-arg-list opt-arg-list)
+  `(cond
+    ((not (list? ,opt-arg-list))
+     (lex-error "sieve-syntax-table-add: opt-arg-list must be a list"))
+    ((not (list? ,req-arg-list))
+     (lex-error "sieve-syntax-table-add: req-arg-list must be a list"))
+    ((not (or (eq? ,function #f)
+	      (eq? ,function #t)
+	      (procedure? ,function)))
+     (lex-error "sieve-syntax-table-add: bad type for function " ,function))
+    (else
+     (set! ,table
+	   (append ,table
+		   (list
+		    (list ,name ,function ,opt-arg-list ,req-arg-list)))))))
+   
+;;;;
+
+(defmacro do-for-all (fun rest)
+  `(for-each
+    (lambda (x)
+      (apply ,fun x))
+    ,rest))
+
+
+;;;; Available syntax tables.
+
+;;;; Comparators
+
+;;; Syntax table for comparators. The opt-arg-list and req-arg-list have
+;;; no meaning for comparators, so they are ignored. The handler function
+;;; names must start with "comparator-"
+(define sieve-comparator-table '())
+
+(define (sieve-find-comparator name)
+  (sieve-syntax-table-lookup sieve-comparator-table name))
+
+(define (sieve-register-comparator name function)
+  (sieve-syntax-table-add sieve-comparator-table name function '() '()))
+
+;;; Register standard comparators
+(do-for-all sieve-register-comparator sieve-standard-comparators)
+
+;;;; Sieve Tests
+
+;;; Syntax table for tests. Function names must start with "test-"
+(define sieve-test-table '())
+
+(define (sieve-find-test name)
+  (sieve-syntax-table-lookup sieve-test-table name))
+
+(define (sieve-register-test name function req-arg-list opt-arg-list)
+  (sieve-syntax-table-add sieve-test-table name function
+			  req-arg-list opt-arg-list))
+
+;;; Register standard tests
+(do-for-all sieve-register-test sieve-standard-tests) 
+
+;;;; Sieve Actions
+
+;;; Syntax table for actions. Function names start with "action-"
+(define sieve-action-table '())
+
+(define (sieve-find-action name)
+  (sieve-syntax-table-lookup sieve-action-table name))
+
+(define (sieve-register-action name function req-arg-list opt-arg-list)
+  (sieve-syntax-table-add sieve-action-table name function
+			  req-arg-list opt-arg-list))
+
+;;; Register standard actions
+(do-for-all sieve-register-action sieve-standard-actions)
+
+;;;;
+
+;;;; Command parsers
+
+;;; sieve-preprocess-arguments: Preprocess and group the arguments. Returns
+;;; a cons whose car is a list of all optional arguments, and the cdr is
+;;; a list of the rest of the arguments.
+;;;
+;;; arguments = *argument [test / test-list]
+;;; argument = string-list / number / tag
+
+(define (sieve-preprocess-arguments tag-gram)
+  (do ((opt-list '())   ;; List of optional arguments (tags)
+       (arg-list '())   ;; List of positional arguments
+       (last-tag #f)    ;; Description of the last tag from tag-gram
+       (state 'opt)     ;; 'opt when scanning optional arguments,
+                        ;; 'arg when scanning positional arguments
+       (token (read-token) (read-token))) ;; Obtain next token
+      ((cond
+	((eof-object? token)
+	 (syntax-error "Expected argument but found " token))
+	((eq? (car token) 'tag)
+	 (if (not (eq? state 'opt))
+	     (syntax-error "Misplaced tag: :" (cdr token)))
+	 (set! last-tag (assoc (cdr token) tag-gram))
+	 (if (not last-tag)
+	     (syntax-error
+	      "Tag :" (cdr token) " is not allowed in this context"))
+	 (set! opt-list (append opt-list (list token)))
+	 #f)
+	((or (eq? (car token) 'number)
+	     (eq? (car token) 'string))
+	 (cond
+	  ((and (eq? state 'opt) (pair? last-tag))
+	   (cond
+	    ((cdr last-tag)
+	     (if (not (eq? (cdr last-tag) (car token)))
+		 (syntax-error
+		  "Tag :" (car last-tag) " takes " (cdr last-tag) " argument"))
+	     (cond
+	      ((string=? (car last-tag) "comparator")
+	       (let ((comp (sieve-find-comparator (cdr token))))
+		 (if (not comp)
+		     (syntax-error "Undefined comparator: " (cdr token)))
+		 (set-cdr! token (car comp)))))
+	     (set! opt-list (append opt-list (list token)))
+	     (set! last-tag #f))
+	    (else
+	     (set! state 'arg)
+	     (set! arg-list (append arg-list (list token))))))
+	  (else
+	   (set! arg-list (append arg-list (list token)))))
+	 #f)
+	((delimiter token #\[) 
+	 (putback-token)
+	 (cond
+	  ((and (eq? state 'opt) (pair? last-tag))
+	   (cond
+	    ((cdr last-tag)
+	     (if (not (eq? (cdr last-tag) 'string-list))
+		 (syntax-error
+		  "Tag :" (car last-tag) " takes string list argument"))
+	     (set! opt-list (append opt-list (list (require-string-list))))
+	     (set! last-tag #f))
+	    (else
+	     (set! state 'arg)
+	     (set! arg-list (append arg-list (list (require-string-list)))))))
+	  (else
+	   (set! arg-list (append arg-list (list (require-string-list))))))
+ 	 #f)
+	(else
+	 #t)) 
+       (cons opt-list arg-list))))
+
+;;; sieve-parse-arguments: Parse the arguments to a test or an action.
+;;; ENTRY is the syntax table entry to guide the parsing
+;;;
+(define (sieve-parse-arguments ident entry)
+  (DEBUG 100 "sieve-parse-arguments" entry)
+  (let ((arg-list (sieve-preprocess-arguments (car (cdr entry)))))
+    ;; Process positional arguments
+    (do ((expect (car (cdr (cdr entry))) (cdr expect))
+	 (argl (cdr arg-list) (cdr argl))
+	 (n 1 (1+ n)))
+	((cond
+	  ((null? expect)
+	   (if (not (null? argl))
+	       (syntax-error
+		"Too many positional arguments for " ident
+		" (bailed out at " (car argl) ")"))
+	   #t)
+	  ((null? argl)
+	   (if (not (null? expect))
+	       (syntax-error
+		"Too few positional arguments for " ident))
+	   #t)
+	  (else #f)) #f)
+      (let ((expect-type (car expect))
+	    (arg (car argl)))
+	(cond
+	 ((and (eq? expect-type 'string-list)
+	       (eq? (car arg) 'string))
+	  ;; Coerce string to string-list
+	  (sieve-exp-append (list 'list (cdr arg))))
+	 ((eq? expect-type (car arg))
+	  (if (eq? expect-type 'string-list)
+	      (sieve-exp-append (append (list 'list) (cdr arg)))
+	      (sieve-exp-append (cdr arg))))
+	 (else
+	  (syntax-error
+	   "Type mismatch in argument " n " to " (cdr ident)
+	   "; expected " expect-type ", but got " (car arg))))))
+    ;; Process optional arguments (tags).
+    ;; They have already been tested
+    (for-each
+     (lambda (tag)
+       (sieve-exp-append (cond
+			  ((eq? (car tag) 'tag)
+			   (symbol->keyword
+			    (string->symbol (cdr tag))))
+			  ((eq? (car tag) 'string-list)
+			   (append (list 'list) (cdr tag)))
+			  (else
+			   (cdr tag)))))
+     (car arg-list))))
+
+;;;;
+
+;;;; Parser functions for tests
+
+;;; test-list = "(" test *("," test) ")"
+(define (sieve-parse-test-list)
+  (do ((token (sieve-parse-test) (sieve-parse-test)))
+      ((cond
+	((delimiter token #\))
+	 #t) ;; break;
+	((delimiter token #\,)
+	 #f) ;; continue
+	((eof-object? token)
+	 (syntax-error "Unexpected end of file in test-list")
+	 #t) ;; break
+	(else
+	 (syntax-error "Expected ',' or ')' but found " (cdr token))
+	 #t)) ;; break
+       (read-token))))
+	
+;;; test = identifier arguments
+(define (sieve-parse-test)
+  (let ((ident (require-identifier)))
+    (cond
+     ((string=? (cdr ident) "not")
+      (sieve-exp-begin)
+      (sieve-exp-append 'not)
+      (sieve-parse-test)
+      (sieve-exp-finish))
+     (else
+      (read-token)
+      (cond
+       ((eof-object? current-token)
+	(syntax-error "Unexpected end of file in conditional"))
+       ((delimiter current-token #\()
+	(sieve-exp-begin)
+	(cond
+	 ((string=? (cdr ident) "allof")
+	  (sieve-exp-append 'and))
+	 ((string=? (cdr ident) "anyof")
+	  (sieve-exp-append 'or))
+	 (else
+	  (syntax-error "Unexpected '('")))
+	(sieve-parse-test-list)
+	(sieve-exp-finish))
+       (else
+	(let ((test (sieve-find-test (cdr ident))))
+	  (if (not test)
+	      (syntax-error "Unknown test name: " (cdr ident)))
+	  (cond
+	   ((procedure? (car test))
+	    (putback-token)
+	    (sieve-exp-begin)
+	    (sieve-exp-append (car test))
+	    (sieve-parse-arguments (cdr ident) test)
+	    (sieve-exp-finish))
+	   (else
+	    (sieve-exp-append (car test))))))))))
+  current-token)
+
+(define (sieve-parse-block . read)
+  (if (not (null? read))
+      (read-token))
+  (if (delimiter current-token #\{)
+      (begin
+	(set! nesting-level (1+ nesting-level))
+	(do ((token (read-token) (read-token)))
+	    ((cond
+	      ((eof-object? token)
+	       (syntax-error "Unexpected end of file in block")
+	       #t)
+	      ((delimiter token #\})
+	       #t)
+	      (else
+	       (putback-token)
+	       (sieve-parse-command)
+	       #f))) #f)
+	(set! nesting-level (1- nesting-level)))
+      (require-semicolon 'dont-read)))
+
+;;; if <test1: test> <block1: block>
+(define (sieve-parse-if-internal)
+  (DEBUG 10 "sieve-parse-if-internal" current-token)
+  (sieve-exp-begin)
+  
+  (sieve-parse-test)
+  
+  (sieve-parse-block)
+  (sieve-exp-finish)
+  
+  (read-token)
+  (cond
+   ((eof-object? current-token) )
+   ((identifier current-token "elsif")
+    (sieve-parse-if-internal))
+   ((identifier current-token "else")
+    (sieve-exp-begin 'else)
+    (sieve-parse-block 'read)
+    (sieve-exp-finish))
+   (else
+    (putback-token))))
+
+(define (sieve-parse-if)
+  (sieve-exp-begin 'cond)
+  (sieve-parse-if-internal)
+  (sieve-exp-finish))
+
+(define (sieve-parse-else)
+  (syntax-error "else without if"))
+
+(define (sieve-parse-elsif)
+  (syntax-error "elsif without if"))
+
+;;; require <capabilities: string-list>
+(define (sieve-parse-require)
+  (for-each
+   (lambda (capability)
+     (if (not
+	  (cond
+	   ((and
+	     (>= (string-length capability) 5)
+	     (string=? (substring capability 0 5) "test-"))
+	    (sieve-find-test (substring capability 5)))
+	   ((and
+	     (>= (string-length capability) 11)
+	     (string=? (substring capability 0 11) "comparator-"))
+	    (sieve-find-comparator (substring capability 11)))
+	   (else
+	    (sieve-find-action capability))))
+	 (let ((name (string-append sieve-libdir
+				    "/" capability ".scm")))
+	   (set! sieve-load-files (append sieve-load-files (list name)))
+	   (catch #t
+		  (lambda ()
+		    (load name))
+		  (lambda args
+		    (lex-error "Can't load required capability "
+			       capability)
+		    args)))))
+   (cdr (require-string-list)))
+  (require-semicolon))
+
+;;; stop
+(define (sieve-parse-stop)
+  (sieve-exp-begin sieve-stop)
+  (sieve-exp-finish)
+  (require-semicolon))
+
+;;;;
+
+;;;; Parser functions for actions
+
+(define (sieve-parse-action)
+  (let* ((name (cdr current-token))
+	 (descr (sieve-find-action name)))
+    (cond
+     (descr
+      (cond
+       ((car descr)
+	(sieve-exp-begin 'reg-action)
+	(sieve-exp-finish)
+	(sieve-exp-begin (car descr))
+	(sieve-parse-arguments name descr)
+	(require-semicolon 'dont-read)
+	(sieve-exp-finish))
+       (else
+	(require-semicolon))))
+     (else
+      (syntax-error "Unknown identifier: " name)))))
+
+;;;;
+
+;;;; The parser
+
+(define (sieve-parse-command)
+  (DEBUG 10 "sieve-parse-command" current-token)
+  (catch 'syntax-error
+   (lambda ()
+     (read-token)
+     (cond
+      ((or (not current-token)
+	   (eof-object? current-token))) ;; Skip comments and #<eof>
+      ((eq? (car current-token) 'identifier)
+       ;; Process a command
+       (let ((elt (assoc (string->symbol (cdr current-token))
+			 (list
+			  (cons 'if sieve-parse-if)
+			  (cons 'elsif sieve-parse-elsif)
+			  (cons 'else sieve-parse-else)
+		          (cons 'require sieve-parse-require)
+		          (cons 'stop sieve-parse-stop)))))
+	 (if (not elt)
+	     (sieve-parse-action)
+	     (apply (cdr elt) '()))))
+      (else
+       (syntax-error "3. Expected identifier but found "
+		     (cdr current-token)))))
+   (lambda args
+     ;; Error recovery: skip until we find a ';' or '}'.
+     (if (and (= input-line-number recovery-line-number)
+	      (= input-index recovery-index))
+	 (begin
+	   (lex-error "ERROR RECOVERY: Skipping to end of file")
+	   (throw 'end-of-file)))
+     (set! recovery-line-number input-line-number)
+     (set! recovery-index input-index)
+
+     (if (or (delimiter current-token #\})
+	     (delimiter current-token #\;))
+	 (read-token))
+     (DEBUG 50 "ERROR RECOVERY at " current-token)
+     (do ((token current-token (read-token)))
+	 ((cond
+	   ((eof-object? token)
+	    (throw 'end-of-file))
+	   ((delimiter token #\;)
+	    #t)
+	   ((delimiter token #\})
+	    (cond
+	     ((> nesting-level 0)
+	      (putback-token)
+	      #t)
+	     (else
+	      #f)))
+	   ((delimiter token #\{)
+	    (sieve-skip-block)
+	    (putback-token)
+	    #f)
+	   (else
+	    #f)) #f))
+     (DEBUG 50 "ERROR RECOVERY FINISHED AT " current-token)))
+  current-token)
+
+(define (sieve-skip-block)
+  (do ((token (read-token) (read-token)))
+      ((cond
+	((eof-object? token)
+	 (throw 'end-of-file))
+	((delimiter token #\{)
+	 (sieve-skip-block)
+	 #f)
+	((delimiter token #\})
+	 #t)
+	(else
+	 #f)) #f)))
+
+(define (sieve-parse-from-port port)
+  (set! input-port port)
+  (do ((token (sieve-parse-command) (sieve-parse-command)))
+      ((eof-object? token) #f)) )
+
+(define (sieve-parse filename)
+  (if (file-exists? filename)
+      (catch 'end-of-file 
+        (lambda ()
+	  (set! error-count 0)
+	  (set! current-token #f)
+	  (set! input-file filename)
+	  (set! input-line-number 0)
+	  (set! putback-list '())
+	  (call-with-input-file filename sieve-parse-from-port))
+	(lambda args args))))
+
+;;;;
+
+;;;; Code generator
+
+(define sieve-exp '())  ;; Expression currently being built
+(define sieve-exp-stack '())
+(define sieve-code-list '())  ;; Resulting scheme code
+
+(define (sieve-exp-begin . exp)
+  (set! sieve-exp-stack (append (list sieve-exp) sieve-exp-stack))
+  (set! sieve-exp exp))
+
+(define (sieve-exp-append exp)
+  (set! sieve-exp (append sieve-exp (list exp))))
+
+(define (sieve-exp-finish)
+  (set! sieve-exp (append (car sieve-exp-stack) (list sieve-exp)))
+  (set! sieve-exp-stack (cdr sieve-exp-stack)))
+
+(define (sieve-code-begin)
+  (set! sieve-exp-stack '())
+  (set! sieve-exp '()))
+
+(define (sieve-code-prologue code-list)
+  (sieve-exp-begin (car code-list))
+  (let loop ((code-list (cdr code-list)))
+    (for-each
+     (lambda (elt)
+       (cond
+	((and (list? elt) (not (null? elt)))
+	 (sieve-exp-begin (car elt))
+	 (loop (cdr elt))
+	 (sieve-exp-finish))
+	(else
+	 (sieve-exp-append elt))))
+     code-list)))
+		 
+(define (sieve-code-finish)
+  (if (not (null? sieve-exp))
+      (set! sieve-code-list (append sieve-code-list sieve-exp))))
+
+;;; Print the program
+
+(define (sieve-code-print-list exp)
+  (display "(")
+  (for-each
+   (lambda (x)
+     (cond
+      ((procedure? x)
+       (display (procedure-name x)))
+      ((list? x)
+       (sieve-code-print-list x))
+      (else
+       (write x)))
+     (display " "))
+   exp)
+  (display ")"))
+
+;;; Save the program
+
+(define (sieve-save-program outfile guimb-header)
+  (with-output-to-file
+      outfile
+    (lambda ()
+      (display "#! ")
+      (cond
+       (guimb-header
+	(display "/home/gray/alpha/bin/guimb -s\n"))
+       (else
+	(display "/bin/sh\n\
+# aside from this initial boilerplate, this is actually -*- scheme -*- code\n\
+exec ${GUILE-guile} -l $0 -c '(mailutils-main)'\n")))
+      (display (string-append
+		"# This Guile mailbox parser was made from " filename))
+      (newline) 
+      (display "# by sieve.scm, GNU %PACKAGE% %VERSION%\n!#")
+      (newline)
+      
+      (display 
+       "(if (not (member \"%GUILE_SITE%\" %load-path))\n
+           (set! %load-path (cons \"%GUILE_SITE%\" %load-path)))\n")
+      
+      (display "(use-modules (mailutils sieve-core))\n")
+      (display (string-append
+		"(set! sieve-source \"" filename "\")"))
+      (newline)
+      
+      (for-each
+       (lambda (file)
+	 (display (string-append
+		   "(load \"" file "\")"))
+	 (newline))
+       sieve-load-files)
+      (newline)
+      (if request-verbose
+	  (display "(set! sieve-verbose #t)\n"))
+      (display "(define (sieve-filter-thunk) ")
+      
+      (sieve-code-print-list (car sieve-code-list))
+      (display ")\n\n")
+
+      (display "(define (mailutils-main . rest)\n")
+      (display "  (sieve-main sieve-filter-thunk))\n\n")
+
+      (display "(define (mailutils-check-message msg)\n\
+  (set! sieve-current-message msg)\n\
+  (sieve-run-current-message sieve-filter-thunk))\n")
+      
+      (display "\n\
+;;;; Local Variables:\n\
+;;;; buffer-read-only: t\n\
+;;;; End:\n"))))
+
+;;;;
+
+;;;; Main
+
+(define filename #f)
+(define output #f)
+(define guimb-header #f)
+
+(define (sieve-usage)
+  (display "usage: sieve.scm [OPTIONS][mailbox]\n")
+  (display "GNU sieve.scm -- compile a Sieve program into Scheme code\n")
+  (display "Options are:\n")
+  (display "   -f, --file FILENAME      Set input file name\n")
+  (display "   -o, --output FILENAME    Set output file name\n")
+  (display "   -L, --lib-dir DIRNAME    Set sieve library directory name\n")
+  (display "   -g, --guimb              Make output file executable for guimb\n")
+  (display "   -d, --debug LEVEL        Set debugging level\n")
+  (display "       --version            Show program version\n\n")
+  (display "If -o option is not given, the compiled program is executed\n")
+  (display "immediately. It operates on the user system mailbox unless\n")
+  (display "mailbox is given in the command line.\n")
+  (exit 0))
+
+(define (sieve-version)
+  (display "sieve.scm (GNU %PACKAGE% %VERSION%)")
+  (newline)
+  (exit 0))
+
+;;; Parse command line 
+
+(define grammar
+  `((file   (single-char #\f)
+            (value #t))
+    (output (single-char #\o)
+	    (value #t))
+    (debug  (single-char #\d)
+	    (value #t))
+    (lib-dir (single-char #\L)
+	     (value #t))
+    (guimb  (single-char #\g))
+    (version)
+    (verbose (single-char #\v))
+    (help   (single-char #\h))))
+
+(define program-name (car (command-line)))
+
+(for-each
+ (lambda (x)
+   (cond
+    ((pair? x)
+     (case (car x)
+       ((debug)
+	(set! sieve-debug (string->number (cdr x))))
+       ((file)
+	(set! filename (cdr x)))
+       ((lib-dir)
+	(set! sieve-libdir (cdr x)))
+       ((output)
+	(set! output (cdr x)))
+       ((guimb)
+	(set! guimb-header #t))
+       ((version)
+	(sieve-version))
+       ((verbose)
+	(set! request-verbose #t))
+       ((help)
+	(sieve-usage))
+       ('()
+	(set! sieve-script-args (cdr x)))))))
+ (getopt-long (command-line) grammar))
+
+(cond
+ ((not filename)
+  (format (current-error-port) "~A: missing input filename~%" program-name)
+  (sieve-usage))
+ ((not (file-exists? filename))
+  (format (current-error-port) "~A: Input file ~A does not exist~%" filename)
+  (exit 0)))
+	
+(if (not sieve-libdir)
+    (set! sieve-libdir
+	    (let ((myname (car (command-line))))
+	      (if (not (char=? (string-ref myname 0) #\/))
+		  (set! myname (string-append (getcwd) "/" myname)))
+	      (let ((slash (string-rindex myname #\/)))
+		(substring myname 0 slash)))))
+
+(sieve-code-prologue
+ '(letrec
+      ((implicit-keep #t)
+       (reg-action (lambda () (set! implicit-keep #f))))))
+
+(sieve-parse filename)
+(sieve-exp-append 'implicit-keep)
+(sieve-exp-finish)
+(sieve-code-finish)
+
+(cond
+ ((> error-count 0)
+  (display error-count)
+  (display " errors.")
+  (newline)
+  (exit 1))
+ (output
+  (sieve-save-program output guimb-header))
+ (else
+  (let ((temp-file (tmpnam))
+	(saved-umask (umask #o077)))
+    (sieve-save-program temp-file guimb-header)
+    (catch #t
+	   (lambda ()
+	     (set-cdr! (command-line) sieve-script-args)
+	     (load temp-file))
+	   (lambda (key . args)
+	     (apply display-error the-last-stack (current-error-port) args)))
+    (delete-file temp-file)	
+    (umask saved-umask))))
+
+;;;; End of sieve.scm
+
+
+

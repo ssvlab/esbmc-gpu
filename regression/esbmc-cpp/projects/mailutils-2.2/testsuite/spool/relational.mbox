@@ -1,0 +1,84 @@
+From bar@dontmailme.org Sun May  6 22:17:15 2001
+From: Bar <bar@dontmailme.org>
+To: foo@example.com.invalid, baz@example.com.invalid
+Cc: qux@example.com.invalid
+Subject: Test 1
+
+rel-address.sv marks it as deleted.
+rel-hairy.sv delivers it to From_A-M
+
+From roadrunner@acme.example.com Sun May  6 22:17:15 2001
+From: Road Runner <roadrunner@acme.example.com>
+To: foo@example.com.invalid, baz@example.com.invalid
+Subject: Test 2
+
+Delivered into From_N-Z
+
+From zax@de.res.example.com Sun May  6 22:17:15 2001
+From: Zax <zax@de.res.example.com>
+To: foo@example.com
+Cc: me@foo.example.com.invalid
+X-Priority: 1
+Subject: Priority 1
+
+rel-hairy.sv delivers it into Priority
+
+From b1ff@de.res.example.com Sun May  6 22:17:15 2001
+To: foo@example.com, me@foo.example.com.invalid
+X-Priority: 2
+Subject: Priority 2
+
+rel-hairy.sv delivers it into Priority
+
+From b1ff@de.res.example.com Sun May  6 22:17:15 2001
+To: foo@example.com
+X-Priority: 2
+Subject: Priority 2
+
+rel-hairy.sv delivers it into Priority
+
+From b1ff@de.res.example.com Sun May  6 22:17:15 2001
+To: foo@example.com
+X-Priority: 3
+Subject: Priority 3
+
+rel-hairy.sv delivers it into From_A-M
+
+From b1ff@de.res.example.com Sun May  6 22:17:15 2001
+To: foo@example.com
+X-Priority: 4
+Subject: Priority 4
+
+rel-hairy.sv delivers it into From_A-M
+
+From b1ff@de.res.example.com Sun May  6 22:17:15 2001
+To: me@foo.example.com.invalid
+X-Priority: 5
+Subject: Priority 5
+
+rel-hairy.sv delivers it into From_A-M *and* Only_me. It does not
+contradict to RFC 3028.
+
+From bar@dontmailme.org Sun May  6 22:17:15 2001
+From: Bar <bar@dontmailme.org>
+Received: from c.host.net ([1.1.1.3]) 
+	by Mirddin.farlep.net with ESMTP id g6G9BZb00791
+	for <gray@mirddin.farlep.net>; Tue, 16 Jul 2002 12:11:35 +0300
+Received: from b.host.net ([1.1.1.2]) 
+	by c.host.net with ESMTP id g6G9BZb00791
+	for <gray@mirddin.farlep.net>; Tue, 16 Jul 2002 12:11:35 +0300
+Received: from a.host.net ([1.1.1.1]) 
+	by b.host.net with ESMTP id g6G9BZb00791
+	for <gray@mirddin.farlep.net>; Tue, 16 Jul 2002 12:11:35 +0300
+To: foo@example.com.invalid, baz@example.com.invalid, qux@example.com.invalid,
+    me@foo.example.com.invalid, b1ff@de.res.example.com,
+    roadrunner@acme.example.com
+Subject: Test 1
+
+rel-hairy.sv delivers it into SPAM
+
+
+
+
+
+

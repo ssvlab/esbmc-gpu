@@ -1,0 +1,76 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# 6.4.3.  EXPUNGE Command
+#   Arguments:  none
+#   Responses:  untagged responses: EXPUNGE
+#   Result:     OK - expunge completed
+#               NO - expunge failure: can't expunge (e.g. permission
+#                    denied)
+#               BAD - command unknown or arguments invalid
+#
+#      The EXPUNGE command permanently removes from the currently
+#      selected mailbox all messages that have the \Deleted flag set.
+#      Before returning an OK to the client, an untagged EXPUNGE response
+#      is sent for each message that is removed.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test "SELECT mbox1" \
+"5 EXISTS"\
+"5 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 6\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags" \
+"OK"
+
+imap4d_test "STORE 2:* +FLAGS (\\Deleted)"\
+"2 FETCH (FLAGS (\\Deleted \\Recent))"\
+"3 FETCH (FLAGS (\\Deleted \\Recent))"\
+"4 FETCH (FLAGS (\\Deleted \\Recent))"\
+"5 FETCH (FLAGS (\\Deleted \\Recent))"\
+"OK"	
+
+imap4d_test "EXPUNGE"\
+"2 EXPUNGED"\
+"2 EXPUNGED"\
+"2 EXPUNGED"\
+"2 EXPUNGED"\
+"1 EXISTS"\
+"1 RECENT"\
+"OK"
+
+imap4d_test "CLOSE"
+
+imap4d_test "SELECT mbox1" \
+"1 EXISTS"\
+"0 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 2\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags" \
+"OK"
+
+imap4d_stop
+
+# End of expunge.exp

@@ -1,0 +1,136 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2005, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mail_start "--file=%teaparty.mbox"
+mail_command "set readonly"
+
+mail_test "headers" \
+">N   1 March Hare         Mon Jul 29 22:00  10/301   Invitation"\
+" N   2 Alice              Mon Jul 29 22:00  10/311   Re: Invitation"\
+" N   3 March Hare         Mon Jul 29 22:00  10/306   Re: Invitation"\
+" N   4 Alice              Mon Jul 29 22:00  10/335   Re: Invitation"\
+" N   5 March Hare         Mon Jul 29 22:00  10/352   Re: Invitation"\
+" N   6 Alice              Mon Jul 29 22:00  11/367   Re: Invitation"\
+" N   7 March Hare         Mon Jul 29 22:00  10/315   Personal remark"\
+" N   8 Alice              Mon Jul 29 22:00  10/358   Re: Personal remark"\
+" N   9 March Hare         Mon Jul 29 22:00  10/344   Riddle (was Re: Personal"\
+" N  10 Alice              Mon Jul 29 22:00  10/313   Re: Riddle"
+
+mail_test "z." \
+">N   1 March Hare         Mon Jul 29 22:00  10/301   Invitation"\
+" N   2 Alice              Mon Jul 29 22:00  10/311   Re: Invitation"\
+" N   3 March Hare         Mon Jul 29 22:00  10/306   Re: Invitation"\
+" N   4 Alice              Mon Jul 29 22:00  10/335   Re: Invitation"\
+" N   5 March Hare         Mon Jul 29 22:00  10/352   Re: Invitation"\
+" N   6 Alice              Mon Jul 29 22:00  11/367   Re: Invitation"\
+" N   7 March Hare         Mon Jul 29 22:00  10/315   Personal remark"\
+" N   8 Alice              Mon Jul 29 22:00  10/358   Re: Personal remark"\
+" N   9 March Hare         Mon Jul 29 22:00  10/344   Riddle (was Re: Personal"\
+" N  10 Alice              Mon Jul 29 22:00  10/313   Re: Riddle"
+
+mail_test "z" \
+">N  11 March Hare         Mon Jul 29 22:00  10/348   Re: Riddle"\
+" N  12 Alice              Mon Jul 29 22:00  10/297   Re: Riddle"\
+" N  13 March Hare         Mon Jul 29 22:00  10/338   Be specific (was Re: Ridd"\
+" N  14 Alice              Mon Jul 29 22:00  11/368   Re: Be specific"\
+" N  15 Hatter             Mon Jul 29 22:00  12/409   Re: Be specific"\
+" N  16 March Hare         Mon Jul 29 22:00  11/386   Re: Be specific"\
+" N  17 Dormouse           Mon Jul 29 22:00  12/442   Re: Be specific"\
+" N  18 Hatter             Mon Jul 29 22:00  10/330   Re: Be specific"\
+" N  19 Hatter             Mon Jul 29 22:00  10/310   Watch"\
+" N  20 Alice              Mon Jul 29 22:00  10/297   Re: Watch"
+
+mail_test "z-" \
+">N   1 March Hare         Mon Jul 29 22:00  10/301   Invitation"\
+" N   2 Alice              Mon Jul 29 22:00  10/311   Re: Invitation"\
+" N   3 March Hare         Mon Jul 29 22:00  10/306   Re: Invitation"\
+" N   4 Alice              Mon Jul 29 22:00  10/335   Re: Invitation"\
+" N   5 March Hare         Mon Jul 29 22:00  10/352   Re: Invitation"\
+" N   6 Alice              Mon Jul 29 22:00  11/367   Re: Invitation"\
+" N   7 March Hare         Mon Jul 29 22:00  10/315   Personal remark"\
+" N   8 Alice              Mon Jul 29 22:00  10/358   Re: Personal remark"\
+" N   9 March Hare         Mon Jul 29 22:00  10/344   Riddle (was Re: Personal"\
+" N  10 Alice              Mon Jul 29 22:00  10/313   Re: Riddle"    
+
+mail_test "z +3" \
+">N  31 Dormouse           Mon Jul 29 22:00  11/364   Re: Remark"\
+" N  32 Hatter             Mon Jul 29 22:00  10/319   Re: Riddle"\
+" N  33 Alice              Mon Jul 29 22:00  10/323   Re: Riddle"\
+" N  34 Hatter             Mon Jul 29 22:00  10/315   Re: Riddle"\
+" N  35 March Hare         Mon Jul 29 22:00  10/292   Re: Riddle"\
+" N  36 Alice              Mon Jul 29 22:00  11/406   Re: Riddle"\
+" N  37 Hatter             Mon Jul 29 22:00  11/372   Discussing Time"\
+" N  38 Alice              Mon Jul 29 22:00  10/322   Re: Discussing Time"\
+" N  39 Hatter             Mon Jul 29 22:00  10/357   Re: Discussing Time"\
+" N  40 Alice              Mon Jul 29 22:00  10/359   Re: Discussing Time"\
+
+mail_test "z -2" \
+">N  11 March Hare         Mon Jul 29 22:00  10/348   Re: Riddle"\
+" N  12 Alice              Mon Jul 29 22:00  10/297   Re: Riddle"\
+" N  13 March Hare         Mon Jul 29 22:00  10/338   Be specific (was Re: Ridd"\
+" N  14 Alice              Mon Jul 29 22:00  11/368   Re: Be specific"\
+" N  15 Hatter             Mon Jul 29 22:00  12/409   Re: Be specific"\
+" N  16 March Hare         Mon Jul 29 22:00  11/386   Re: Be specific"\
+" N  17 Dormouse           Mon Jul 29 22:00  12/442   Re: Be specific"\
+" N  18 Hatter             Mon Jul 29 22:00  10/330   Re: Be specific"\
+" N  19 Hatter             Mon Jul 29 22:00  10/310   Watch"\
+" N  20 Alice              Mon Jul 29 22:00  10/297   Re: Watch"
+
+mail_test "z +8" \
+" N  86 Hatter             Mon Jul 29 22:01  12/401   Re: Story"\
+" N  87 Alice              Mon Jul 29 22:01  10/317   Re: Story"\
+" N  88 Dormouse           Mon Jul 29 22:01  10/322   Re: Story"\
+" N  89 Dormouse           Mon Jul 29 22:01  11/390   Re: Story"\
+" N  90 Alice              Mon Jul 29 22:01  10/306   Re: Story"\
+">N  91 Dormouse           Mon Jul 29 22:01  10/300   Re: Story"\
+" N  92 Dormouse           Mon Jul 29 22:01  13/487   Re: Story"\
+" N  93 Alice              Mon Jul 29 22:01  10/331   Re: Story"\
+" N  94 Hatter             Mon Jul 29 22:01  10/311   Rude remark"\
+" N  95 Alice              Mon Jul 29 22:01  11/379   Thoughts"
+
+
+mail_test "z" "On last screenful of messages"
+
+mail_test "headers" \
+" N  86 Hatter             Mon Jul 29 22:01  12/401   Re: Story"\
+" N  87 Alice              Mon Jul 29 22:01  10/317   Re: Story"\
+" N  88 Dormouse           Mon Jul 29 22:01  10/322   Re: Story"\
+" N  89 Dormouse           Mon Jul 29 22:01  11/390   Re: Story"\
+" N  90 Alice              Mon Jul 29 22:01  10/306   Re: Story"\
+">N  91 Dormouse           Mon Jul 29 22:01  10/300   Re: Story"\
+" N  92 Dormouse           Mon Jul 29 22:01  13/487   Re: Story"\
+" N  93 Alice              Mon Jul 29 22:01  10/331   Re: Story"\
+" N  94 Hatter             Mon Jul 29 22:01  10/311   Rude remark"\
+" N  95 Alice              Mon Jul 29 22:01  11/379   Thoughts"
+
+mail_test "z -9" \
+" N   1 March Hare         Mon Jul 29 22:00  10/301   Invitation"\
+" N   2 Alice              Mon Jul 29 22:00  10/311   Re: Invitation"\
+" N   3 March Hare         Mon Jul 29 22:00  10/306   Re: Invitation"\
+" N   4 Alice              Mon Jul 29 22:00  10/335   Re: Invitation"\
+" N   5 March Hare         Mon Jul 29 22:00  10/352   Re: Invitation"\
+">N   6 Alice              Mon Jul 29 22:00  11/367   Re: Invitation"\
+" N   7 March Hare         Mon Jul 29 22:00  10/315   Personal remark"\
+" N   8 Alice              Mon Jul 29 22:00  10/358   Re: Personal remark"\
+" N   9 March Hare         Mon Jul 29 22:00  10/344   Riddle (was Re: Personal" \
+" N  10 Alice              Mon Jul 29 22:00  10/313   Re: Riddle"
+
+mail_test "z-" "On first screenful of messages"
+
+# End of z.exp

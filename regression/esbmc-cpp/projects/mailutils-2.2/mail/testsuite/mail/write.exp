@@ -1,0 +1,123 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mail_start "--file=%mbox1"
+
+# Delete first and last message and quit
+mail_command "delete 1 4"
+mail_test -noprompt "quit" \
+	  "Held 3 messages in $MU_SPOOL_DIR/mbox1"
+
+# Start again using the same mailbox
+mail_start -reuse-spool "--file=%mbox1"
+# Go to the last message and do delete 4 times
+mail_command "4"
+mail_command "delete"
+mail_command "delete"
+mail_command "delete"
+mail_command "delete"
+# This delete should fail. Version 1.0 failed as reported by
+# Dan Jacobson
+# References:
+#   <E1G5mnI-0004Zp-2X@jidanni1>
+#   http://lists.gnu.org/archive/html/bug-mailutils/2006-07/msg00023.html
+mail_test "delete" "No applicable messages"
+
+# Start again using the same mailbox
+mail_start -reuse-spool "--file=%mbox1"
+mail_test "h" \
+	">U   1 Bar                Fri Dec 28 23:28  16/579   Re: Jabberwocky"\
+	" U   2 Sergey Poznyakoff  Sat Jul 13 00:43  44/1645  Simple MIME"\
+	" U   3 Sergey Poznyakoff  Sat Jul 13 00:43  29/933   Empty MIME Parts"
+
+# Send first message to mbox...
+mail_command "mbox 1"
+mail_test "h" \
+	">M   1 Bar                Fri Dec 28 23:28  16/579   Re: Jabberwocky"\
+	" U   2 Sergey Poznyakoff  Sat Jul 13 00:43  44/1645  Simple MIME"\
+	" U   3 Sergey Poznyakoff  Sat Jul 13 00:43  29/933   Empty MIME Parts"
+
+# ... and quit
+mail_test -noprompt "quit" \
+	"Saved 1 message in $MU_SPOOL_DIR/mbox" \
+	"Held 2 messages in $MU_SPOOL_DIR/mbox1"
+
+# Now check the mbox contents
+mail_start -reuse-spool "--file=%mbox"
+mail_test "headers" \
+	">N   1 Sergey Poznyakoff  Tue Jul 16 12:11  12/425   MBOX"\
+	" U   2 Bar                Fri Dec 28 23:28  16/579   Re: Jabberwocky"
+
+# Save messages to the third mailbox
+mail_command "set folder=\"$MU_FOLDER_DIR\""
+mail_test "save 1 2 +three" \
+	"\"$MU_FOLDER_DIR/three\"  28/1004"
+
+mail_test "headers" \
+	">*   1 Sergey Poznyakoff  Tue Jul 16 12:11  12/425   MBOX"\
+	" *   2 Bar                Fri Dec 28 23:28  16/579   Re: Jabberwocky"
+
+mail_test -noprompt "quit" \
+	  "Held 2 messages in $MU_SPOOL_DIR/mbox"
+
+# Examine its contents
+mail_start -reuse-spool "--file=$MU_FOLDER_DIR/three"
+mail_test "headers" \
+	">N   1 Sergey Poznyakoff  Tue Jul 16 12:11  12/425   MBOX"\
+	" U   2 Bar                Fri Dec 28 23:28  16/579   Re: Jabberwocky"
+
+# Test uppercase commands (Save and Copy)
+mail_command "set outfolder=\"$MU_FOLDER_DIR\""
+mail_test "Save" \
+	"\"$MU_FOLDER_DIR/gray\"  12/425"
+
+mail_test "file \"$MU_FOLDER_DIR/gray\"" \
+	"Held 2 messages in $MU_FOLDER_DIR/three"
+
+mail_test "headers" \
+	">N   1 Sergey Poznyakoff  Tue Jul 16 12:11  12/425   MBOX"
+mail_exit
+
+# Test write 
+mail_start -reuse-spool "--file=%teaparty.mbox"
+mail_command "set outfolder=\"$MU_FOLDER_DIR\""
+mail_test "write" \
+	"\"$MU_FOLDER_DIR/1\"   1/15"
+
+mail_test "write 2 3 tmp" \
+	"\"$MU_FOLDER_DIR/tmp\"   2/37"
+
+mail_test "Write 1 2 3" \
+	"\"$MU_FOLDER_DIR/hare\"   3/52"
+mail_exit
+
+# Now examine the created files
+
+mu_test_file "$MU_FOLDER_DIR/1" "Have some wine"
+mu_test_file "$MU_FOLDER_DIR/tmp" \
+	"I don't see any wine" \
+	"There isn't any"
+mu_test_file "$MU_FOLDER_DIR/hare" \
+	"Have some wine" \
+	"I don't see any wine" \
+	"There isn't any"
+
+mail_stop
+# End of write.exp
+

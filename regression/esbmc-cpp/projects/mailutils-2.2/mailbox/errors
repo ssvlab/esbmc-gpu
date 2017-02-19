@@ -1,0 +1,85 @@
+# Error messages for GNU Mailutils
+# Copyright (C) 2005, 2006, 2007, 2010 Free Software Foundation, Inc.
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301  USA  
+
+MU_ERR_FAILURE              _("Operation failed")
+MU_ERR_CANCELED             _("Operation canceled")
+
+MU_ERR_NO_HANDLER           _("No registered handler")
+MU_ERR_EMPTY_VFN            _("Empty virtual function")
+
+MU_ERR_OUT_NULL             _("Pointer to output null")
+MU_ERR_OUT_PTR_NULL         _("Pointer to output pointer null")
+
+MU_ERR_MBX_NULL             _("Mailbox null")
+
+MU_ERR_BAD_822_FORMAT       _("Format of RFC822 object is bad")
+MU_ERR_EMPTY_ADDRESS        _("Address contains no addr specs")
+
+MU_ERR_LOCKER_NULL          _("Locker null")
+MU_ERR_LOCK_CONFLICT        _("Conflict with previous locker")
+MU_ERR_LOCK_BAD_LOCK        _("Lock file check failed")
+MU_ERR_LOCK_BAD_FILE        _("File check failed")
+MU_ERR_LOCK_NOT_HELD        _("Lock not held on file")
+MU_ERR_LOCK_EXT_FAIL        _("Failed to execute external locker")
+MU_ERR_LOCK_EXT_ERR         _("External locker failed")
+MU_ERR_LOCK_EXT_KILLED      _("External locker killed")
+
+MU_ERR_NO_SUCH_USER         _("No such user name")
+
+MU_ERR_GETHOSTBYNAME        _("DNS name resolution failed")
+MU_ERR_BAD_RESUMPTION       _("State busy must resume operation")
+MU_ERR_MAILER_BAD_FROM      _("Not a valid mailer from address")
+MU_ERR_MAILER_BAD_TO        _("Not a valid mailer to address")
+MU_ERR_MAILER_NO_RCPT_TO    _("No receipt addresses found")
+MU_ERR_MAILER_BAD_URL       _("Malformed or unsupported mailer URL")
+MU_ERR_SMTP_RCPT_FAILED     _("SMTP rcpt to command failed")
+MU_ERR_TCP_NO_HOST          _("Tcp connections need a host")
+MU_ERR_TCP_NO_PORT          _("Tcp connections need a postive port")
+
+MU_ERR_BAD_2047_INPUT       _("Input string is not RFC 2047 encoded")
+MU_ERR_BAD_2047_ENCODING    _("Not a valid RFC 2047 encoding")
+
+MU_ERR_NOUSERNAME           _("User name is not supplied")
+MU_ERR_NOPASSWORD           _("User password is not supplied")
+
+MU_ERR_UNSAFE_PERMS         _("Unsafe file permissions. Set 0600")
+MU_ERR_BAD_AUTH_SCHEME      _("Unsupported authentication scheme")
+MU_ERR_AUTH_FAILURE         _("Authentication failed")
+
+MU_ERR_PROCESS_NOEXEC       _("Cannot execute")
+MU_ERR_PROCESS_EXITED       _("Process exited with a non-zero status")
+MU_ERR_PROCESS_SIGNALED     _("Process exited on signal")
+MU_ERR_PROCESS_UNKNOWN_FAILURE _("Unknown failure while executing subprocess")
+MU_ERR_CONN_CLOSED          _("Connection closed by remote host")
+MU_ERR_PARSE                _("Parse error")
+MU_ERR_NOENT                _("Requested item not found")
+MU_ERR_EXISTS               _("Item already exists")
+MU_ERR_BUFSPACE             _("Not enough buffer space")
+
+MU_ERR_SQL                  _("SQL error")
+MU_ERR_DB_ALREADY_CONNECTED _("Already connected to the database")
+MU_ERR_DB_NOT_CONNECTED     _("Not connected to the database")
+MU_ERR_RESULT_NOT_RELEASED  _("Result of the previous query is not released")
+MU_ERR_NO_QUERY             _("No query was yet executed")
+MU_ERR_BAD_COLUMN           _("Bad column address")
+MU_ERR_NO_RESULT            _("No result from the previous query available")
+MU_ERR_NO_INTERFACE         _("No such interface")
+
+MU_ERR_BADOP                _("Inappropriate operation for this mode")
+MU_ERR_BAD_FILENAME         _("Badly formed file or directory name")
+MU_ERR_READ                 _("Read error")

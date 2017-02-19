@@ -1,0 +1,4 @@
+main.cu
+-I ~/libraries/ --force-malloc-success --unwind 5 --context-switch 2 -DGPU_threads=16
+^VERIFICATION SUCCESSFUL$
+#VERIFICATION SUCCESSFUL$

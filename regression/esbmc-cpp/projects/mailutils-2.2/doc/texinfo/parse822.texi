@@ -1,0 +1,161 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_parse822_} is reserved. */}
+@code{#include <mailutils/parse822.h>}
+
+@end smallexample
+
+@deftypefun  int mu_parse822_is_char (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_digit (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_ctl (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_space (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_htab (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_lwsp_char (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_special (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_atom_char (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_q_text (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_d_text (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_is_smtp_q (char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_skip_crlf (const char **@var{p}, const char *@var{e})
+@end deftypefun
+
+@deftypefun  int mu_parse822_skip_lwsp_char (const char **@var{p}, const char *@var{e})
+@end deftypefun
+
+@deftypefun  int mu_parse822_skip_lwsp (const char **@var{p}, const char *@var{e})
+@end deftypefun
+
+@deftypefun  int mu_parse822_skip_comments (const char **@var{p}, const char *@var{e})
+@end deftypefun
+
+@deftypefun  int mu_parse822_skip_nl (const char **@var{p}, const char *@var{e})
+@end deftypefun
+
+@deftypefun  int mu_parse822_digits (const char **@var{p}, const char *@var{e}, int @var{min}, int @var{max}, int *@var{digits})
+@end deftypefun
+
+@deftypefun  int mu_parse822_special (const char **@var{p}, const char *@var{e}, char @var{c})
+@end deftypefun
+
+@deftypefun  int mu_parse822_comment (const char **@var{p}, const char *@var{e}, char **@var{comment})
+@end deftypefun
+
+@deftypefun  int mu_parse822_atom (const char **@var{p}, const char *@var{e}, char **@var{atom})
+@end deftypefun
+
+@deftypefun  int mu_parse822_quoted_pair (const char **@var{p}, const char *@var{e}, char **@var{qpair})
+@end deftypefun
+
+@deftypefun  int mu_parse822_quoted_string (const char **@var{p}, const char *@var{e}, char **@var{qstr})
+@end deftypefun
+
+@deftypefun  int mu_parse822_word (const char **@var{p}, const char *@var{e}, char **@var{word})
+@end deftypefun
+
+@deftypefun  int mu_parse822_phrase (const char **@var{p}, const char *@var{e}, char **@var{phrase})
+@end deftypefun
+
+@deftypefun  int mu_parse822_d_text (const char **@var{p}, const char *@var{e}, char **@var{dtext})
+@end deftypefun
+
+@c
+@c From RFC 822, 6.1 Address Specification Syntax
+@c
+
+@deftypefun  int mu_parse822_address_list (mu_address_t *@var{a}, const char *@var{s})
+@end deftypefun
+
+@deftypefun  int mu_parse822_mail_box (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_group (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_address (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_route_addr (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_route (const char **@var{p}, const char *@var{e}, char **@var{route})
+@end deftypefun
+
+@deftypefun  int mu_parse822_addr_spec (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_unix_mbox (const char **@var{p}, const char *@var{e}, mu_address_t *@var{a})
+@end deftypefun
+
+@deftypefun  int mu_parse822_local_part (const char **@var{p}, const char *@var{e}, char **@var{local_part})
+@end deftypefun
+
+@deftypefun  int mu_parse822_domain (const char **@var{p}, const char *@var{e}, char **@var{domain})
+@end deftypefun
+
+@deftypefun  int mu_parse822_sub_domain (const char **@var{p}, const char *@var{e}, char **@var{sub_domain})
+@end deftypefun
+
+@deftypefun  int mu_parse822_domain_ref (const char **@var{p}, const char *@var{e}, char **@var{domain_ref})
+@end deftypefun
+
+@deftypefun  int mu_parse822_domain_literal (const char **@var{p}, const char *@var{e}, char **@var{domain_literal})
+@end deftypefun
+
+@c
+@c RFC 822 Quoting Functions
+@c
+
+@deftypefun  int mu_parse822_quote_string (char **@var{quoted}, const char *@var{raw})
+@end deftypefun
+
+@deftypefun  int mu_parse822_quote_local_part (char **@var{quoted}, const char *@var{raw})
+@end deftypefun
+
+@deftypefun  int mu_parse822_field_body (const char **@var{p}, const char *@var{e}, char **@var{fieldbody})
+@end deftypefun
+
+@deftypefun  int mu_parse822_field_name (const char **@var{p}, const char *@var{e}, char **@var{fieldname})
+@end deftypefun
+
+@c
+@c From RFC 822, 5.1 Date and Time Specification Syntax
+@c
+
+@deftypefun  int mu_parse822_day (const char **@var{p}, const char *@var{e}, int *@var{day})
+@end deftypefun
+
+@deftypefun  int mu_parse822_date (const char **@var{p}, const char *@var{e}, int *@var{day}, int *@var{mon}, int *@var{year})
+@end deftypefun
+
+@deftypefun  int mu_parse822_time (const char **@var{p}, const char *@var{e}, int *@var{h}, int *@var{m}, int *@var{s}, int *@var{tz}, const char **@var{tz_name})
+@end deftypefun
+
+@deftypefun  int mu_parse822_date_time (const char **@var{p}, const char *@var{e}, struct tm *@var{tm}, mu_timezone *@var{tz})
+@end deftypefun

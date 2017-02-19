@@ -1,0 +1,87 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2005, 2007, 2008, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test -sort "LIST \"~\" \"*\""\
+"LIST (\\NoInferiors) \"/\" ~/mbox1"\
+"LIST (\\NoInferiors) \"/\" ~/mbox"\
+"LIST (\\NoInferiors) \"/\" ~/sieve.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/teaparty.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/bigto.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/relational.mbox" \
+"OK LIST Completed"
+
+imap4d_test -sort "LIST \"~\" \"%\""\
+"LIST (\\NoInferiors) \"/\" ~/mbox1"\
+"LIST (\\NoInferiors) \"/\" ~/mbox"\
+"LIST (\\NoInferiors) \"/\" ~/sieve.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/teaparty.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/bigto.mbox"\
+"LIST (\\NoInferiors) \"/\" ~/relational.mbox" \
+"OK LIST Completed"
+
+imap4d_test -sort "LIST \"\" \"*\""\
+"LIST (\\NoInferiors) NIL INBOX"\
+"LIST (\\NoInferiors) \"/\" mbox1"\
+"LIST (\\NoInferiors) \"/\" mbox"\
+"LIST (\\NoInferiors) \"/\" sieve.mbox"\
+"LIST (\\NoInferiors) \"/\" teaparty.mbox"\
+"LIST (\\NoInferiors) \"/\" bigto.mbox"\
+"LIST (\\NoInferiors) \"/\" relational.mbox" \
+"OK LIST Completed"
+
+imap4d_test "LIST \"/\" \"*\""\
+"NO LIST The requested item could not be found."
+
+imap4d_test -sort "LIST \"$MU_DATA_DIR\" \"*\""\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/etc"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/etc/mail.rc"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/etc/mailutils.rc"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/etc/passwd"\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/spool"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/bigto.mbox"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/relational.mbox" \
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/mbox1"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/mbox"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/sieve.mbox"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/spool/teaparty.mbox"\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/folder"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/folder/one"\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/folder/two"\
+"OK LIST Completed"	
+
+imap4d_test -sort "LIST \"$MU_DATA_DIR\" \"%\""\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/etc"\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/spool"\
+"LIST (\\NoSelect) \"/\" $MU_DATA_DIR/folder"\
+"OK LIST Completed"	
+
+imap4d_test "LIST \"$MU_DATA_DIR/folder\" \"one\""\
+"LIST (\\NoInferiors) \"/\" $MU_DATA_DIR/folder/one"\
+"OK LIST Completed"
+
+imap4d_test -sort "LIST \"\" INBOX"\
+"LIST (\\NoInferiors) NIL INBOX"\
+"OK LIST Completed"	
+
+imap4d_stop
+
+# End of list.exp

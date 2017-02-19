@@ -1,0 +1,43 @@
+@c snarfed from "mu_address.c":79
+@deffn {Scheme procedure} mu-address-get-personal address num
+Return personal part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":89
+@deffn {Scheme procedure} mu-address-get-comments address num
+Return comment part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":99
+@deffn {Scheme procedure} mu-address-get-email address num
+Return email part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":109
+@deffn {Scheme procedure} mu-address-get-domain address num
+Return domain part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":119
+@deffn {Scheme procedure} mu-address-get-local address num
+Return local part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":129
+@deffn {Scheme procedure} mu-address-get-count address
+Return number of parts in email address @var{address}.
+
+@end deffn
+
+@c snarfed from "mu_address.c":153
+@deffn {Scheme procedure} mu-username->email name
+Deduce user's email address from his username. If @var{name} is omitted, 
+current username is assumed
+
+@end deffn
+

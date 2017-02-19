@@ -1,0 +1,217 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# 6.4.4.  SEARCH Command
+# Arguments:  OPTIONAL [CHARSET] specification
+#             searching criteria (one or more)
+# Responses:  REQUIRED untagged response: SEARCH
+# Result:     OK - search completed
+#             NO - search error: can't search that [CHARSET] or
+#             criteria
+#             BAD - command unknown or arguments invalid
+#
+#      The SEARCH command searches the mailbox for messages that match
+#      the given searching criteria.  Searching criteria consist of one
+#      or more search keys.  The untagged SEARCH response from the server
+#      contains a listing of message sequence numbers corresponding to
+#      those messages that match the searching criteria.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test "SELECT INBOX"\
+"95 EXISTS"\
+"95 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 96\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage "\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags"\
+"OK \[READ-WRITE\] SELECT Completed"
+
+# <message set>  Messages with message sequence numbers
+#                corresponding to the specified message sequence
+#                number set
+
+imap4d_test "SEARCH 1:*" \
+"SEARCH 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95" \
+"OK"
+
+# ALL            All messages in the mailbox; the default initial
+#                key for ANDing.
+
+imap4d_test "SEARCH ALL" \
+"SEARCH 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95" \
+"OK"
+
+# NEW            Messages that have the \Recent flag set but not the
+#                \Seen flag.  This is functionally equivalent to
+#                "(RECENT UNSEEN)".
+
+# All messages are still new
+imap4d_test "SEARCH NEW" \
+"SEARCH 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95" \
+"OK"
+
+# FROM <string>  Messages that contain the specified string in the
+#                envelope structure's FROM field.
+
+imap4d_test "SEARCH FROM alice" \
+"SEARCH 2 4 6 8 10 12 14 20 25 27 29 33 36 38 40 43 45 47 51 53 55 57 59 63 66 68 70 72 74 76 78 80 82 85 87 90 93 95" \
+"OK"
+
+imap4d_test "SEARCH FROM hare" \
+"SEARCH 1 3 5 7 9 11 13 16 22 24 35 42 58 62 71" \
+"OK"
+
+# LARGER <n>     Messages with an [RFC-822] size larger than the
+#                specified number of octets.
+
+imap4d_test "SEARCH LARGER 512" \
+"SEARCH 41 46" \
+"OK"
+
+# SMALLER <n>    Messages with an [RFC-822] size smaller than the
+#                specified number of octets.
+
+imap4d_test "SEARCH SMALLER 300" \
+"SEARCH 12 20 35" \
+"OK"
+
+# SUBJECT <string>   Messages that contain the specified string in the
+#                    envelope structure's SUBJECT field.
+
+imap4d_test "SEARCH SUBJECT \"watch\"" \
+"SEARCH 19 20 21 22 23 24 25 26 27 28 29"\
+"OK"
+
+# HEADER <field-name> <string>
+#                    Messages that have a header with the specified
+#                    field-name (as defined in [RFC-822]) and that
+#                    contains the specified string in the [RFC-822]
+#                    field-body.
+
+imap4d_test "SEARCH HEADER Message-Id \"<200207292200.3303@wonder.land>\"" \
+"SEARCH 3" \
+"OK"	
+
+# CC <string>    Messages that contain the specified string in the
+#                 envelope structure's CC field.
+
+imap4d_test "SEARCH CC dormouse" \
+"SEARCH 60" \
+"OK"
+
+# TO <string>    Messages that contain the specified string in the
+#                envelope structure's TO field.
+
+imap4d_test "SEARCH TO hare"\
+"SEARCH 2 4 6 8 10 12 14 21 23 42 59 72" \
+"OK"
+
+# SENTBEFORE <date>
+#                Messages whose [RFC-822] Date: header is earlier
+#                than the specified date.
+
+imap4d_test "SEARCH SENTBEFORE \"29-Jul-2002 22:00:02 +0100\"" \
+"SEARCH 1"\
+"OK"
+
+# SENTSINCE <date>
+#                Messages whose [RFC-822] Date: header is within or
+#                later than the specified date.
+
+imap4d_test "SEARCH SENTSINCE \"29-Jul-2002 22:01:32 +0100\""\
+"SEARCH 92 93 94 95"\
+"OK"
+
+imap4d_test "SEARCH SENTSINCE \"29-Jul-2002 23:01:32 +0200\""\
+"SEARCH 92 93 94 95"\
+"OK"
+
+# BEFORE <date>  Messages whose internal date is earlier than the
+#                specified date.
+
+imap4d_test "SEARCH BEFORE \"29-Jul-2002 22:00:09 +0000\""\
+"SEARCH 1"\
+"OK"
+
+# SINCE <date>   Messages whose internal date is within or later
+#                than the specified date.
+
+imap4d_test "SEARCH SINCE \"29-Jul-2002 22:01:36 +0000\""\
+"SEARCH 89 90 91 92 93 94 95"\
+"OK"
+
+imap4d_test "STORE 3,5,89 +FLAGS (\\Answered)"\
+"3 FETCH (FLAGS (\\Answered \\Recent))"\
+"5 FETCH (FLAGS (\\Answered \\Recent))"\
+"89 FETCH (FLAGS (\\Answered \\Recent))"\
+"OK"
+
+# ANSWERED       Messages with the \Answered flag set.
+
+imap4d_test "SEARCH ANSWERED"\
+"SEARCH 3 5 89"\
+"OK"
+
+# TEXT <string>  Messages that contain the specified string in the
+#                header or body of the message.
+
+imap4d_test "SEARCH TEXT wine"\
+"SEARCH 1 2"\
+"OK"
+
+## Boolean operations
+
+# When multiple keys are specified, the result is the intersection
+# (AND function) of all the messages that match those keys.
+
+imap4d_test "SEARCH TEXT wine FROM alice"\
+"SEARCH 2"\
+"OK"
+
+# OR <search-key1> <search-key2>
+#                Messages that match either search key.
+
+imap4d_test "SEARCH OR FROM alice ANSWERED"\
+"SEARCH 2 3 4 5 6 8 10 12 14 20 25 27 29 33 36 38 40 43 45 47 51 53 55 57 59 63 66 68 70 72 74 76 78 80 82 85 87 89 90 93 95"\
+"OK"
+
+## Check precedence
+
+imap4d_test "SEARCH (OR FROM alice ANSWERED) SENTSINCE \"29-Jul-2002 22:00:33 +0100\""\
+"SEARCH 33 36 38 40 43 45 47 51 53 55 57 59 63 66 68 70 72 74 76 78 80 82 85 87 89 90 93 95" \
+"OK"
+
+imap4d_test "SEARCH (OR FROM alice ANSWERED) SENTSINCE \"29-Jul-2002 22:00:33 +0100\" SENTBEFORE \"29-Jul-2002 22:00:56 +0100\""\
+"SEARCH 33 36 38 40 43 45 47 51 53 55"\
+"OK"
+
+imap4d_test "SEARCH OR FROM alice ANSWERED SENTSINCE \"29-Jul-2002 22:00:33 +0100\" SENTBEFORE \"29-Jul-2002 22:00:56 +0100\""\
+"SEARCH 33 36 38 40 43 45 47 51 53 55"\
+"OK"
+
+imap4d_test "SEARCH OR FROM alice (ANSWERED SENTSINCE \"29-Jul-2002 22:00:33 +0100\" SENTBEFORE \"29-Jul-2002 22:00:56 +0100\")"\
+"SEARCH 2 4 6 8 10 12 14 20 25 27 29 33 36 38 40 43 45 47 51 53 55 57 59 63 66 68 70 72 74 76 78 80 82 85 87 90 93 95"\
+"OK"
+
+imap4d_stop
+
+# End of search.exp

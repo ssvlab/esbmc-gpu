@@ -1,0 +1,74 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# 6.3.3.  CREATE Command
+#   Arguments:  mailbox name
+#   Responses:  no specific responses for this command
+#   Result:     OK - create completed
+#               NO - create failure: can't create mailbox with that name
+#               BAD - command unknown or arguments invalid
+#
+#      The CREATE command creates a mailbox with the given name.  An OK
+#      response is returned only if a new mailbox with that name has been
+#      created.  It is an error to attempt to create INBOX or a mailbox
+#      with a name that refers to an extant mailbox.  Any error in
+#      creation will return a tagged NO response.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test "CREATE flat"
+
+imap4d_test "CREATE en/to/tre"
+
+imap4d_test -long "APPEND en/to/tre \"25-Aug-2002 18:00:00 +0200\""\
+"Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+From: Fred Foobar <foobar@Blurdybloop.COM>
+Subject: afternoon meeting again
+To: mooch@owatagu.siam.edu
+Message-Id: <B27397-0200000@Blurdybloop.COM>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+
+Better yet at 04:00?
+
+" 
+
+#      If the server's hierarchy separator character appears elsewhere in
+#      the name, the server SHOULD create any superior hierarchical names
+#      that are needed for the CREATE command to complete successfully.
+
+imap4d_test "SELECT en/to/tre"\
+"1 EXISTS"\
+"1 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 2\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags"\
+"OK \[READ-WRITE\] SELECT Completed"
+
+imap4d_test "FETCH 1 ALL"\
+"1 FETCH (FLAGS (\\Recent) INTERNALDATE \"25-Aug-2002 16:00:00 +0000\" RFC822.SIZE 285 ENVELOPE (\"Mon, 7 Feb 1994 21:52:25 -0800 (PST)\" \"afternoon meeting again\" ((\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\")) ((\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\")) ((\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\")) ((NIL NIL \"mooch\" \"owatagu.siam.edu\")) NIL NIL NIL \"<B27397-0200000@Blurdybloop.COM>\"))"\
+"OK"
+
+	
+imap4d_stop
+
+# End of create.exp	

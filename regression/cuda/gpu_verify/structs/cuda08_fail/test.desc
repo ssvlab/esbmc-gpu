@@ -1,0 +1,3 @@
+main.cu
+-I ~/libraries/ --context-switch 2 --force-malloc-success --unwind 5 --state-hashing -DGPU_threads=2 --no-bounds-check --no-pointer-check --no-div-by-zero-check
+^VERIFICATION FAILED$

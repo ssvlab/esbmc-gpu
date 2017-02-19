@@ -1,0 +1,150 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_attribute_} is reserved. */}
+@code{#include <mailutils/attribute.h>}
+@end smallexample
+
+@deftypefun  int mu_attribute_create (mu_attribute_t *@var{attr}, void *)
+@end deftypefun
+
+@deftypefun void mu_attribute_destroy (mu_attribute_t *@var{attr}, void *)
+@end deftypefun
+
+@deftypefun void* mu_attribute_get_owner (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_modified (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_clear_modified (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_modified (mu_attribute_t @var{attr})
+@end deftypefun
+
+@c
+@c _is_
+@c
+
+@deftypefun  int mu_attribute_is_userflag (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_seen (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_answered (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_flagged (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_deleted (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_draft (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_recent (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_is_read (mu_attribute_t @var{attr})
+@end deftypefun
+
+@c
+@c _set_
+@c
+
+@deftypefun  int mu_attribute_set_userflag (mu_attribute_t @var{attr}, int)
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_seen (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_answered (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_flagged (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_deleted (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_draft (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_recent (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_read (mu_attribute_t @var{attr})
+@end deftypefun
+
+@c
+@c _unset_
+@c
+
+@deftypefun  int mu_attribute_unset_userflag (mu_attribute_t @var{attr}, int)
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_seen (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_answered (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_flagged (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_deleted (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_draft (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_recent (mu_attribute_t @var{attr})
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_read (mu_attribute_t @var{attr})
+@end deftypefun
+
+@c
+@c ----------
+@c
+
+@deftypefun  int mu_attribute_get_flags (mu_attribute_t @var{attr}, int *)
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_flags (mu_attribute_t @var{attr}, int)
+@end deftypefun
+
+@deftypefun  int mu_attribute_unset_flags (mu_attribute_t @var{attr}, int)
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_set_flags (mu_attribute_t @var{attr}, int (*@var{_set_flags}) (mu_attribute_t, int), void *)
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_unset_flags (mu_attribute_t @var{attr}, int (*@var{_unset_flags}) (mu_attribute_t, int), void *)
+@end deftypefun
+
+@deftypefun  int mu_attribute_set_get_flags (mu_attribute_t @var{attr}, int (*@var{_get_flags}) (mu_attribute_t, int *), void *)
+@end deftypefun
+
+@c
+@c ----------
+@c
+
+@deftypefun  int mu_attribute_is_equal (mu_attribute_t @var{attr1}, mu_attribute_t @var{attr2})
+@end deftypefun
+
+@deftypefun  int mu_attribute_copy (mu_attribute_t @var{dst}, mu_attribute_t @var{src})
+@end deftypefun
+
+@deftypefun  int mu_attribute_to_string (mu_attribute_t @var{attr}, char *@var{buf}, size_t @var{len}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int string_to_flags (const char *@var{buf}, int *)
+@end deftypefun

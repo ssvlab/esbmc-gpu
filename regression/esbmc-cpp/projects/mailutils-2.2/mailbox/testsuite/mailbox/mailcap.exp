@@ -1,0 +1,71 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mu_prepare_spools
+
+set mailcapfile ${MU_DATA_DIR}/mailcap
+set chan [open ${srcdir}/Mailcap r]
+set outchan [open "$mailcapfile" w]
+
+set command ""
+set state 0
+set entry 0
+set pattern [list]
+
+for {gets $chan line} {![eof $chan]} {gets $chan line} {
+    if {$state == 0} {
+	switch -regexp -- "$line" {
+	    "^#.*" { }
+	    "^entry" {
+		set state 1
+		incr entry
+		lappend pattern "entry\[${entry}\]"
+	    }
+	    default {
+		puts $outchan $line
+	    }
+	}
+    } else {
+	switch -regexp -- "$line" {
+	    "^#.*" { }
+	    "^\$"  {
+		lappend pattern ""
+		set state 0
+	    }
+	    default { 
+		lappend pattern $line
+	    }
+	}
+    }
+}
+
+if {$state == 1} {
+    lappend pattern ""
+}
+
+close $outchan
+close $chan
+
+set MU_TOOL ${top_builddir}/examples/mailcap
+set MU_TOOL_FLAGS ""
+
+verbose "INVOKE $pattern"
+eval mu_exec -message "mailcap" -arg "$mailcapfile" $pattern
+
+# end of mailcap.exp

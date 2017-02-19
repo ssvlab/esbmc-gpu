@@ -1,0 +1,320 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2007, 2009, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+The functions from @file{libmailutils} library get user information from
+the system user database. The library @file{libmu_auth} extends this
+functionality, allowing @file{libmailutils} functions to obtain
+information about a user from several places, like @sc{sql} database,
+etc. The method used is described in detail in @ref{Auth Statement,
+authentication}. This chapter contains a very succinct description of
+the underlying library mechanism.
+
+@menu
+* Data Types::
+* Initializing libmu_auth::
+* Module Creation and Destruction::
+* Obtaining Authorization Information::
+* Existing Modules::
+* Using libmu_auth in Your Programs::
+@end menu
+
+@node Data Types
+@subsection Data Types
+@cindex libmu_auth, data types
+
+@deftp {Data Type} mu_auth_fp
+
+This is a pointer to authentication or authorization data. It
+is defined as follows:
+
+@smallexample
+@group
+typedef int (*mu_auth_fp) (struct mu_auth_data **@var{return_data},
+                           void *@var{key},
+                           void *@var{func_data},
+                           void *@var{call_data});
+@end group
+@end smallexample
+
+@noindent
+Its arguments are:
+
+@table @var
+@item return_data
+Upon successful return authorization handler leaves in this memory
+location a pointer to the filled @code{mu_auth_data} structure
+with the user's information.
+
+For authentication handlers this argument is always @code{NULL} and
+should be ignored.
+
+@item key
+The search key value. Its actual type depends upon type of the handler.
+
+For authorization handlers it is @code{const char*} if the handler is called by
+@code{mu_get_auth_by_name()} and @code{uid_t *} if it is called by
+@code{mu_get_auth_by_uid()}.
+
+For authentication handlers it is always @code{struct mu_auth_data*}
+representing the user's data obtained by a previous call to a
+@code{mu_get_auth_by_@dots{}} function.
+
+@item func_data
+Any data associated with this handler.
+
+@item call_data
+Any call specific data. This argument is not used at the moment.
+@end table
+@end deftp
+
+@deftp {Data Type} mu_auth_data
+
+The @code{mu_auth_data} is used to return the information about the
+user. It is similar to system @code{struct passwd}, except that it
+is more mailutils-specific. Its definition is:
+
+@smallexample
+@group
+struct mu_auth_data @{
+  /* These are from struct passwd */
+  char    *name;       /* user name */
+  char    *passwd;     /* user password */
+  uid_t   uid;         /* user id */
+  gid_t   gid;         /* group id */
+  char    *gecos;      /* real name */
+  char    *dir;        /* home directory */
+  char    *shell;      /* shell program */
+  /* */
+  char    *mailbox;    /* Path to the user's system mailbox */
+  int     change_uid;  /* Should the uid be changed? */
+@};
+@end group
+@end smallexample
+@end deftp
+
+@deftp {Data Type} mu_auth_module
+
+The @code{mu_auth_module} structure contains full information about a
+libmu_auth module. It is declared as follows:
+
+@smallexample
+@group
+struct mu_auth_module @{
+  char           *name;              /* Module name */
+  struct argp    *argp;              /* Corresponding argp structure */
+  mu_auth_fp     authenticate;       /* Authentication function ... */
+  void           *authenticate_data; /* ... and its specific data */
+  mu_auth_fp     auth_by_name;       /* Get user info by user name */ 
+  void           *auth_by_name_data; /* ... and its specific data */
+  mu_auth_fp     auth_by_uid;        /* Get user info by user id */  
+  void           *auth_by_uid_data;  /* ... and its specific data */
+@};
+@end group
+@end smallexample
+@end deftp
+
+@node Initializing libmu_auth
+@subsection Initializing @file{libmu_auth}
+
+@deftypefun void mu_auth_init (void)
+This function registers the command line capability ``auth''. It must be
+called after registering @file{libmu_auth} modules and before calling
+@code{mu_agrp_parse()}. If an error occurs, this function prints
+diagnostic message and aborts the program.
+@end deftypefun
+
+@deftypefun void MU_AUTH_REGISTER_ALL_MODULES (void)
+This macro registers all default modules and calls @code{mu_auth_init()}.
+@end deftypefun
+
+@node Module Creation and Destruction
+@subsection Module Creation and Destruction
+
+@deftypefun int mu_auth_data_alloc (struct mu_auth_data **@var{ptr}, const char *@var{name}, const char *@var{passwd}, uid_t @var{uid}, gid_t @var{gid}, const char *@var{gecos}, const char *@var{dir}, const char *@var{shell}, const char *@var{mailbox}, int @var{change_uid})
+
+Create a @code{mu_auth_data} structure and initialize it with the given
+values. Returns 0 on success and 1 otherwise.
+@end deftypefun
+
+@deftypefun void mu_auth_data_free (struct mu_auth_data *@var{ptr})
+Free the @code{mu_auth_data} structure allocated by a call to
+@code{mu_auth_data_alloc()}.
+@end deftypefun
+
+@deftypefun void mu_auth_register_module (struct mu_auth_module *@var{mod})
+Register the module defined by the @var{mod} argument.
+@end deftypefun
+
+@node Obtaining Authorization Information
+@subsection Obtaining Authorization Information
+@cindex libmu_auth, obtaining authorization information
+
+@deftypefun int mu_auth_runlist (list_t @var{flist}, struct mu_auth_data **@var{return_data}, void *@var{key}, void *@var{call_data});
+The list is expected to contain @code{mu_auth_fp} pointers. Each of them
+is dereferenced and executed until either the list is exhausted or any
+of the functions returns non-zero, whichever occurs first. The
+@var{return_data} and @var{key} arguments are passed as the first two
+parameters to the function (see the definition of @code{mu_auth_fp},
+notice the footnote), the @code{call_data} is passed as its last
+parameter.
+
+The function returns 0 if none of the functions from @code{list}
+succeeded, i.e. returned non-zero value. Otherwise it returns the
+return code from the succeeded function.
+@end deftypefun
+
+@deftypefun {struct mu_auth_data *} mu_get_auth_by_name (const char *@var{username})
+Search the information about given user by its username. Similar to
+system's @code{getpwnam} call).
+@end deftypefun
+
+@deftypefun {struct mu_auth_data *} mu_get_auth_by_uid (uid_t @var{uid})
+Search the information about given user by its uid. Similar to
+system's @code{getpwuid} call).
+@end deftypefun
+
+@deftypefun  int mu_authenticate (struct mu_auth_data *@var{auth_data}, char *@var{pass})
+Authenticate the user whose data are in @var{auth_data} using password
+@var{pass}. Return 0 if the user is authenticated.
+@end deftypefun
+
+@node Existing Modules
+@subsection Existing Modules
+@cindex libmu_auth modules
+
+@deftypefun  int mu_auth_nosupport (struct mu_auth_data **@var{return_data}, void *@var{key}, void *@var{func_data}, void *@var{call_data});
+The ``not-supported'' module. Always returns @code{ENOSYS}.
+@end deftypefun
+
+@defvar mu_auth_system_module
+This module is always registered even if @file{libmu_auth} is not linked.
+It performs usual authentication using system user database
+(@file{/etc/password} et al.)
+@end defvar
+
+@defvar mu_auth_generic_module
+This module is always registered even if @file{libmu_auth} is not linked.
+Both its authorization handlers are @code{mu_auth_nosupport}. Its
+authentication handler computes the MD5 or DES hash over the supplied
+password with the seed taken from @code{passwd} member of its @var{key}
+argument. Then it compares the obtained hash with the @code{passwd}
+member itself and returns 1 if both strings match.
+@end defvar
+
+@defvar mu_auth_pam_module
+Implements PAM authentication. Both authorization handlers are
+@code{mu_auth_nosupport()}.
+@end defvar
+
+@defvar mu_auth_sql_module
+Implements authentication and authorization via MySQL database. The
+credentials for accessing the database are taken from global variables
+@code{sql_host}, @code{sql_port}, @code{sql_user}, @code{sql_passwd}
+and @code{sql_db}. The SQL queries for retrieving user information
+from global variables @code{sql_getpwnam_query} and
+@code{sql_getpwuid_query}. The variable @code{sql_getpass_query} keeps
+the query used for retrieving user's password. @FIXME-xref{auth}, for
+information on command line options used to set these variables.
+@end defvar
+
+@defvar mu_auth_virtual_module
+Implements @code{mu_get_auth_by_name} method using virtual mail domains.
+Neither @code{mu_get_auth_by_uid} nor @code{mu_authenticate} is
+implemented. This module must be used together with @code{generic}
+module.
+@end defvar
+
+
+@node Using libmu_auth in Your Programs
+@subsection Using @file{libmu_auth} in Your Programs
+@cindex Using @file{libmu_auth}
+@cindex Linking with @file{libmu_auth}
+@cindex libmu_auth, linking with
+
+To link your program against @file{libmu_auth}, obtain loader arguments
+by running @command{mailutils-config} as follows:
+
+@smallexample
+mailutils-config --link auth
+@end smallexample
+@noindent
+
+@xref{mailutils-config}, for more information about this utility.
+
+Here is a sample Makefile fragment:
+
+@smallexample
+MU_LDFLAGS=`mailutils-config --link auth`
+MU_INCLUDES=`mailutils-config --include`
+
+myprog: myprog.c
+        $(CC) -omyprog $(CFLAGS) $(MU_INCLUDES) myprog.c $(MU_LDFLAGS)
+@end smallexample        
+
+If your program will be using only default modules provided by the
+library, then it will suffice to call
+@code{MU_AUTH_REGISTER_ALL_MODULES()} somewhere near the start of
+your program. As an example, consider the following code fragment
+(it is taken from the @command{imap4d} daemon):
+
+@smallexample
+@group
+int
+main (int argc, char **argv)
+@{
+  struct group *gr;
+  int status = EXIT_SUCCESS;
+ 
+  state = STATE_NONAUTH; /* Starting state in non-auth.  */
+
+  MU_AUTH_REGISTER_ALL_MODULES ();
+  mu_argp_parse (&argp, &argc, &argv, 0, imap4d_capa,
+                 NULL, &daemon_param);
+  @dots{}       
+@end group
+@end smallexample
+
+Otherwise, if your program will use it's own modules, first register
+them with @code{mu_auth_register_module} and then call
+@code{mu_auth_init()}, e.g.:
+
+@smallexample
+@group
+struct mu_auth_module radius_module = @{
+  @dots{}
+@};
+
+struct mu_auth_module ext_module = @{
+  @dots{}
+@};
+
+int
+main (int argc, char **argv)
+@{
+  mu_auth_register_module (&radius_module);
+  mu_auth_register_module (&ext_module);
+  mu_auth_init ();
+
+  @dots{}
+@end group
+@end smallexample      
+
+These two approaches may be combined, allowing you to use both your
+modules and the ones provided by Mailutils. Consider the example below:
+
+@smallexample
+@group
+int
+main (int argc, char **argv)
+@{
+  mu_auth_register_module (&radius_module);
+  mu_auth_register_module (&ext_module);
+  MU_AUTH_REGISTER_ALL_MODULES ();
+
+  @dots{}
+@}
+@end group
+@end smallexample

@@ -1,0 +1,101 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_nntp_} is reserved */}
+@code{#include <mailutils/nntp.h>}
+
+@end smallexample
+
+Network News Transfer Protocol. Not implemented.
+
+@subsection Commands
+
+@subsubsection Initialization
+@cindex NNTP Initialization
+@deftypefun int mu_nntp_create (mu_nntp_t *)
+@end deftypefun
+
+@deftypefun int mu_nntp_destroy (mu_nntp_t *)
+@end deftypefun
+
+@deftypefun int mu_nntp_open (nnpt_t)
+@end deftypefun
+
+@subsubsection Article
+@cindex NNTP Article
+@deftypefun int mu_nntp_article (nnpt_t)
+@end deftypefun
+
+@subsubsection Body
+@cindex NNTP Body
+@deftypefun int mu_nntp_body (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Group
+@cindex NNTP Group
+@deftypefun int mu_nntp_group (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Head
+@cindex NNTP Head
+@deftypefun int mu_nntp_head (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Help
+@cindex NNTP Help
+@deftypefun int mu_nntp_help (mu_nntp_t)
+@end deftypefun
+
+@subsubsection IHave
+@cindex NNTP IHave
+@deftypefun int mu_nntp_ihave (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Last
+@cindex NNTP Last
+@deftypefun int mu_nntp_last (mu_nntp_t)
+@end deftypefun
+
+@subsubsection List
+@cindex NNTP List
+@deftypefun int mu_nntp_list (mu_nntp_t)
+@end deftypefun
+
+@subsubsection NewGroups
+@cindex NNTP NewGroups
+@deftypefun int mu_nntp_newgroups (mu_nntp_t)
+@end deftypefun
+
+@subsubsection NewNews
+@cindex NNTP NewNews
+@deftypefun int mu_nntp_newnews (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Next
+@cindex NNTP Next
+@deftypefun int mu_nntp_next (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Post
+@cindex NNTP Post
+@deftypefun int mu_nntp_post (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Quit
+@cindex NNTP Quit
+@deftypefun int mu_nntp_quit (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Slave
+@cindex NNTP Slave
+@deftypefun int mu_nntp_slave (mu_nntp_t)
+@end deftypefun
+
+@subsubsection Stat
+@cindex NNTP Stat
+@deftypefun int mu_nntp_stat (mu_nntp_t)
+@end deftypefun

@@ -1,0 +1,86 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2005, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mu_prepare_spools
+
+mu_exec -message "Read mode on TTY" \
+        -arg "--nosum" -arg "--file=%mbox1" -arg "< ${srcdir}/if.mail" \
+    "Begin test" \
+    "Not a send mode" \
+    "Read mode" \
+    "On TTY" \
+    "End test" \
+    "" \
+    "Held 5 messages in $MU_SPOOL_DIR/mbox1"
+
+mu_exec -message "Read mode not on TTY" \
+        -arg "--nosum" -arg "--file=%mbox1" -arg "< ${srcdir}/if.mail" \
+        -arg "> $MU_FOLDER_DIR/if.out"
+
+mu_test_file "$MU_FOLDER_DIR/if.out" \
+    "Begin test" \
+    "Not a send mode" \
+    "Read mode" \
+    "Not on TTY" \
+    "End test" \
+    "" \
+    "Held 5 messages in $MU_SPOOL_DIR/mbox1"
+
+mu_exec -message "Send mode on TTY" \
+        -arg "--exec='setq mode=send'" \
+        -arg "--exec='source ${srcdir}/if.mail'" \
+        -arg "--exec=quit" \
+    "Begin test" \
+    "Send mode" \
+    "End test"
+
+mu_exec -message "Send mode not on TTY" \
+        -arg "--exec='setq mode=send'" \
+        -arg "--exec='source ${srcdir}/if.mail'" \
+        -arg "--exec=quit" \
+        -arg "> $MU_FOLDER_DIR/if.out"
+
+mu_test_file "$MU_FOLDER_DIR/if.out" \
+    "Begin test" \
+    "Send mode" \
+    "End test"
+
+mu_exec -message "Nomode on TTY" \
+        -arg "--exec='setq mode=nomode'" \
+        -arg "--exec='source ${srcdir}/if.mail'" \
+        -arg "--exec=quit" \
+    "Begin test" \
+    "Not a send mode" \
+    "End test"
+
+mu_exec -message "Nomode not on TTY" \
+        -arg "--exec='setq mode=nomode'" \
+        -arg "--exec='source ${srcdir}/if.mail'" \
+        -arg "--exec=quit" \
+        -arg "> $MU_FOLDER_DIR/if.out"
+
+mu_test_file "$MU_FOLDER_DIR/if.out" \
+    "Begin test" \
+    "Not a send mode" \
+    "End test"
+
+# End of if.exp
+
+
+

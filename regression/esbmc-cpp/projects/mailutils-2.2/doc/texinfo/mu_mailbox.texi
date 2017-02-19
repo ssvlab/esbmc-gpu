@@ -1,0 +1,66 @@
+@c snarfed from "mu_mailbox.c":110
+@deffn {Scheme procedure} mu-mail-directory url
+If @var{url} is given, sets it as a name of the user's mail directory.
+Returns the current value of the mail directory.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":125
+@deffn {Scheme procedure} mu-folder-directory url
+If @var{url} is given, sets it as a name of the user's folder directory.
+Returns the current value of the folder directory.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":149
+@deffn {Scheme procedure} mu-mailbox-open url mode
+Opens the mailbox specified by @var{url}. @var{mode} is a string, consisting of
+the characters described below, giving the access mode for the mailbox
+
+@multitable @columnfractions 0.20 0.70
+@headitem @var{mode} @tab Meaning
+@item r @tab Open for reading.
+@item w @tab Open for writing.
+@item a @tab Open for appending to the end of the mailbox.
+@item c @tab Create the mailbox if it does not exist.
+@end multitable
+
+@end deffn
+
+@c snarfed from "mu_mailbox.c":201
+@deffn {Scheme procedure} mu-mailbox-close mbox
+Closes mailbox @var{mbox}.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":216
+@deffn {Scheme procedure} mu-mailbox-get-url mbox
+Returns url of the mailbox @var{mbox}.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":240
+@deffn {Scheme procedure} mu-mailbox-get-port mbox mode
+Returns a port associated with the contents of the @var{mbox}.
+@var{mode} is a string defining operation mode of the stream. It may
+contain any of the two characters: @samp{r} for reading, @samp{w} for
+writing.
+
+@end deffn
+
+@c snarfed from "mu_mailbox.c":262
+@deffn {Scheme procedure} mu-mailbox-get-message mbox msgno
+Retrieve from message #@var{msgno} from the mailbox @var{mbox}.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":288
+@deffn {Scheme procedure} mu-mailbox-messages-count mbox
+Returns number of messages in the mailbox @var{mbox}.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":309
+@deffn {Scheme procedure} mu-mailbox-expunge mbox
+Expunges deleted messages from the mailbox @var{mbox}.
+@end deffn
+
+@c snarfed from "mu_mailbox.c":328
+@deffn {Scheme procedure} mu-mailbox-append-message mbox mesg
+Appends message @var{mesg} to the mailbox @var{mbox}.
+@end deffn
+

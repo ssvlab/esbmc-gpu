@@ -1,0 +1,164 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_mailer_} is reserved. */}
+@code{#include <mailutils/mailer.h>}
+
+@end smallexample
+
+@c
+@c Constructor/Destructor.
+@c
+
+@deftypefun  int mu_mailer_create (mu_mailer_t *, const char *@var{url})
+@end deftypefun
+
+@deftypefun void mu_mailer_destroy (mu_mailer_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_open (mu_mailer_t, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_mailer_close (mu_mailer_t)
+@end deftypefun
+
+@deftypefun  int mu_mailer_send_message (mu_mailer_t @var{mailer}, mu_message_t @var{msg}, mu_address_t @var{from}, mu_address_t @var{to});
+
+If @var{from} is not @code{NULL}, it must contain a single fully qualified
+RFC2822 email address which will be used as the envelope from
+address. This is the address to which delivery status notifications
+are sent, so it never matters what it is set to until it @strong{really}
+matters. This is equivalent to Sendmail's @option{-f} flag.
+
+The default for @var{from} is provided by the specific mailer.
+
+If to is not @code{NULL}, then the message will be sent to the list of
+addresses that it specifies.
+
+The default for @var{to} is to use the contents of the standard "To:", "Cc:",
+and "Bcc:" fields, this is equivalent to Sendmail's @option{-t} flag.
+@end deftypefun
+
+@deftypefun  int mu_mailer_get_property (mu_mailer_t, mu_property_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_get_stream (mu_mailer_t, mu_stream_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_set_stream (mu_mailer_t, mu_stream_t)
+@end deftypefun
+
+@deftypefun  int mu_mailer_get_debug (mu_mailer_t, mu_debug_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_set_debug (mu_mailer_t, mu_debug_t)
+@end deftypefun
+
+@deftypefun  int mu_mailer_get_observable (mu_mailer_t, observable_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_get_url (mu_mailer_t, url_t *)
+@end deftypefun
+
+@deftypefun  int mu_mailer_check_from (mu_address_t @var{from})
+@end deftypefun
+
+@deftypefun  int mu_mailer_check_to (mu_address_t @var{to})
+@end deftypefun
+
+@sp 1
+@subheading Some Usage Notes
+
+Some possible use cases the API must support are:
+
+@itemize @bullet{}
+@item original submission
+
+@enumerate 0
+@item fill in header addresses
+
+@item @code{mu_mailer_send_message(mailer, msg, NULL, NULL)}
+
+@itemize @minus{}
+@item from will be filled in if missing,
+
+@item Bcc's will be deleted before delivery to a non-bcc address,
+
+@item message-id and date will be added, if missing,
+
+@item a @code{To:} or @code{Apparently-To:} header will be added if non is present (for RFC compliance)
+@end itemize
+
+@end enumerate
+
+@item MTA-style @file{.forward} (and Sieve-style redirect)
+
+@enumerate 1
+@item get the envelope from of the message to be forwarded
+
+@item @code{mu_mailer_send_message(mailer, msg, from, to)}
+@end enumerate
+
+@item MUA-style bounce
+
+@enumerate 1
+@item add @code{Resent-[To,From,...]}
+
+@item @code{mu_mailer_send_message(mailer, msg, NULL, to)}
+@end enumerate
+
+@item DSN "bounce"
+
+@enumerate 1
+@item compose DSN
+
+@item @code{mu_mailer_deliver(mailer, msg, address_t("<>"), to)}
+
+   Don't want mail loops, so the null but valid SMTP address of @samp{<>}
+   is the envelope From.
+@end enumerate
+@end itemize
+
+@subheading The Sendmail Mailer
+
+@file{/sbin/sendmail} isn't always Sendmail... Sometimes it's a
+Sendmail-compatible wrapper, so assume @file{/sbin/sendmail} understands
+only a recipient list, @option{-f} and @option{-oi}, these seem
+to be pretty basic. Cross fingers.
+
+Pipe to "/sbin/sendmail -oi [-f @var{from}] [@var{to}...]", supplying
+@option{-f} if there was a from, and supplying the recipient list from
+the to (if there is no recipient list, assume it will read the message
+contents for the recipients).
+
+@strong{Caution:} since the @code{stdout} and @code{stderr} of Sendmail
+is closed, we have no way of ever giving feedback on failure. Also, what
+should the return code be from @code{mu_mailer_send_message()} when Sendmail
+returns @samp{1}? @samp{1} maps to @code{EPERM}, which is less than
+descriptive!
+
+@subheading The SMTP Mailer
+
+This mailer does @strong{not} canonicalize the message. This must be
+done before sending the message, or it may be assumed that the MTA
+will do so.
+
+It does blind out the Bcc: header before sending, though.
+
+@strong{Caution:} Mutt always puts the recipient addresses on the
+command line, even Bcc: ones, do we strip the Bcc: before forwarding
+with SMTP?
+
+@subheading Non-RFC822 Addresses
+
+An address that has no domain is not and RFC822 email address. What
+do I do with them? Should the user of the API be responsible for
+determining what is mean by email to "John" means? Or should the
+be able to configure Sendmail to decide globally what this means.
+If so, we can pass the address to Sendmail, but we have to decide
+for SMTP! So, right now these addresses are rejected.
+This could be changed.

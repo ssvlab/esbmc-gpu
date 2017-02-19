@@ -1,0 +1,165 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008,
+@c 2010 Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_mailcap_} is reserved. */}
+@code{#include <mailutils/mailcap.h>}
+
+@end smallexample
+
+The standard @cite{RFC 1524} (A User Agent Configuration Mechanism)
+suggests a file format to be used to inform a mail user agent about
+facilities for handling mail in various format. The configuration
+file is known also as mailcap and it is tipically found in UNIX
+platforms, a example of @file{/etc/mailcap}:
+
+@smallexample
+@group
+application/pgp; gpg < %s | metamail; needsterminal; \
+       test=test %@{encapsulation@}=entity ; copiousoutput
+@end group
+@end smallexample
+
+A mailcap file consists of a set of mailcap entries per line, lines
+beginning with @samp{#} are considered comments and ignored. Long
+mailcap entry may be continued on multiple lines if each line ends
+with a backslash character @samp{\}, the multiline will be considered
+a single mailcap entry. The overall format in @acronym{BNF}:
+
+@smallexample
+@group
+Mailcap-File = *@var{mailcap-line}
+Mailcap-Line = @var{comment} | @var{mailcap-entry}
+Comment = @var{newline} | "#" * @var{char} @var{newline}
+Newline = <newline as defined by OS convention>
+@end group
+@end smallexample
+
+Each mailcap entry consists of a number of fields, separated
+by semi-colons. The first two fields are required and must occur
+in the specified order, the remaining fields are optional.
+
+@smallexample
+Mailcap-Entry = @var{typefield} ";" @var{view-command} ";" *[ ";" @var{field} ]
+@end smallexample
+
+@deftp {Data Type} mu_mailcap_t, mu_mailcap_entry_t
+The @code{mu_mailcap_t} and @code{mu_mailcap_entry_t} objects
+are used to hold information and it is an opaque data structure
+to the user. Functions are provided to retrieve information
+from the data structure.
+@end deftp
+
+@smallexample
+@group
+                        mu_mailcap_t                  mu_mailcap_entry_t
+-/etc/mailcap-  +--->/------------------------\  +-->/------------------\
+(  alain   )         |  mu_mailcap_entry[0]*--|--+   |  typefield       |
+                     |  mu_mailcap_entry[1]   |      |  view-command    |
+                     |  .....                 |      |  field[0]        |
+                     |  mu_mailcap_entry[n]   |      |  .....           |
+                     \------------------------/      |  field[n]        |
+                                                     \------------------/
+@end group
+@end smallexample
+
+@subheading An Example of Parsing a Mailcap File:
+@smallexample
+@include mailcap.inc
+@end smallexample
+
+@deftypefun  int mu_mailcap_create (mu_mailcap_t *@var{mailcap}, mu_stream_t @var{stream})
+The function allocates, parses the buffer from the @var{stream} and initializes @var{mailcap}.
+The return value is @code{0} on success and a code number on error conditions:
+@table @code
+@item MU_ERROR_INVALID_PARAMETER
+@var{mailcap} is @code{NULL} or @var{stream} is invalid.
+@end table
+@end deftypefun
+
+@deftypefun void mu_mailcap_destroy (mu_mailcap_t *@var{mailcap})
+Release any resources from the mailcap object.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entries_count (mu_mailcap_t @var{mailcap}, size_t *@var{count})
+The function returns the number of entries found in the mailcap.
+The return value is @code{0} on success and a code number on error conditions:
+@table @code
+
+@item EINVAL
+@var{mailcap} or @var{count} is @code{NULL}.
+@end table
+@end deftypefun
+
+@deftypefun  int mu_mailcap_get_entry (mu_mailcap_t @var{mailcap}, size_t @var{no}, mu_mailcap_entry_t *@var{entry})
+Returns in @var{entry} the mailcap entry of @var{no}.
+@end deftypefun
+
+@deftypefun int mu_mailcap_entry_fields_count (mu_mailcap_entry_t @var{entry}, size_t *@var{count})
+The function returns the number of fields found in the entry.
+The return value is @code{0} on success and a code number on error conditions:
+@table @code
+
+@item EINVAL
+@var{entry} or @var{count} is @code{NULL}.
+@end table
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_typefield (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_viewcommand (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_field (mu_mailcap_entry_t @var{entry}, size_t @var{no}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_value (mu_mailcap_entry_t @var{entry}, const char *@var{key}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_compose (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "compose" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_composetyped (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "composetyped" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_edit (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "edit" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_textualnewlines (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "textualnewlines" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_test (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "test" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_x11bitmap (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "x11-bitmap" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_description (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "description" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_nametemplate (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "nametemplate" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_get_notes (mu_mailcap_entry_t @var{entry}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{n})
+Helper function saving in buffer, the argument of "notes" field.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_needsterminal (mu_mailcap_entry_t @var{entry}, int *@var{on})
+Helper function. Returns *@var{on} != 0 if the flag @code{needsterminal} is in the record.
+@end deftypefun
+
+@deftypefun  int mu_mailcap_entry_copiousoutput (mu_mailcap_entry_t @var{entry}, int *@var{on})
+Helper function. Returns *@var{on} != 0 if the flag @var{copiousoutput} is in the record.
+@end deftypefun

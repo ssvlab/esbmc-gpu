@@ -1,0 +1,40 @@
+# This file is part of GNU Mailutils -- a suite of utilities for electronic
+# mail
+# Copyright (C) 2007, 2008, 2010 Free Software Foundation, Inc.
+#
+# GNU Mailutils is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GNU Mailutils.  If not, see <http://www.gnu.org/licenses/>. 
+
+# Mailutuls LDAP schema items
+#
+# depends upon:
+#    nis.schema
+
+attributetype ( 1.3.6.1.4.1.11591.5.1.0 NAME 'mu-mailBox'
+	DESC 'The URL of the user mail box'
+	EQUALITY caseExactIA5Match
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.11591.5.1.1 NAME 'mu-mailQuota'
+	DESC 'Maximum allowed size of the user mailbox'
+	EQUALITY integerMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+
+# Object Class Definitions
+
+objectclass ( 1.3.6.1.4.1.11591.5.2.0 NAME 'mailutilsAccount'
+	DESC 'Abstraction of an account with Mailutils attributes'
+	SUP posixAccount AUXILIARY
+	MUST ( cn $ uid $ uidNumber $ gidNumber $ homeDirectory )
+	MAY ( userPassword $ loginShell $ gecos $ mu-mailBox $ mu-mailQuota ) )
+

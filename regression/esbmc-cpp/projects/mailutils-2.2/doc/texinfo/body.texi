@@ -1,0 +1,52 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_body_} is reserved. */}
+@code{#include <mailutils/body.h>}
+@end smallexample
+
+@deftypefun  int mu_body_create (mu_body_t *@var{body}, void *@var{owner})
+Initialize an object @var{body}.
+@end deftypefun
+
+@deftypefun void mu_body_destroy (mu_body_t *@var{body})
+The resources allocated are release.
+@end deftypefun
+
+@deftypefun void* mu_body_get_owner (mu_body_t @var{body})
+@end deftypefun
+
+@deftypefun  int mu_body_is_modified (mu_body_t @var{body})
+@end deftypefun
+
+@deftypefun  int mu_body_clear_modified (mu_body_t @var{body})
+@end deftypefun
+
+@c
+@c -----------
+@c
+
+@deftypefun  int mu_body_get_stream (mu_body_t @var{body}, stream_t *@var{stream})
+@end deftypefun
+
+@deftypefun  int mu_body_set_stream (mu_body_t @var{body}, stream_t @var{stream}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_body_get_filename (mu_body_t @var{body}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int mu_body_size (mu_body_t @var{body}, size_t *@var{size})
+@end deftypefun
+
+@deftypefun  int mu_body_set_size (mu_body_t @var{body}, int (*@var{_size}) (mu_body_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_body_lines (mu_body_t @var{body}, size_t *@var{lines})
+@end deftypefun
+
+@deftypefun  int mu_body_set_lines (mu_body_t @var{body}, int (*@var{_lines}) (mu_body_t, size_t *), void *@var{owner})
+@end deftypefun

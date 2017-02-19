@@ -1,0 +1,111 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# 6.3.11. APPEND Command
+#   Arguments:  mailbox name
+#               OPTIONAL flag parenthesized list
+#               OPTIONAL date/time string
+#               message literal
+#   Responses:  no specific responses for this command
+#   Result:     OK - append completed
+#               NO - append error: can't append to that mailbox, error
+#                    in flags or date/time or message text
+#               BAD - command unknown or arguments invalid
+#
+#      The APPEND command appends the literal argument as a new message
+#      to the end of the specified destination mailbox.  This argument
+#      SHOULD be in the format of an [RFC-822] message.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test -long "APPEND mbox (\\Seen)"\
+"Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+From: Fred Foobar <foobar@Blurdybloop.COM>
+Subject: afternoon meeting
+To: mooch@owatagu.siam.edu
+Message-Id: <B27397-0100000@Blurdybloop.COM>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+
+Hello Joe, do you think we can meet at 3:30 tomorrow?
+
+" 
+
+imap4d_test -long "APPEND mbox \"25-Aug-2002 18:00:00 +0200\""\
+"Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+From: Fred Foobar <foobar@Blurdybloop.COM>
+Subject: afternoon meeting again
+To: mooch@owatagu.siam.edu
+Message-Id: <B27397-0200000@Blurdybloop.COM>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+
+Better yet at 04:00?
+
+" 
+
+imap4d_test "SELECT mbox"\
+"3 EXISTS"\
+"3 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 4\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags"\
+"OK"
+
+imap4d_test "FETCH 2:3 BODY\[\]"\
+"2 FETCH (FLAGS (\\Seen) BODY\[\] {312}"\
+-literal\
+"Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)"\
+"From: Fred Foobar <foobar@Blurdybloop.COM>"\
+"Subject: afternoon meeting"\
+"To: mooch@owatagu.siam.edu"\
+"Message-Id: <B27397-0100000@Blurdybloop.COM>"\
+"MIME-Version: 1.0"\
+"Content-Type: TEXT/PLAIN; CHARSET=US-ASCII"\
+""\
+"Hello Joe, do you think we can meet at 3:30 tomorrow?"\
+""\
+")"\
+-noliteral\
+"3 FETCH (FLAGS (\\Seen) BODY\[\] {285}"\
+-literal\
+"Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)"\
+"From: Fred Foobar <foobar@Blurdybloop.COM>"\
+"Subject: afternoon meeting again"\
+"To: mooch@owatagu.siam.edu"\
+"Message-Id: <B27397-0200000@Blurdybloop.COM>"\
+"MIME-Version: 1.0"\
+"Content-Type: TEXT/PLAIN; CHARSET=US-ASCII"\
+""\
+"Better yet at 04:00?"\
+")"\
+"OK"	
+
+
+imap4d_stop
+
+# End of append.exp
+
+
+
+
+

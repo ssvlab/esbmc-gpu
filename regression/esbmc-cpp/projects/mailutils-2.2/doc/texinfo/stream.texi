@@ -1,0 +1,208 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{#include <mailutils/stream.h>}
+@end smallexample
+
+These generic flags are interpreted as appropriate to the specific
+streams.
+
+@table @code
+@item MU_STREAM_READ
+@findex MU_STREAM_READ
+The stream is open read only.
+@item MU_STREAM_WRITE
+@findex MU_STREAM_WRITE
+The stream is open write only.
+@item MU_STREAM_RDWR
+@findex MU_STREAM_RDWR
+The stream is open read and write.
+@item MU_STREAM_APPEND
+@findex MU_STREAM_APPEND
+The stream is open in append mode for writing.
+@item MU_STREAM_CREAT
+@findex MU_STREAM_CREAT
+The stream open will create the underlying resource (such as a file)
+if it doesn't exist already.
+@item MU_STREAM_NONBLOCK
+@findex MU_STREAM_NONBLOCK
+The stream is set non blocking.
+@item MU_STREAM_NO_CHECK
+@findex MU_STREAM_NO_CHECK
+Stream is destroyed without checking for the owner.
+@item MU_STREAM_SEEKABLE
+@findex MU_STREAM_SEEKABLE
+
+@item MU_STREAM_NO_CLOSE
+@findex MU_STREAM_NO_CLOSE
+Stream doesn't close it's underlying resource when it is closed or destroyed.
+@item MU_STREAM_ALLOW_LINKS
+@findex MU_STREAM_ALLOW_LINKS
+
+@end table
+
+@deftypefun  int mu_file_stream_create (mu_stream_t *@var{stream}, const char *@var{filename}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_tcp_stream_create (mu_stream_t *@var{stream}, const char *@var{host}, int @var{port}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_mapfile_stream_create (mu_stream_t *@var{stream}, const char *@var{filename}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_memory_stream_create (mu_stream_t *@var{stream}, const char *@var{filename}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_encoder_stream_create (mu_stream_t *@var{stream}, mu_stream_t @var{iostream}, const char *@var{encoding})
+@end deftypefun
+
+@deftypefun  int mu_decoder_stream_create (mu_stream_t *@var{stream}, mu_stream_t @var{iostream}, const char *@var{encoding})
+@end deftypefun
+
+@deftypefun  int mu_stdio_stream_create (mu_stream_t *@var{stream}, FILE *@var{stdio}, int @var{flags})
+If @code{MU_STREAM_NO_CLOSE} is specified, @code{fclose()} will not be called on
+@var{stdio} when the stream is closed.
+@end deftypefun
+
+@deftypefun  int mu_prog_stream_create (mu_stream_t *@var{stream}, const char *@var{progname}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_filter_prog_stream_create (mu_stream_t *@var{stream}, const char *@var{progname}, mu_stream_t @var{input})
+@end deftypefun
+
+@deftypefun void mu_stream_destroy (mu_stream_t *@var{stream}, void *@var{owner})
+@end deftypefun
+
+@c
+@c ---------
+@c
+
+@deftypefun  int mu_stream_open (mu_stream_t @var{stream})
+@end deftypefun
+
+@deftypefun  int mu_stream_close (mu_stream_t @var{stream})
+@end deftypefun
+
+@deftypefun  int mu_stream_is_seekable (mu_stream_t @var{stream})
+@end deftypefun
+
+@deftypefun  int mu_stream_get_fd (mu_stream_t @var{stream}, int *@var{fd})
+@end deftypefun
+
+@deftypefun  int mu_stream_get_fd2 (mu_stream_t @var{stream}, int *@var{fd1}, int *@var{fd2})
+@end deftypefun
+
+@deftypefun  int mu_stream_read (mu_stream_t @var{stream}, char *@var{buffer}, size_t @var{buflen}, mu_off_t @var{offset}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int mu_stream_readline (mu_stream_t @var{stream}, char *@var{buffer}, size_t @var{buflen}, mu_off_t @var{offset}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int mu_stream_size (mu_stream_t @var{stream}, mu_off_t *@var{size})
+@end deftypefun
+
+@deftypefun n int mu_stream_truncate (mu_stream_t @var{stream}, mu_off_t @var{size})
+@end deftypefun
+
+@deftypefun  int mu_stream_write (mu_stream_t @var{stream}, const char *@var{buffer}, size_t @var{buflen}, mu_off_t @var{offset}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int mu_stream_setbufsiz (mu_stream_t @var{stream}, size_t @var{size})
+@end deftypefun
+
+@deftypefun  int mu_stream_flush (mu_stream_t @var{stream})
+@end deftypefun
+
+@c
+@c These functions will typically only be useful to implementors of streams.
+@c
+
+@deftypefun int mu_stream_create (mu_stream_t *@var{stream}, int @var{flags}, void *@var{owner})
+Used to implement a new kind of stream.
+@end deftypefun
+
+@deftypefun void* mu_stream_get_owner (mu_stream_t @var{stream})
+@end deftypefun
+
+@deftypefun void mu_stream_set_owner (mu_stream_t @var{stream}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_get_flags (mu_stream_t @var{stream}, int *@var{flags})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_flags (mu_stream_t @var{stream}, int @var{flags})
+@end deftypefun
+
+@deftypefun  int mu_stream_get_property (mu_stream_t @var{stream}, property_t *)
+@end deftypefun
+
+@deftypefun  int mu_stream_set_property (mu_stream_t @var{stream}, property_t, void *)
+@end deftypefun
+
+@deftypefun int mu_stream_get_state (mu_stream_t @var{stream}, int *@var{state})
+@table @code
+@item MU_STREAM_STATE_OPEN
+Last action was @code{mu_stream_open}.
+@item MU_STREAM_STATE_READ
+Last action was @code{mu_stream_read} or @code{mu_stream_readline}.
+@item MU_STREAM_STATE_WRITE
+Last action was @code{mu_stream_write}.
+@item MU_STREAM_STATE_CLOSE
+Last action was @code{mu_stream_close}.
+@end table
+@end deftypefun
+
+@deftypefun  int mu_stream_set_destroy (mu_stream_t @var{stream}, void (*@var{_destroy}) (mu_stream_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_open (mu_stream_t @var{stream}, int (*@var{_open}) (mu_stream_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_close (mu_stream_t @var{stream}, int (*@var{_close}) (mu_stream_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_fd (mu_stream_t @var{stream}, int (*@var{_get_fd}) (mu_stream_t, int *, int *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_read (mu_stream_t @var{stream}, int (*@var{_read}) (mu_stream_t, char *, size_t, mu_off_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_readline (mu_stream_t @var{stream}, int (*@var{_readline}) (mu_stream_t, char *, size_t, mu_off_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_size (mu_stream_t @var{stream}, int (*@var{_size}) (mu_stream_t, mu_off_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_truncate (mu_stream_t @var{stream}, int (*@var{_truncate}) (mu_stream_t, mu_off_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_write (mu_stream_t @var{stream}, int (*@var{_write}) (mu_stream_t, const char *, size_t, mu_off_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_flush (mu_stream_t @var{stream}, int (*@var{_flush}) (mu_stream_t), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_set_strerror (mu_stream_t @var{stream}, int (*@var{_fp}) (mu_stream_t, char **), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_stream_sequential_readline (mu_stream_ts @var{stream}, char *@var{buf}, size_t @var{size}, size_t *@var{nbytes})
+@end deftypefun
+
+@deftypefun  int mu_stream_sequential_write (mu_stream_t @var{stream}, char *@var{buf}, size_t @var{size})
+@end deftypefun
+
+@deftypefun  int mu_stream_seek (mu_stream_t @var{stream}, mu_off_t @var{off}, int @var{whence})
+@end deftypefun
+
+@deftypefun  int mu_stream_strerror (mu_stream_t @var{stream}, char **@var{p})
+@end deftypefun
+
+An example using @code{mu_tcp_stream_create()} to make a simple web client:
+
+@smallexample
+@include http.inc
+@end smallexample

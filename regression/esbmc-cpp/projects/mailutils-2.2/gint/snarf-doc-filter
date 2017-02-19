@@ -1,0 +1,449 @@
+#! /bin/sh
+# aside from this initial boilerplate, this is actually -*- scheme -*- code
+main='(module-ref (resolve-module '\''(gint snarf-doc-filter)) '\'main')'
+exec ${GUILE-guile} -l $0 -c "(apply $main (cons \"$0\" (cdr (command-line))))" "$@"
+!#
+;;;; This file is part of Gint
+;;;; Copyright (C) 2010 Sergey Poznyakoff
+;;;;
+;;;; This program is free software; you can redistribute it and/or modify
+;;;; it under the terms of the GNU General Public License as published by
+;;;; the Free Software Foundation; either version 3, or (at your option)
+;;;; any later version.
+;;;;
+;;;; This program is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU General Public License for more details.
+;;;;
+;;;; You should have received a copy of the GNU General Public License
+;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define-module (gint snarf-doc-filter)
+  :use-module (ice-9 getopt-long)
+  :use-module (ice-9 regex)
+  :use-module (ice-9 rdelim))
+
+(define debug-option #f)
+(define print-option #f)
+(define snarfer-option #f)
+
+(define state 'skip)
+(define last-token '())
+
+(define string-collection '())
+
+(define (init-collection . rest)
+  (set! string-collection rest))
+
+(define (collect-string . rest)
+  (for-each
+   (lambda (str)
+     (set! string-collection (cons str string-collection)))
+   rest))
+
+(define (format-debug fmt . rest)
+  (if debug-option
+      (apply format (current-error-port)
+	     (string-append "~A:~A:DEBUG:" fmt)
+	     (cons (port-line (current-input-port))
+		   (cons (port-column (current-input-port))
+			 rest)))))
+
+(define (output sym)
+  (set! last-token sym)
+  (if print-option
+      (begin
+	(display sym)
+	(newline))))
+
+(define (output-x sym)
+  (set! last-token sym)
+  (display sym)
+  (newline))
+
+(define (output-cons name rest)
+  (set! last-token name)
+  (if print-option
+      (begin
+	(format #t "(~A . \"" name)
+	(for-each display (reverse rest))
+	(display "\")\n"))))
+
+(define (output-string)
+  (set! last-token 'string)
+  (if print-option
+      (begin
+	(for-each display (reverse string-collection))
+	(newline))))
+
+(define char-set:c-delim
+  (char-set-delete
+   (char-set-union char-set:whitespace
+		   char-set:punctuation
+		   char-set:symbol)
+   #\_))
+
+(define char-set:not-c-delim
+  (char-set-complement char-set:c-delim))
+
+(define ident-rx
+  (make-regexp "^[a-zA-Z_][a-zA-Z_0-9]*"))
+
+(define onum-rx
+  (make-regexp "^0([0-7]+(l|L|ll|LL|lL|Ll|u|U)?)"))
+
+(define xnum-rx
+  (make-regexp "^0[xX]([0-9a-fA-F]*(l|L|ll|LL|lL|Ll|u|U)?)"))
+
+(define dnum-rx
+  (make-regexp "^(0|([1-9][0-9]*))(l|L|ll|LL|lL|Ll|u|U)?"))
+
+(define fnum-rx
+  (make-regexp
+   "^(([0-9]+[Ee][+-]?[0-9]+)|(([0-9]*\\.[0-9]+)|([0-9]+\\.[0-9]*))([Ee][+-]?[0-9]+)?)[fFlL]?"))
+
+(define snarf-cookie-rx
+  (make-regexp "^\\^[ \\t\\v\\n\\f]*\\^"))
+
+(define (string-prefix-one-of str pfxdef)
+  (call-with-current-continuation
+   (lambda (return)
+     (for-each
+      (lambda (pfx)
+	(if (string-prefix? (car pfx) str)
+	    (return pfx)))
+      pfxdef)
+     (return #f))))
+
+(define (lexer)
+  (let loop ((input (read-line)))
+    (letrec ((find-char-end
+	      (lambda (str pfx)
+		(init-collection pfx)
+		(let find-char-end-loop ((str str)
+					 (ind (string-length pfx)))
+		  (cond
+		   ((>= ind (string-length str))
+		    (format (current-error-port)
+			    "~A:~A: invalid character constant~%"
+			    (port-line (current-input-port))
+			    (port-column (current-input-port)))
+		    (output "eol")
+		    (loop (read-line))) ; Try to continue anyway
+		   ((char=? (string-ref str ind) #\\)
+		    (format-debug "SKIP SC \\~A~%"
+				  (string-ref str (+ 1 ind)))
+		    (collect-string "\\")
+		    (find-char-end-loop str (+ ind 1)))
+		   ((char=? (string-ref str ind) #\')
+		    (collect-string "'")
+		    (output-cons 'char string-collection)
+		    (loop (substring str (+ 1 ind)))); Next iteration
+		   (else
+		    (let ((ch (string-ref str ind)))
+		      (format-debug "SKIP SC ~A~%" ch)
+		      (collect-string ch))
+		    (find-char-end-loop str (+ ind 1)))))))
+	     
+	     (find-string-end
+	      (lambda (line pfx)
+		(let ((pos (cons (port-line (current-input-port))
+				 (port-column (current-input-port)))))
+		  (init-collection pfx)
+		  (let find-string-end-loop ((str line)
+					     (start (string-length pfx)))
+;	            (format-debug "FNE:~A~%" (substring str start))
+		    (if (eof-object? str)
+			(format (current-error-port)
+				"EOF in string started in ~A:~A~%"
+				(car pos) (cdr pos))
+	       
+			(let ((n (string-skip str (lambda (c)
+						    (not (or (char=? c #\")
+							     (char=? c #\\))))
+					      start)))
+			  (cond
+			   (n
+			    (if (> n start)
+				(let ((prefix (substring str start n)))
+				  (format-debug "SEGM ~A~%" prefix)
+				  (collect-string prefix)))
+			    (cond
+			     ((char=? (string-ref str n) #\")
+			      (collect-string "\"")
+			      (output-string)
+			      (loop (substring str (+ n 1)))) ; Next iteration
+			     ((= (1+ n) (string-length str))
+			      (format-debug "ESCNL~%")
+			      (collect-string "\\\n")
+			      (find-string-end-loop (read-line) 0))
+			     ((char=? (string-ref str (1+ n)) #\")
+			      (format-debug "ESCQUOTE~%")
+			      (collect-string "\\\"")
+			      (find-string-end-loop str (+ n 2)))
+			     (else
+			      (format-debug "ESCAPE~%")
+			      (collect-string "\\")
+			      (find-string-end-loop str (1+ n)))))
+			   (else
+			    (let ((segm (substring str start)))
+			      (format-debug "SEGM ~A~%" segm)
+			      (collect-string segm))
+			    (find-string-end-loop (read-line) 0))))))))))
+      
+      (format-debug "IN:~A / ~A / ~A / ~A~%" input print-option state last-token)
+      (if (not (eof-object? input))
+	  (let ((line (string-trim input)))
+;	    (format-debug "LI:~A~%" line)
+	    (cond
+	     ((string-null? line)
+	      (output "eol")
+	      (loop (read-line)))
+	     ((string-prefix? "#" line)
+	      (output "hash")
+	      (loop (read-line)))
+	     ((string-prefix? "/*" line)
+	      (let ((pos (cons (port-line (current-input-port))
+			       (port-column (current-input-port)))))
+		(init-collection)
+		(let find-comment-end ((str line))
+;		  (format-debug "FCE:~A~%" str)
+		  (cond
+		   ((eof-object? str)
+		    (format (current-error-port)
+			    "EOF in comment started in ~A:~A~%"
+			    (car pos) (cdr pos)))
+		   ((string-contains str "*/") =>
+		    (lambda (n)
+		      (collect-string (substring str 0 (+ n 2)))
+		      (output-cons 'comment string-collection)
+		      (loop (substring str (+ n 2)))))
+		   (else
+		    (collect-string str "\n")
+		    (find-comment-end (read-line)))))))
+	   
+	     ((string-prefix? "\"" line)
+	      (find-string-end line "\""))
+	     ((string-prefix? "L\"" line)
+	      (find-string-end line "L\""))
+	     
+	     ((string-prefix? "L'" line)
+	      (find-char-end line "L'"))
+
+	     ((string-prefix? "{" line)
+	      (let ((lt last-token))
+		(output "brace_open")
+		(if (and (eq? lt 'snarf_cookie)
+			 (eq? state 'cookie))
+		    (set! state 'multiline))
+		(loop (substring line 1))))
+
+	     ((string-prefix? "<%" line)
+	      (let ((lt last-token))
+		(output "brace_open")
+		(if (and (eq? lt 'snarf_cookie)
+			 (eq? state 'cookie))
+		    (set! state 'multiline))
+		(loop (substring line 2))))
+
+	     ((string-prefix? "}" line)
+	      (let ((lt last-token))
+		(output "brace_close")
+		(if (and (eq? lt 'snarf_cookie)
+			 (eq? state 'multiline-cookie))
+		    (begin
+		      (set! state 'skip)
+		      (set! print-option #f)))
+		(loop (substring line 1))))
+
+	     ((string-prefix? "%>" line)
+	      (let ((lt last-token))
+		(output "brace_close")
+		(if (and (eq? lt 'snarf_cookie)
+			 (eq? state 'multiline-cookie))
+		    (begin
+		      (set! state 'skip)
+		      (set! print-option #f)))
+		(loop (substring line 2))))
+	     
+	     ((regexp-exec fnum-rx line) =>
+	      (lambda (m)
+		(format-debug "FNUM: ~S~%" m)
+		(let ((pfx (match:substring m)))
+		  (output-cons 'flo_dec (list pfx))
+		  (loop (substring line (string-length pfx))))))
+
+	     ((regexp-exec snarf-cookie-rx line) =>
+	      (lambda (m)
+		(if snarfer-option
+		    (case state
+		      ((skip)
+		       (set! state 'cookie)
+		       (set! print-option #t))
+		      ((multiline multiline-cookie)
+		       (set! state 'multiline-cookie))
+		      ((cookie)
+		       (set! state 'skip)
+		       (set! print-option #f))))
+		(output-x 'snarf_cookie)
+		(loop (substring line (- (match:end m) (match:start m))))))
+	     
+	     ((string-prefix-one-of line
+				    '((">>=" . shift_right_assign)
+				      ("<<=" . shift_left_assign)
+				      ("+="  . add_assign)
+				      ("-="  . sub_assign)
+				      ("*="  . mul-assign)
+				      ("/="  . div_assign)
+				      ("%="  . mod_assign)
+				      ("&="  . logand_assign)
+				      ("^="  . logxor_assign)
+				      ("|="  . logior_assign)
+				      (">>"  . right_shift)
+				      ("<<"  . left_shift)
+				      ("++"  . inc)
+				      ("--"  . dec)
+				      ("->"  . ptr)
+				      ("&&"  . and)
+				      ("||"  . or)
+				      ("<="  . le)
+				      (">="  . ge)
+				      ("=="  . eq)
+				      ("!="  . neq)
+				      ("..." . ellipsis)
+				      (","   . comma)
+				      (":"   . colon)
+				      ("="   . assign)
+				      ("("   . paren_open)
+				      (")"   . paren_close)
+				      ("["   . bracket_open)
+				      ("]"   . bracket_close)
+				      ("."   . dot)
+				      ("&"   . amp)
+				      ("!"   . bang)
+				      ("~"   . tilde)
+				      ("-"   . minus)
+				      ("+"   . plus)
+				      ("*"   . star)
+				      ("/"   . slash)
+				      ("%"   . percent)
+				      ("<"   . lt)
+				      (">"   . gt)
+				      ("^"   . caret)
+				      ("|"   . pipe)
+				      ("?"   . question)
+				      (";"   . semicolon))) =>
+	      (lambda (pfx)
+		(output (symbol->string (cdr pfx)))
+		(loop (substring line (string-length (car pfx))))))
+
+	   ;; more...
+	     ((char-set-contains? char-set:c-delim (string-ref line 0))
+;	      (format-debug "special ~A~%" line)
+	      (cond
+	       ((string-prefix? "'" line)
+		(find-char-end line "'"))
+	       (else
+		(format-debug "SKIP #\\~A~%" (substring line 0 1))
+		(loop (substring line 1)))))
+	   
+	     ((regexp-exec ident-rx line) =>
+	      (lambda (m)
+		(format-debug "IDENT: ~S~%" m)
+		(let ((pfx (match:substring m)))
+		  (output-cons 'id (list pfx))
+		  (loop (substring line (string-length pfx))))))
+
+	     ((regexp-exec onum-rx line) =>
+	      (lambda (m)
+		(format-debug "ONUM: ~S~%" m)
+		(let ((pfx (match:substring m 1)))
+		  (output-cons 'int_oct (list pfx))
+		  (loop (substring line
+				   (- (match:end m) (match:start m)))))))
+	     
+	     ((regexp-exec xnum-rx line) =>
+	      (lambda (m)
+		(format-debug "XNUM: ~S~%" m)
+		(let ((pfx (match:substring m 1)))
+		  (output-cons 'int_hex (list pfx))
+		  (loop (substring line (- (match:end m) (match:start m)))))))
+
+	     ((regexp-exec dnum-rx line) =>
+	      (lambda (m)
+		(format-debug "DNUM: ~S~%" m)
+		(let ((pfx (match:substring m)))
+		  (output-cons 'int_dec (list pfx))
+		  (loop (substring line (string-length pfx))))))
+	     
+	     (else
+	      (let ((n (string-skip line char-set:not-c-delim)))
+		(format-debug "N=~A~%" n)
+		(cond
+		 (n
+		  (format-debug "SKIP '~A'~%" (substring line 0 n))
+		  (loop (substring line n)))
+		 (else
+		  (format-debug "SKIP '~A'~%" line)
+		  (output "eol")
+		  (loop (read-line))))))))))))
+
+(define grammar
+  `((debug  (single-char #\d))
+    (snarfer (single-char #\s))
+    (output (single-char #\o)
+	    (value #t))
+    (help   (single-char #\h))))
+
+(define (usage)
+  (display "usage: snarf-doc-filter [OPTIONS] [FILE]\n")
+  (display "\n")
+  (display "OPTIONS are:\n")
+  (display "  -d, --debug        debugging output\n")
+  (display "  -s, --snarfer      filter snarfed contents\n")
+  (display "  -o, --output FILE  set output file name\n")
+  (display "  -h, --help         display this help summary\n"))
+
+(define output-file-name #f)
+(define input-file-name #f)
+
+(define (main . args)
+  (for-each
+   (lambda (x)
+     (case (car x)
+       ((debug)
+	(set! debug-option #t))
+       ((snarfer)
+	(set! snarfer-option #t))
+       ((output)
+	(set! output-file-name (cdr x)))
+       ((help)
+	(usage)
+	(exit 0))
+       ('()
+	(if (not (null? (cdr x)))
+	    (set! input-file-name (cadr x))))))
+   (getopt-long args grammar))
+  
+  (if (and
+       (not print-option)
+       (not snarfer-option))
+      (set! print-option #t))
+  
+  (letrec ((lex-out (lambda ()
+		      (if output-file-name
+			  (with-output-to-file
+			      output-file-name
+			    lexer)
+			  (lexer)))))
+    (if input-file-name
+	(with-input-from-file
+	    input-file-name
+	  lex-out)
+	(lex-out))))
+
+;; End of snarf-doc-filter.scm
+	  
+    
+    

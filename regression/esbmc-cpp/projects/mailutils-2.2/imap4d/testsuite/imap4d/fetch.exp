@@ -1,0 +1,525 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# 6.4.5.  FETCH Command
+# Arguments:  message set
+#             message data item names
+# Responses:  untagged responses: FETCH
+# Result:     OK - fetch completed
+#             NO - fetch error: can't fetch that data
+#             BAD - command unknown or arguments invalid
+#
+#      The FETCH command retrieves data associated with a message in the
+#      mailbox.  The data items to be fetched can be either a single atom
+#      or a parenthesized list.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+
+imap4d_test "SELECT mbox1" \
+"5 EXISTS"\
+"5 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 6\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags" \
+"OK"
+
+# FLAGS          The flags that are set for this message.
+imap4d_test "FETCH 3 (FLAGS)"\
+"3 FETCH (FLAGS (\\Recent))"\
+"OK"
+
+# INTERNALDATE   The internal date of the message.
+imap4d_test "FETCH 3 INTERNALDATE"\
+"3 FETCH (INTERNALDATE \"13-Jul-2002 00:43:18 +0000\")"\
+"OK"
+
+# UID            The unique identifier for the message.
+imap4d_test "FETCH 3 UID"\
+"3 FETCH (UID 3)"\
+"OK"
+
+imap4d_test "FETCH 3 (FLAGS INTERNALDATE UID)"\
+"3 FETCH (FLAGS (\\Recent) INTERNALDATE \"13-Jul-2002 00:43:18 +0000\" UID 3)"\
+"OK"
+
+# ENVELOPE       The envelope structure of the message.  This is
+#                computed by the server by parsing the [RFC-822]
+#                header into the component parts, defaulting various
+#                fields as necessary.
+
+imap4d_test "FETCH 1:* ENVELOPE"\
+"1 FETCH (ENVELOPE (\"Fri, 28 Dec 2001 22:18:08 +0200\" \"Jabberwocky\" ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) NIL NIL NIL \"<200112282018.fBSKI8N04906@nonexistent.net>\"))"\
+"2 FETCH (ENVELOPE (\"Fri, 28 Dec 2001 23:28:08 +0200\" \"Re: Jabberwocky\" ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200112232808.fERKR9N16790@dontmailme.org>\"))"\
+"3 FETCH (ENVELOPE (\"Sat, 13 Jul 2002 00:43:18 +0300\" \"Simple MIME\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122143.g6CLhIb05086@Mirddin.farlep.net>\"))"\
+"4 FETCH (ENVELOPE (\"Sat, 13 Jul 2002 00:50:58 +0300\" \"Nested MIME\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122150.g6CLowb05126@Mirddin.farlep.net>\"))"\
+"5 FETCH (ENVELOPE (\"Sat, 13 Jul 2002 00:43:18 +0300\" \"Empty MIME Parts\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122143.g6CLhIb05086@Mirddin.farlep.net>\"))"\
+"OK"
+
+# ALL            Macro equivalent to: (FLAGS INTERNALDATE
+#                RFC822.SIZE ENVELOPE)
+
+imap4d_test "FETCH 1:\* ALL"\
+"1 FETCH (FLAGS (\\Recent) INTERNALDATE \"28-Dec-2001 22:18:09 +0000\" RFC822.SIZE 1299 ENVELOPE (\"Fri, 28 Dec 2001 22:18:08 +0200\" \"Jabberwocky\" ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) NIL NIL NIL \"<200112282018.fBSKI8N04906@nonexistent.net>\"))"\
+"2 FETCH (FLAGS (\\Recent) INTERNALDATE \"28-Dec-2001 23:28:09 +0000\" RFC822.SIZE 548 ENVELOPE (\"Fri, 28 Dec 2001 23:28:08 +0200\" \"Re: Jabberwocky\" ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Bar\" NIL \"bar\" \"dontmailme.org\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200112232808.fERKR9N16790@dontmailme.org>\"))"\
+"3 FETCH (FLAGS (\\Recent) INTERNALDATE \"13-Jul-2002 00:43:18 +0000\" RFC822.SIZE 1668 ENVELOPE (\"Sat, 13 Jul 2002 00:43:18 +0300\" \"Simple MIME\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122143.g6CLhIb05086@Mirddin.farlep.net>\"))"\
+"4 FETCH (FLAGS (\\Recent) INTERNALDATE \"13-Jul-2002 00:50:58 +0000\" RFC822.SIZE 3568 ENVELOPE (\"Sat, 13 Jul 2002 00:50:58 +0300\" \"Nested MIME\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122150.g6CLowb05126@Mirddin.farlep.net>\"))"\
+"5 FETCH (FLAGS (\\Recent) INTERNALDATE \"13-Jul-2002 00:43:18 +0000\" RFC822.SIZE 941 ENVELOPE (\"Sat, 13 Jul 2002 00:43:18 +0300\" \"Empty MIME Parts\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122143.g6CLhIb05086@Mirddin.farlep.net>\"))"\
+"OK"
+
+# BODYSTRUCTURE  The [MIME-IMB] body structure of the message.  This
+#                is computed by the server by parsing the [MIME-IMB]
+#                header fields in the [RFC-822] header and
+#                [MIME-IMB] headers.
+
+imap4d_test "FETCH 1 BODYSTRUCTURE"\
+"1 FETCH (BODYSTRUCTURE (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" 972 35 NIL NIL NIL))"\
+"OK"
+
+imap4d_test "FETCH 2 BODYSTRUCTURE"\
+"2 FETCH (BODYSTRUCTURE (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" 219 4 NIL NIL NIL))"\
+"OK"
+
+imap4d_test "FETCH 3 BODYSTRUCTURE"\
+"3 FETCH (BODYSTRUCTURE ((\"text\" \"plain\" (\"name\" \"msg.1\" \"charset\" \"us-ascii\") \"<5082.1026510189.1@Mirddin.farlep.net>\" \"How doth\" \"7BIT\" 239 9 NIL NIL NIL)(\"application\" \"octet-stream\" (\"name\" \"msg.21\") \"<5082.1026510189.2@Mirddin.farlep.net>\" \"Father William Part I\" \"base64\" 468 NIL NIL NIL) \"mixed\" (\"boundary\" \"----- =_aaaaaaaaaa0\") NIL NIL))"\
+"OK"
+
+imap4d_test "FETCH 4 BODYSTRUCTURE"\
+"4 FETCH (BODYSTRUCTURE ((\"text\" \"plain\" (\"name\" \"msg.21\" \"charset\" \"us-ascii\") \"<5122.1026510654.2@Mirddin.farlep.net>\" \"Father William Part I\" \"7BIT\" 351 10 NIL NIL NIL)((\"application\" \"octet-stream\" (\"name\" \"msg.22\") \"<5122.1026510654.4@Mirddin.farlep.net>\" \"Father William Part II\" \"base64\" 486 NIL NIL NIL)((\"application\" \"octet-stream\" (\"name\" \"msg.23\") \"<5122.1026510654.6@Mirddin.farlep.net>\" \"Father William Part III\" \"base64\" 490 NIL NIL NIL)(\"application\" \"octet-stream\" (\"name\" \"msg.24\") \"<5122.1026510654.7@Mirddin.farlep.net>\" \"Father William Part IV\" \"base64\" 502 NIL NIL NIL) \"mixed\" (\"boundary\" \"----- =_aaaaaaaaaa2\") NIL NIL) \"mixed\" (\"boundary\" \"----- =_aaaaaaaaaa1\") NIL NIL) \"mixed\" (\"boundary\" \"----- =_aaaaaaaaaa0\") NIL NIL))"\
+"OK"
+
+imap4d_test "FETCH 5 BODYSTRUCTURE"\
+"5 FETCH (BODYSTRUCTURE ((\"text\" \"plain\" (\"name\" \"empty\" \"charset\" \"us-ascii\") \"<5082.1026510189.1@Mirddin.farlep.net>\" \"Empty part\" \"7BIT\" 0 0 NIL NIL NIL)(\"text\" \"plain\" (\"name\" \"single.line\" \"charset\" \"us-ascii\") \"<5082.1026510189.2@Mirddin.farlep.net>\" \"Single line part\" \"7BIT\" 2 1 NIL NIL NIL) \"mixed\" (\"boundary\" \"----- =_aaaaaaaaaa0\") NIL NIL))"\
+"OK" 
+
+# BODY       The text of a particular body section. 
+imap4d_test "FETCH 1:* BODY"\
+"1 FETCH (BODY (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" 972 35))"\
+"2 FETCH (BODY (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" 219 4))"\
+"3 FETCH (BODY ((\"text\" \"plain\" (\"name\" \"msg.1\" \"charset\" \"us-ascii\") \"<5082.1026510189.1@Mirddin.farlep.net>\" \"How doth\" \"7BIT\" 239 9)(\"application\" \"octet-stream\" (\"name\" \"msg.21\") \"<5082.1026510189.2@Mirddin.farlep.net>\" \"Father William Part I\" \"base64\" 468) \"mixed\" NIL NIL NIL))"\
+"4 FETCH (BODY ((\"text\" \"plain\" (\"name\" \"msg.21\" \"charset\" \"us-ascii\") \"<5122.1026510654.2@Mirddin.farlep.net>\" \"Father William Part I\" \"7BIT\" 351 10)((\"application\" \"octet-stream\" (\"name\" \"msg.22\") \"<5122.1026510654.4@Mirddin.farlep.net>\" \"Father William Part II\" \"base64\" 486)((\"application\" \"octet-stream\" (\"name\" \"msg.23\") \"<5122.1026510654.6@Mirddin.farlep.net>\" \"Father William Part III\" \"base64\" 490)(\"application\" \"octet-stream\" (\"name\" \"msg.24\") \"<5122.1026510654.7@Mirddin.farlep.net>\" \"Father William Part IV\" \"base64\" 502) \"mixed\" NIL NIL NIL) \"mixed\" NIL NIL NIL) \"mixed\" NIL NIL NIL))"\
+"5 FETCH (BODY ((\"text\" \"plain\" (\"name\" \"empty\" \"charset\" \"us-ascii\") \"<5082.1026510189.1@Mirddin.farlep.net>\" \"Empty part\" \"7BIT\" 0 0)(\"text\" \"plain\" (\"name\" \"single.line\" \"charset\" \"us-ascii\") \"<5082.1026510189.2@Mirddin.farlep.net>\" \"Single line part\" \"7BIT\" 2 1) \"mixed\" NIL NIL NIL))"\
+"OK"
+
+# BODY.PEEK[<section>]<<partial>>
+#                    An alternate form of BODY[<section>] that does not
+#                    implicitly set the \Seen flag.
+
+imap4d_test "FETCH 1 BODY.PEEK\[HEADER\]"\
+"1 FETCH (BODY\[HEADER\] {327}"\
+-literal\
+"Received: (from foobar@nonexistent.net) "\
+"	by nonexistent.net id fBSKI8N04906"\
+"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"From: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+"To: Bar <bar@dontmailme.org>"\
+"Subject: Jabberwocky"\
+""\
+")"\
+"OK"
+
+# The HEADER, HEADER.FIELDS, and HEADER.FIELDS.NOT
+# part specifiers refer to the [RFC-822] header of
+# the message or of an encapsulated [MIME-IMT]
+# MESSAGE/RFC822 message.
+
+imap4d_test "FETCH 1 BODY\[HEADER\]"\
+"1 FETCH (FLAGS (\\Seen) BODY\[HEADER\] {327}"\
+-literal\
+"Received: (from foobar@nonexistent.net) "\
+"	by nonexistent.net id fBSKI8N04906"\
+"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"From: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+"To: Bar <bar@dontmailme.org>"\
+"Subject: Jabberwocky"\
+""\
+")"\
+"OK"
+
+# HEADER.FIELDS and HEADER.FIELDS.NOT are followed by a list of
+# field-name (as defined in [RFC-822]) names, and return a subset
+# of the header.
+
+# The subset returned by HEADER.FIELDS contains only those header fields
+# with a field-name that matches one of the names in the list;
+
+imap4d_test "FETCH 1 BODY\[HEADER.FIELDS (FROM TO SUBJECT)\]"\
+"1 FETCH (BODY\[HEADER.FIELDS (FROM TO SUBJECT)\] {94}"\
+-literal\
+"FROM: Foo Bar <foobar@nonexistent.net>"\
+"TO: Bar <bar@dontmailme.org>"\
+"SUBJECT: Jabberwocky"\
+""\
+")"\
+"OK"
+
+# similarly, the subset returned by HEADER.FIELDS.NOT contains only
+# the header fields with a non-matching field-name. 
+
+imap4d_test "FETCH 1 BODY\[HEADER.FIELDS.NOT (FROM TO SUBJECT)\]"\
+"1 FETCH (BODY\[HEADER.FIELDS.NOT (FROM TO SUBJECT)\] {235}"\
+-literal\
+"Received: (from foobar@nonexistent.net) "\
+"	by nonexistent.net id fBSKI8N04906"\
+"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+""\
+")"\
+"OK"
+
+# The TEXT part specifier refers to the text body of
+# the message, omitting the [RFC-822] header.
+
+imap4d_test "FETCH 1 BODY\[TEXT\]"\
+"1 FETCH (BODY\[TEXT\] {972}"\
+-literal\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+"`Beware the Jabberwock, my son!"\
+"The jaws that bite, the claws that catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword in hand:"\
+"Long time the manxome foe he sought --"\
+"So rested he by the Tumtum gree,"\
+"And stood awhile in thought."\
+""\
+"And as in uffish thought he stood,"\
+"The Jabberwock, with eyes of flame,"\
+"Came whiffling through the tulgey wook,"\
+"And burbled as it came!"\
+""\
+"One, two!  One, two!  And through and through"\
+"The vorpal blade went snicker-snack!"\
+"He left it dead, and with its head"\
+"He went galumphing back."\
+""\
+"`And has thou slain the Jabberwock?"\
+"Come to my arms, my beamish boy!"\
+"O frabjous day!  Calloh!  Callay!"\
+"He chortled in his joy."\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+")"\
+"OK"
+
+# It is possible to fetch a substring of the
+# designated text.  This is done by appending an open
+# angle bracket ("<"), the octet position of the
+# first desired octet, a period, the maximum number
+# of octets desired, and a close angle bracket (">")
+# to the part specifier.  
+imap4d_test "FETCH 1 BODY\[TEXT\]<0.20>"\
+"1 FETCH (BODY\[TEXT\]<0> {20}"\
+-literal\
+"`Twas brillig, and t)"\
+"OK"
+
+imap4d_test "FETCH 1 BODY\[TEXT\]<200.100>"\
+"1 FETCH (BODY\[TEXT\]<200> {100}"\
+-literal\
+"t catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword i)"\
+"OK"
+
+# If the starting octet is beyond the end of
+# the text, an empty string is returned.
+imap4d_test "FETCH 1 BODY\[TEXT\]<3900.4000>"\
+"1 FETCH (BODY\[TEXT\]<3900> \"\")"\
+"OK"
+
+
+# Any partial fetch that attempts to read beyond the
+# end of the text is truncated as appropriate.  A
+# partial fetch that starts at octet 0 is returned as
+# a partial fetch, even if this truncation happened.
+#
+# Note: this means that BODY[]<0.2048> of a 1500-octet
+# message will return BODY[]<0> with a literal of size 1500,
+# not BODY[].
+
+imap4d_test "FETCH 1 BODY\[TEXT\]<0.4000>"\
+"1 FETCH (BODY\[TEXT\]<0> {972}"\
+-literal\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+"`Beware the Jabberwock, my son!"\
+"The jaws that bite, the claws that catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword in hand:"\
+"Long time the manxome foe he sought --"\
+"So rested he by the Tumtum gree,"\
+"And stood awhile in thought."\
+""\
+"And as in uffish thought he stood,"\
+"The Jabberwock, with eyes of flame,"\
+"Came whiffling through the tulgey wook,"\
+"And burbled as it came!"\
+""\
+"One, two!  One, two!  And through and through"\
+"The vorpal blade went snicker-snack!"\
+"He left it dead, and with its head"\
+"He went galumphing back."\
+""\
+"`And has thou slain the Jabberwock?"\
+"Come to my arms, my beamish boy!"\
+"O frabjous day!  Calloh!  Callay!"\
+"He chortled in his joy."\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+")"\
+"OK"
+
+# The MIME part specifier refers to the [MIME-IMB]
+# header for this part.
+
+# The MIME part specifier MUST be prefixed by one or
+# more numeric part specifiers.
+
+imap4d_test "FETCH 3 BODY\[1.MIME\]"\
+"3 FETCH (FLAGS (\\Seen) BODY\[1.MIME\] {145}"\
+-literal\
+"Content-Type: text/plain; name=\"msg.1\"; charset=\"us-ascii\""\
+"Content-ID: <5082.1026510189.1@Mirddin.farlep.net>"\
+"Content-Description: How doth"\
+""\
+")"\
+"OK"
+
+imap4d_test "FETCH 4 BODY\[2.2.1\]"\
+"4 FETCH (FLAGS (\\Seen) BODY\[2.2.1\] {490}"\
+-literal\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBhbmQgeW91ciBqYXdzIGFyZSB0b28gd2Vh"\
+"awpGb3IgYW55dGhpbmcgdG91Z2hlciB0aGFuIHN1ZXQ7CllldCB5b3UgZmluaXNoZWQgdGhlIGdv"\
+"b3NlLCB3aXRoIHRoZSBib25lcyBhbmQgdGhlIGJlYWstLQpQcmF5IGhvdyBkaWQgeW91IG1hbmFn"\
+"ZSB0byBkbyBpdD8nCgpgSW4gbXkgeW91dGgsJyBzYWlkIGhpcyBmYXRoZXIsIGBJIHRvb2sgdG8g"\
+"dGhlIGxhdywKQW5kIGFyZ3VlZCBlYWNoIGNhc2Ugd2l0aCBteSB3aWZlOwpBbmQgdGhlIG11c2N1"\
+"bGFyIHN0cmVuZ3RoLCB3aGljaCBpdCBnYXZlIHRvIG15IGphdywKSGFzIGxhc3RlZCB0aGUgcmVz"\
+"dCBvZiBteSBsaWZlLicK"\
+")"\
+"OK"
+
+imap4d_test "FETCH 4 BODY\[2.2.1.TEXT\]"\
+"4 FETCH (BODY\[2.2.1.TEXT\] {490}"\
+-literal\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBhbmQgeW91ciBqYXdzIGFyZSB0b28gd2Vh"\
+"awpGb3IgYW55dGhpbmcgdG91Z2hlciB0aGFuIHN1ZXQ7CllldCB5b3UgZmluaXNoZWQgdGhlIGdv"\
+"b3NlLCB3aXRoIHRoZSBib25lcyBhbmQgdGhlIGJlYWstLQpQcmF5IGhvdyBkaWQgeW91IG1hbmFn"\
+"ZSB0byBkbyBpdD8nCgpgSW4gbXkgeW91dGgsJyBzYWlkIGhpcyBmYXRoZXIsIGBJIHRvb2sgdG8g"\
+"dGhlIGxhdywKQW5kIGFyZ3VlZCBlYWNoIGNhc2Ugd2l0aCBteSB3aWZlOwpBbmQgdGhlIG11c2N1"\
+"bGFyIHN0cmVuZ3RoLCB3aGljaCBpdCBnYXZlIHRvIG15IGphdywKSGFzIGxhc3RlZCB0aGUgcmVz"\
+"dCBvZiBteSBsaWZlLicK"\
+")"\
+"OK"
+
+imap4d_test "FETCH 4 BODY\[2.2.TEXT\]"\
+"4 FETCH (BODY\[2.2.TEXT\] {1446}"\
+-literal\
+-- "------- =_aaaaaaaaaa2"\
+"Content-Type: application/octet-stream; name=\"msg.23\""\
+"Content-ID: <5122.1026510654.6@Mirddin.farlep.net>"\
+"Content-Description: Father William Part III"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBhbmQgeW91ciBqYXdzIGFyZSB0b28gd2Vh"\
+"awpGb3IgYW55dGhpbmcgdG91Z2hlciB0aGFuIHN1ZXQ7CllldCB5b3UgZmluaXNoZWQgdGhlIGdv"\
+"b3NlLCB3aXRoIHRoZSBib25lcyBhbmQgdGhlIGJlYWstLQpQcmF5IGhvdyBkaWQgeW91IG1hbmFn"\
+"ZSB0byBkbyBpdD8nCgpgSW4gbXkgeW91dGgsJyBzYWlkIGhpcyBmYXRoZXIsIGBJIHRvb2sgdG8g"\
+"dGhlIGxhdywKQW5kIGFyZ3VlZCBlYWNoIGNhc2Ugd2l0aCBteSB3aWZlOwpBbmQgdGhlIG11c2N1"\
+"bGFyIHN0cmVuZ3RoLCB3aGljaCBpdCBnYXZlIHRvIG15IGphdywKSGFzIGxhc3RlZCB0aGUgcmVz"\
+"dCBvZiBteSBsaWZlLicK"\
+""\
+-- "------- =_aaaaaaaaaa2"\
+"Content-Type: application/octet-stream; name=\"msg.24\""\
+"Content-ID: <5122.1026510654.7@Mirddin.farlep.net>"\
+"Content-Description: Father William Part IV"\
+"Content-Transfer-Encoding: base64"\
+""\
+"YFlvdSBhcmUgb2xkLCcgc2FpZCB0aGUgeW91dGgsIGBvbmUgd291bGQgaGFyZGx5IHN1cHBvc2UK"\
+"VGhhdCB5b3VyIGV5ZSB3YXMgYXMgc3RlYWR5IGFzIGV2ZXI7CllldCB5b3UgYmFsYW5jZWQgYW4g"\
+"ZWVsIG9uIHRoZSBlbmQgb2YgeW91ciBub3NlLS0KV2hhdCBtYWRlIHlvdSBzbyBhd2Z1bGx5IGNs"\
+"ZXZlcj8nCgpgSSBoYXZlIGFuc3dlcmVkIHRocmVlIHF1ZXN0aW9ucywgYW5kIHRoYXQgaXMgZW5v"\
+"dWdoLCcKU2FpZCBoaXMgZmF0aGVyOyBgZG9uJ3QgZ2l2ZSB5b3Vyc2VsZiBhaXJzIQpEbyB5b3Ug"\
+"dGhpbmsgSSBjYW4gbGlzdGVuIGFsbCBkYXkgdG8gc3VjaCBzdHVmZj8KQmUgb2ZmLCBvciBJJ2xs"\
+"IGtpY2sgeW91IGRvd24gc3RhaXJzIScK"\
+""\
+-- "------- =_aaaaaaaaaa2--"\
+")"\
+"OK"
+
+imap4d_test "FETCH 5 BODY\[1.TEXT\]"\
+"5 FETCH (FLAGS (\\Seen) BODY\[1.TEXT\] \"\")"\
+"OK"
+
+imap4d_test "FETCH 5 BODY\[2.TEXT\]"\
+"5 FETCH (BODY\[2.TEXT\] {2}"\
+-literal\
+""\
+")"\
+"OK"
+
+###############
+# Test RFC822 operations
+
+# Clean \Seen flags
+
+imap4d_test "STORE 1:* -FLAGS (\\Seen)"\
+"1 FETCH (FLAGS (\\Recent))"\
+"2 FETCH (FLAGS (\\Recent))"\
+"3 FETCH (FLAGS (\\Recent))"\
+"4 FETCH (FLAGS (\\Recent))"\
+"5 FETCH (FLAGS (\\Recent))"\
+"OK"
+
+# RFC822         Functionally equivalent to BODY[], differing in the
+#                syntax of the resulting untagged FETCH data (RFC822
+#                is returned).
+
+imap4d_test "FETCH 1 RFC822"\
+"1 FETCH (FLAGS (\\Seen) RFC822 {1299}"\
+-literal\
+"Received: (from foobar@nonexistent.net) "\
+"	by nonexistent.net id fBSKI8N04906"\
+"	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+"From: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+"To: Bar <bar@dontmailme.org>"\
+"Subject: Jabberwocky"\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+"`Beware the Jabberwock, my son!"\
+"The jaws that bite, the claws that catch!"\
+"Beware the Jujub bird, and shun"\
+"The frumious Bandersnatch!'"\
+""\
+"He took his vorpal sword in hand:"\
+"Long time the manxome foe he sought --"\
+"So rested he by the Tumtum gree,"\
+"And stood awhile in thought."\
+""\
+"And as in uffish thought he stood,"\
+"The Jabberwock, with eyes of flame,"\
+"Came whiffling through the tulgey wook,"\
+"And burbled as it came!"\
+""\
+"One, two!  One, two!  And through and through"\
+"The vorpal blade went snicker-snack!"\
+"He left it dead, and with its head"\
+"He went galumphing back."\
+""\
+"`And has thou slain the Jabberwock?"\
+"Come to my arms, my beamish boy!"\
+"O frabjous day!  Calloh!  Callay!"\
+"He chortled in his joy."\
+""\
+"`Twas brillig, and the slithy toves"\
+"Did gyre and gimble in the wabe;"\
+"All mimsy were the borogoves,"\
+"And the mome raths outgrabe."\
+""\
+")"\
+"OK"
+
+# RFC822.HEADER  Functionally equivalent to BODY.PEEK[HEADER],
+#                differing in the syntax of the resulting untagged
+#                FETCH data (RFC822.HEADER is returned).
+
+imap4d_test "FETCH 2 RFC822.HEADER"\
+"2 FETCH (RFC822.HEADER {329}"\
+-literal\
+"Received: (from bar@dontmailme.org) "\
+"	by dontmailme.org id fERKR9N16790"\
+"	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200"\
+"Date: Fri, 28 Dec 2001 23:28:08 +0200"\
+"From: Bar <bar@dontmailme.org>"\
+"To: Foo Bar <foobar@nonexistent.net>"\
+"Message-Id: <200112232808.fERKR9N16790@dontmailme.org>"\
+"Subject: Re: Jabberwocky"\
+""\
+")"\
+"OK"
+
+# RFC822.SIZE    The [RFC-822] size of the message.
+
+imap4d_test "FETCH 3 RFC822.SIZE"\
+"3 FETCH (RFC822.SIZE 1668)"\
+"OK"
+
+# RFC822.TEXT    Functionally equivalent to BODY[TEXT], differing in
+#                the syntax of the resulting untagged FETCH data
+#                (RFC822.TEXT is returned).
+imap4d_test "FETCH 2 RFC822.TEXT"\
+"2 FETCH (FLAGS (\\Seen) RFC822.TEXT {219}"\
+-literal\
+"It seems very pretty, but it's *rather* hard to understand!'"\
+"Somehow it seems to fill my head with ideas -- only I don't"\
+"exactly know what they are!  However, SOMEBODY killed SOMETHING:"\
+"that's clear, at any rate..."\
+")"\
+"OK"
+
+# FAST           Macro equivalent to: (FLAGS INTERNALDATE
+#                RFC822.SIZE)
+
+imap4d_test "FETCH 1 FAST" \
+"1 FETCH (FLAGS (\\Seen \\Recent) INTERNALDATE \"28-Dec-2001 22:18:09 +0000\" RFC822.SIZE 1299)"\
+"OK"
+
+# FULL           Macro equivalent to: (FLAGS INTERNALDATE
+#                RFC822.SIZE ENVELOPE BODY)
+
+imap4d_test "FETCH 4 FULL"\
+"4 FETCH (FLAGS (\\Recent) INTERNALDATE \"13-Jul-2002 00:50:58 +0000\" RFC822.SIZE 3568 ENVELOPE (\"Sat, 13 Jul 2002 00:50:58 +0300\" \"Nested MIME\" ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Sergey Poznyakoff\" NIL \"gray\" \"Mirddin.farlep.net\")) ((\"Foo Bar\" NIL \"foobar\" \"nonexistent.net\")) NIL NIL NIL \"<200207122150.g6CLowb05126@Mirddin.farlep.net>\") BODY ((\"text\" \"plain\" (\"name\" \"msg.21\" \"charset\" \"us-ascii\") \"<5122.1026510654.2@Mirddin.farlep.net>\" \"Father William Part I\" \"7BIT\" 351 10)((\"application\" \"octet-stream\" (\"name\" \"msg.22\") \"<5122.1026510654.4@Mirddin.farlep.net>\" \"Father William Part II\" \"base64\" 486)((\"application\" \"octet-stream\" (\"name\" \"msg.23\") \"<5122.1026510654.6@Mirddin.farlep.net>\" \"Father William Part III\" \"base64\" 490)(\"application\" \"octet-stream\" (\"name\" \"msg.24\") \"<5122.1026510654.7@Mirddin.farlep.net>\" \"Father William Part IV\" \"base64\" 502) \"mixed\" NIL NIL NIL) \"mixed\" NIL NIL NIL) \"mixed\" NIL NIL NIL))"\
+"OK"
+
+imap4d_stop
+
+# End of fetch.exp

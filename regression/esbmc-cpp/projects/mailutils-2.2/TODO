@@ -1,0 +1,162 @@
+GNU mailutils TODO list. 2008-08-20
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 Free
+Software Foundation, Inc.
+
+* Configuration callback functions should not modify node->tag and node->label.
+
+* Debug handling in cfg vs. argp
+
+* Fix folder_imap_list in libproto/imap/folder.c
+
+* Documentation
+
+* Review the code and use mu_vartab_* and mu_kwd_* functions where
+necessary.
+
+* mailbox 
+
+** Generic search interface
+
+** Locking
+
+*** Implement a read/write locker_lock() flag so that when MU_LOCKER_WRONLY
+is set in the locker flags, only write locks actually lock the file,
+read locks don't do anything.
+
+*** what kind of locking should mh use? See FIXME in mbx_mh.c
+
+*** why does mimetest fail on a symlink, but succeed on a dotlocked file?
+
+*** implement a force unlock mode... so that when a mailbox
+is closed or destroyed it can make sure that the lock
+is definitely gone.
+
+** mailboxes don't remember whether or not they've been opened
+
+** does IMAP do an EXAMINE instead of a select if the mailbox is being
+opened readonly? Does list return whether a mailbox is readonly?
+Check against CMUs anon server, it is a read-only mailbox.
+
+** mu_cpystr - the size_t* size outputs only give strlen(), not the
+actual length?
+Sam Roberts:
+  My recollection is that when you give a buffer to output APIs, you give
+  the total size. But the size_t* that returns the required size, returns
+  the required size, minus the NUL. The units are different, in a sense.
+
+** need code to find a "real" envelope from... an actual email address
+that DSNs can be sent to.
+
+** need to be able to map some addresses (like mail to "root") to a
+user for the box, a la nullmailer, perhaps
+Sam Roberts:
+  If you have a really simple workstation with a basic mail system,
+  you  may want mail.local to deliver all email addressed to "root" and
+  "postmaster", etc., to a particular user, like yourself. 
+Sergey Poznyakoff:
+  In short, that is kind of aliasing support. We have aliasing support
+  in MH, possibly it could be used in libmailbox as well.
+
+** mailer_t: the SMTP mailer isn't as fully implemented as the sendmail
+mailer.
+
+** make the smtp mailer calls usable standalone, as well as url based,
+and use them in mail.remote.
+
+** support AUTH=anonymous (imap://cyrus.andrew.cmu.edu/archive.info-cyrus)
+
+** filter_trans needs readline method.
+
+* pop3
+
+** pop3d_readline - should this use select(), avoid the race condition,
+and touch the lockfile in time intervals smaller than MU_LOCKER_EXPIRE_TIME?
+
+* imap4d
+
+** Check interaction with various imap clients. Currently tested with:
+mail (from mailutils itself), mutt, pine, netscape, mozilla.
+
+** Better support of multi-access mailbox
+
+** implement charsets in search: 1 SEARCH CHARSET ISO-8859-2 TEXT ...
+
+** implement AUTHENTICATE KERBEROS_V4 and SKEY and SRP?
+
+* Implement extensions:
+
+ - QUOTA     : RFC 2087
+ - ACL       : RFC 4314
+ - CHILDREN  : RFC 3348
+ 
+** Consider implementing the following extensions:
+
+ - CONDSTORE : RFC 4551
+ - ESEARCH   : RFC 4731
+ - SEARCHRES : RFC 5182
+
+* Mailcap API
+
+The framework is implemented. Needs extensive testing.
+
+* Mime.types API is available in mimeview. Do we need to move it to
+libmailbox?
+
+* examples
+
+** unify the mbox-* and mimetest examples with messages, it would be nice
+to have a general purpose tool
+
+* mh -- see mh/TODO
+
+* sieve
+
+** run as daemon, sieveing mail on arrival (need interface for notification
+of message arrival, this is supported by imap, but we'll have to fake
+for pop and local spools my polling, why can't you select() on a unix
+file?)
+
+* utilities
+
+** mimeview: support nametemplate
+
+** all
+
+* Testsuite:
+
+Tcl is not able to handle binary data properly. This makes impossible
+to test some aspects of MU functionalities. Following testcases are
+affected:
+
+** mailbox/testsuite/mailbox/base64.exp
+
+The ability of the test program to read given file instead of the
+stdin is used to override the issue.
+
+** mailbox/testsuite/mailbox/encode2047.exp
+
+Input data are represented in octal format (see
+mailbox/testsuite/Encode2047). 
+
+** mailbox/testsuite/mailbox/argcv.exp
+
+The affected testcase is not run (see mailbox/testsuite/Argcv and
+search for FIXME). 
+
+* add nightly build
+
+* add more features
+
+* optimize everything
+
+* test everything
+
+
+Local variables:
+mode: outline
+paragraph-separate: "[ 	]*$"
+eval: (add-hook 'write-file-hooks 'time-stamp)
+time-stamp-start: "list. "
+time-stamp-format: "%:y-%02m-%02d"
+time-stamp-end: "\n"
+end:

@@ -1,0 +1,62 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2006, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mailbox_run ${top_builddir}/examples/encode2047
+
+set chan [open ${srcdir}/Encode2047 r]
+
+set command ""
+set message ""
+for {gets $chan line} {![eof $chan]} {gets $chan line} {
+    switch -regexp -- "$line" {
+	"^#.*" { }
+	"-message.*" {
+	    regexp -- "-message (.*)" $line dummy message
+	}
+	"^\\\\\[^\\\\\]" {
+	    mu_command $line
+	}
+	"^[^ \t].*=>.*" {
+	    regexp "(.*)=>.*" $line dummy command
+	    set pattern [list $line]
+	}
+	"^\$"    {
+	    if {$command != ""} {
+		verbose "COMMAND $command"
+		verbose "PATTERN $pattern"
+                if {$message != ""} {
+		  mailbox_test -message $message -pattern $pattern $command
+                } else {
+		  mailbox_test -pattern $pattern $command
+                }
+		set command ""
+		set message ""
+	    }
+	}
+	default {
+	    if [info exist pattern] {
+		set pattern [concat $pattern [list $line]]
+	    }
+	}
+    }
+}
+
+close $chan
+
+# end of encode2037.exp

@@ -1,0 +1,130 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_folder_} is reserved. */}
+@code{#include <mailutils/folder.h>}
+
+@end smallexample
+
+@smallexample
+@group
+                             mu_folder_t                mu_url_t
+  -/var/mail-    +---//--->/-------------------\   +-->/-----------\
+ (  alain *-)-+  |         |  mu_url_t       *-|---+   |  port     |
+  ----------  |  |         |-------------------+       |  hostname |
+ (  jakob *-)-+--+         |  mu_observer_t  *-|       |  file     |
+  ----------  |            |-------------------+       |  ...      |
+ (  jeff  *-)-+            |  mu_stream_t      |       \-----------/
+  ----------  |            |-------------------|
+ (  sean  *-)-+            |  mu_auth_t        |
+  ----------               |-------------------|
+                           |  mu_mailbox_t(1)  |
+                           |-------------------|
+                           |  mu_mailbox_t(2)  |
+                           |  ......           |
+                           |  mu_mailbox_t(n)  |
+                           \-----------------/
+@end group
+@end smallexample
+
+Data structures:
+
+@smallexample
+@group
+struct mu_list_response
+@{
+  int type;
+  int separator;
+  char *name;
+@};
+
+@end group
+@end smallexample
+
+@c
+@c Constructor/Destructor and possible types.
+@c
+
+@deftypefun  int mu_folder_create (mu_folder_t *, const char *@var{url})
+@end deftypefun
+
+@deftypefun void mu_folder_destroy (mu_folder_t *)
+@end deftypefun
+
+@deftypefun  int mu_folder_open (mu_folder_t, int @var{flag})
+@end deftypefun
+
+@deftypefun  int mu_folder_close (mu_folder_t)
+@end deftypefun
+
+@deftypefun  int mu_folder_delete (mu_folder_t, const char *@var{mailbox})
+@end deftypefun
+
+@deftypefun  int mu_folder_rename (mu_folder_t, const char *, const char *@var{mailbox})
+@end deftypefun
+
+@deftypefun  int mu_folder_subscribe (mu_folder_t, const char *@var{mailbox})
+@end deftypefun
+
+@deftypefun  int mu_folder_unsubscribe (mu_folder_t, const char *@var{mailbox})
+@end deftypefun
+
+@deftypefun  int mu_folder_list (mu_folder_t, const char *@var{ref}, const char *@var{wcard}, size_t @var{size}, mu_list_t *@var{list})
+@end deftypefun
+
+@deftypefun  int mu_folder_lsub (mu_folder_t, const char *@var{ref}, const char *@var{wcard}, mu_list_t *@var{list})
+@end deftypefun
+
+@c
+@c Stream Settings.
+@c
+
+@deftypefun  int mu_folder_get_stream (mu_folder_t, mu_stream_t *)
+@end deftypefun
+
+@deftypefun  int mu_folder_set_stream (mu_folder_t, mu_stream_t)
+@end deftypefun
+
+@c
+@c Notifications.
+@c
+
+@deftypefun  int mu_folder_get_observable (mu_folder_t, mu_observable_t *)
+@end deftypefun
+
+@c
+@c Debug.
+@c
+
+@deftypefun  int mu_folder_has_debug (mu_folder_t)
+@end deftypefun
+
+@deftypefun  int mu_folder_get_debug (mu_folder_t, mu_debug_t *)
+@end deftypefun
+
+@deftypefun  int mu_folder_set_debug (mu_folder_t, mu_debug_t)
+@end deftypefun
+
+@c
+@c Authentication.
+@c
+
+@deftypefun  int mu_folder_get_authority (mu_folder_t, mu_authority_t *)
+@end deftypefun
+
+@deftypefun  int mu_folder_set_authority (mu_folder_t, mu_authority_t)
+@end deftypefun
+
+@c
+@c URL.
+@c
+
+@deftypefun  int mu_folder_get_url (mu_folder_t, mu_url_t *)
+@end deftypefun
+
+@deftypefun  int mu_folder_set_url (mu_folder_t, mu_url_t)
+@end deftypefun

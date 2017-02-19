@@ -1,0 +1,65 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+source $top_srcdir/testsuite/lib/mailutils.exp
+
+mu_init -noflags
+set env(MAIL) $MU_SPOOL_DIR/mbox1
+set env(FOLDER) $env(MAIL)
+
+mu_prepare_spools
+
+mu_exec -retcode 1 -message "frm" "Foo Bar\tJabberwocky"\
+"Bar\tRe: Jabberwocky"\
+"Sergey Poznyakoff\tSimple MIME"\
+"Sergey Poznyakoff\tNested MIME"\
+"Sergey Poznyakoff\tEmpty MIME Parts"
+
+mu_exec -retcode 1 -message "frm -n" -arg -n \
+"   1:\tFoo Bar\tJabberwocky"\
+"   2:\tBar\tRe: Jabberwocky"\
+"   3:\tSergey Poznyakoff\tSimple MIME"\
+"   4:\tSergey Poznyakoff\tNested MIME"\
+"   5:\tSergey Poznyakoff\tEmpty MIME Parts"
+
+mu_exec -retcode 1 -message "frm -l" -arg -l \
+"(Bar)\tFoo Bar\tJabberwocky"\
+"(Foo Bar)\tBar\tRe: Jabberwocky"\
+"(Foo Bar)\tSergey Poznyakoff\tSimple MIME"\
+"(Foo Bar)\tSergey Poznyakoff\tNested MIME"\
+"(Foo Bar)\tSergey Poznyakoff\tEmpty MIME Parts"
+
+mu_exec -retcode 1 -message "frm -qS" -arg -qS \
+"Folder contains 5 new messages."
+
+mu_exec -retcode 1 -arg -q -message "frm -q"  \
+"There are messages in that folder."
+
+mu_exec -retcode 1 -arg "--set mailbox.folder=\"'$MU_SPOOL_DIR'\"" -arg +mbox -message "frm +mbox" \
+"Sergey Poznyakoff\tMBOX"
+
+mu_exec -arg -q -arg %nonexistent -retcode 2 -message "frm -q %nonexistent" \
+"No messages in that folder!"    
+
+set env(MAIL) $MU_SPOOL_DIR/bigto.mbox
+unset env(FOLDER)
+mu_exec -retcode 1 -message "frm -l on long headers" -arg -l \
+"(Ayoung-Chee, Nigel Paul -- Nigel Paul Ayoung-Chee)\tPatrick Chan\tNew email address, etc."
+
+#end of test.exp

@@ -1,0 +1,3 @@
+main.cu
+--unwind 10 --force-malloc-success  -I ~/libraries/ 
+^VERIFICATION FAILED$

@@ -1,0 +1,141 @@
+@c snarfed from "mu_message.c":184
+@deffn {Scheme procedure} mu-message-create
+Creates an empty message.
+
+@end deffn
+
+@c snarfed from "mu_message.c":196
+@deffn {Scheme procedure} mu-message-copy mesg
+Creates the copy of the message @var{mesg}.
+
+@end deffn
+
+@c snarfed from "mu_message.c":257
+@deffn {Scheme procedure} mu-message-destroy mesg
+Destroys the message @var{mesg}.
+@end deffn
+
+@c snarfed from "mu_message.c":274
+@deffn {Scheme procedure} mu-message-set-header mesg header value replace
+Sets new @var{value} to the header @var{header} of the message @var{mesg}.
+If @var{header} is already present in the message its value
+is replaced with the supplied one if the optional @var{replace} is
+#t. Otherwise, a new header is created and appended.
+@end deffn
+
+@c snarfed from "mu_message.c":314
+@deffn {Scheme procedure} mu-message-get-size mesg
+Returns the size of the message @var{mesg}
+.
+@end deffn
+
+@c snarfed from "mu_message.c":328
+@deffn {Scheme procedure} mu-message-get-lines mesg
+Returns number of lines in the given message.
+
+@end deffn
+
+@c snarfed from "mu_message.c":349
+@deffn {Scheme procedure} mu-message-get-sender mesg
+Returns email address of the sender of the message @var{mesg}.
+
+@end deffn
+
+@c snarfed from "mu_message.c":376
+@deffn {Scheme procedure} mu-message-get-header mesg header
+Returns value of the header @var{header} from the message @var{mesg}.
+
+@end deffn
+
+@c snarfed from "mu_message.c":433
+@deffn {Scheme procedure} mu-message-get-header-fields mesg headers
+Returns the list of headers in the message @var{mesg}. Optional argument
+@var{headers} gives a list of header names to restrict return value to.
+
+@end deffn
+
+@c snarfed from "mu_message.c":510
+@deffn {Scheme procedure} mu-message-set-header-fields mesg list replace
+Set the headers in the message @var{mesg} from @var{list}
+@var{list} is a list of conses (cons HEADER VALUE). The function sets
+these headers in the message @var{mesg}.
+Optional parameter @var{replace} specifies whether the new header
+values should replace the headers already present in the
+message.
+@end deffn
+
+@c snarfed from "mu_message.c":564
+@deffn {Scheme procedure} mu-message-delete mesg flag
+Mark the message @var{mesg} as deleted. Optional argument @var{flag} allows to toggle
+deletion mark. The message is deleted if it is @code{#t} and undeleted if
+it is @code{#f}
+@end deffn
+
+@c snarfed from "mu_message.c":600
+@deffn {Scheme procedure} mu-message-get-flag mesg flag
+Return value of the attribute @var{flag} of the message @var{mesg}.
+@end deffn
+
+@c snarfed from "mu_message.c":662
+@deffn {Scheme procedure} mu-message-set-flag mesg flag value
+Set the attribute @var{flag} of the message @var{mesg}. If optional @var{value} is #f, the
+attribute is unset.
+@end deffn
+
+@c snarfed from "mu_message.c":760
+@deffn {Scheme procedure} mu-message-get-user-flag mesg flag
+Return the value of the user attribute @var{flag} from the message @var{mesg}.
+@end deffn
+
+@c snarfed from "mu_message.c":783
+@deffn {Scheme procedure} mu-message-set-user-flag mesg flag value
+Set the given user attribute @var{flag} in the message @var{mesg}. If optional argument
+@var{value} is @samp{#f}, the attribute is unset.
+@end deffn
+
+@c snarfed from "mu_message.c":823
+@deffn {Scheme procedure} mu-message-get-port mesg mode full
+Returns a port associated with the given @var{mesg}. @var{mode} is a string
+defining operation mode of the stream. It may contain any of the
+two characters: @samp{r} for reading, @samp{w} for writing.
+If optional argument @var{full} is specified, it should be a boolean value.
+If it is @samp{#t} then the returned port will allow access to any
+part of the message (including headers). If it is @code{#f} then the port
+accesses only the message body (the default).
+
+@end deffn
+
+@c snarfed from "mu_message.c":870
+@deffn {Scheme procedure} mu-message-get-body mesg
+Returns the message body for the message @var{mesg}.
+@end deffn
+
+@c snarfed from "mu_message.c":888
+@deffn {Scheme procedure} mu-message-multipart? mesg
+Returns @code{#t} if @var{mesg} is a multipart @acronym{MIME} message.
+@end deffn
+
+@c snarfed from "mu_message.c":904
+@deffn {Scheme procedure} mu-message-get-num-parts mesg
+Returns number of parts in a multipart @acronym{MIME} message. Returns
+@code{#f} if the argument is not a multipart message.
+@end deffn
+
+@c snarfed from "mu_message.c":929
+@deffn {Scheme procedure} mu-message-get-part mesg part
+Returns part #@var{part} from a multipart @acronym{MIME} message @var{mesg}.
+@end deffn
+
+@c snarfed from "mu_message.c":957
+@deffn {Scheme procedure} mu-message-send mesg mailer from to
+Sends the message @var{mesg}. Optional @var{mailer} overrides default mailer settings
+in mu-mailer. Optional @var{from} and @var{to} give sender and receiver addresses.
+
+@end deffn
+
+@c snarfed from "mu_message.c":1025
+@deffn {Scheme procedure} mu-message-get-uid mesg
+Returns uid of the message @var{mesg}
+
+@end deffn
+

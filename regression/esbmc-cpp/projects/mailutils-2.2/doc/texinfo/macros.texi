@@ -1,0 +1,3 @@
+@macro xopindex{option,text}
+@opindex \option\, --\option\ @r{option, \text\}
+@end macro

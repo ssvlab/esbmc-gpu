@@ -1,0 +1,81 @@
+#!/bin/sh
+# aside from this initial boilerplate, this is actually -*- scheme -*- code
+main="(module-ref (resolve-module '(gint extract-exports)) 'main)
+"
+exec ${GUILE-guile} -l $0 -c "(apply $main (command-line))" "$@"
+!#
+
+;;;; This file is part of Gint
+;;;; Copyright (C) 2010 Sergey Poznyakoff
+;;;;
+;;;; This program is free software; you can redistribute it and/or modify
+;;;; it under the terms of the GNU General Public License as published by
+;;;; the Free Software Foundation; either version 3, or (at your option)
+;;;; any later version.
+;;;;
+;;;; This program is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU General Public License for more details.
+;;;;
+;;;; You should have received a copy of the GNU General Public License
+;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define-module (gint extract-exports)
+  :use-module (ice-9 getopt-long))
+
+(define (snarf-exports)
+  (let loop ((elt (read)))
+    (cond
+     ((not (eof-object? elt))
+      (if (and (pair? elt)
+	       (eq? (car elt) 'id)
+	       (string? (cdr elt))
+	       (string=? (cdr elt) "fname"))
+	  (let ((name (read)))
+	    (if (string? name)
+		(format #t "(export ~A)~%" name))))
+      (loop (read))))))
+
+(define output-file-name #f)
+(define input-file-list '())
+
+(define (usage)
+  (display "usage: extract-exports [OPTIONS] [FILE [FILE...]]\n")
+  (display "\n")
+  (display "OPTIONS are:\n")
+  (display "  -o, --output FILE  set output file name\n")
+  (display "  -h, --help         display this help summary\n"))
+
+(define (do-file-list)
+  (if (null? input-file-list)
+      (snarf-exports)
+      (for-each
+       (lambda (file)
+	 (with-input-from-file
+	     file
+	   snarf-exports))
+       input-file-list)))
+
+(define (main . cmdline)
+  (let ((grammar `((output (single-char #\o)
+			   (value #t))
+		   (help   (single-char #\h)))))
+    (for-each
+     (lambda (x)
+       (case (car x)
+	 ((output)
+	  (set! output-file-name (cdr x)))
+	 ((help)
+	  (usage)
+	  (exit 0))
+	 ('()
+	  (set! input-file-list (cdr x)))))
+     (getopt-long cmdline grammar)))
+  
+  (if output-file-name
+      (with-output-to-file
+	  output-file-name
+	do-file-list)
+      (do-file-list)))
+

@@ -1,0 +1,4 @@
+main.cu
+-I ~/libraries/ -DGPU_threads=40 --force-malloc-success --state-hashing --context-switch 2 --unwind 13
+^VERIFICATION SUCCESSFUL$
+#VERIFICATION SUCCESSFUL$

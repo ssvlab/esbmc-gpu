@@ -1,0 +1,208 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2009, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+source $top_srcdir/testsuite/lib/mailutils.exp
+
+mu_init "--nosum --norc"
+
+#FIXME: this doesn't work with remote testing
+set env(MAILRC) $MU_RC_DIR/mail.rc
+set env(MBOX) "$MU_SPOOL_DIR/mbox"
+
+# The variable mail_prompt is a regexp which matches the mail prompt.
+global mail_prompt
+if ![info exists mail_prompt] then {
+    set mail_prompt "\\? "
+}
+
+### Only procedures should come after this point.
+
+proc mail_version {} {
+    global MU_TOOL
+    global MU_TOOL_FLAGS
+    global MU_TOOL_VERSION
+    
+    mu_version
+    if ![is_remote host] {
+	clone_output "[which $MU_TOOL] version $MU_TOOL_VERSION"
+    } else {
+	clone_output "$MU_TOOL on remote host version $MU_TOOL_VERSION"
+    }
+}
+
+proc default_mail_start {args} {
+    global verbose
+    global MU_TOOL
+    global MU_TOOL_FLAGS
+    global mail_prompt
+    global expect_out
+    global mail_spawn_id
+    
+    mu_version
+    
+    set sw $args
+    append sw " "
+    if [info exists MU_TOOL_FLAGS] {
+	append sw $MU_TOOL_FLAGS
+    }
+    
+    if [info exists host_board] {
+	if [board_info $host_board exists top_srcdir] {
+	    append sw " --set \"mailbox.mail-spool='[board_info $host_board top_srcdir]/mail/testsuite/spool'\""
+	}
+    }
+
+    set mail_cmd "$MU_TOOL $sw"
+    verbose "Spawning $mail_cmd"
+
+    set mail_spawn_id [remote_spawn host $mail_cmd]
+    if { $mail_spawn_id < 0 || $mail_spawn_id == "" } {
+	perror "Spawning $mail_cmd failed."
+	return 1;
+    }
+
+    mu_expect 360 {
+	-re "\[\r\n\]?${mail_prompt}$" {
+	    verbose "mail initialized."
+	}
+	default {
+	    perror "mail not initialized"
+            return 1
+	}
+    }
+    return 0
+}
+
+proc default_mail_stop {} {
+    verbose "Stopping mail"
+    mail_command "exit"
+    remote_close host
+}
+
+proc mail_start {args} {
+    verbose "Starting mail"
+
+    set reuse_spool 0
+    for {set i 0} {$i < [llength $args]} {incr i} {
+	set a [lindex $args $i]
+	if {"$a" == "-reuse-spool"} {
+	    set reuse_spool 1
+	} else {
+	    break;
+	}
+    }
+
+    if {$reuse_spool == 0} {
+	mu_prepare_spools
+    }
+    return [default_mail_start [lrange $args $i end]]
+}
+    
+proc mail_stop {} {
+    global mail_spawn_id
+    if {[info exists mail_spawn_id] && $mail_spawn_id > 0} {
+	default_mail_stop
+	unset mail_spawn_id
+    }
+}
+
+##
+
+proc mail_send { string } {
+    return [mu_send "$string"]
+}
+
+proc mail_command { cmd } {
+    return [mu_command $cmd]
+}
+
+proc mail_exit {} {
+    mail_stop
+}
+
+# mail_test [-message MESSAGE][-default (FAIL|XFAIL)][-noprompt]
+#            COMMAND PATTERN [PATTERN...]
+# COMMAND   - Command to send to mail.
+# PATTERN   - Sequence to expect in return. 
+# MESSAGE   - [optional] message to output
+proc mail_test { args } {
+    global verbose
+    global mail_prompt
+    global suppress_flag;
+    upvar timeout timeout
+
+    set default ""
+    set message ""
+    set wait_for_prompt 1
+    for {set i 0} {$i < [llength $args]} {incr i} {
+	set a [lindex $args $i]
+	if {"$a" == "-default"} {
+	    set default [lindex $args [expr $i + 1]]
+	    incr i
+	} elseif {"$a" == "-message"} {
+	    set message [lindex $args [expr $i + 1]]
+	    incr i
+	} elseif {"$a" == "-noprompt"} {
+	    set wait_for_prompt 0
+	} else {
+	    set args [lrange $args $i end]
+	    break
+	}
+    }
+    
+    if {"$message" == ""}  {
+	set message [lindex $args 0]
+    }
+
+    if $verbose>2 then {
+	send_user "Message is \"$message\"\n"
+    }
+    set command [lindex $args 0]
+    set pattern [lrange $args 1 end]
+    set result [mu_test $command $pattern]
+    if {$wait_for_prompt} {
+	mu_expect 30 {
+		-re "\[\r\n\]?${mail_prompt}$" {}
+		default {
+			perror "mail not initialized"
+			return 1
+		}
+	}
+    }
+
+    if {$result == 0} {
+	pass "$message"
+    } elseif {$result == 1} {
+	if { "$default" == "" || "$default" != "FAIL" } {
+	    fail "$message"
+	} else {
+	    xfail "$message"
+	    set result 0
+	}
+    } elseif {$result == -2} {
+	fail "$message (timeout)"
+    } elseif {$result == -3} {
+	fail "$message (eof)"
+    } else {
+	fail "$message"
+    }
+    return $result
+}
+
+

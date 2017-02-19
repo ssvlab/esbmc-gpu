@@ -1,0 +1,56 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2007, 2010 Free
+@c Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@menu
+* POP3::      POP3
+* IMAP4::     IMAP4
+* Mbox::      Mbox
+* Mh::        Mh
+* Maildir::   Maildir
+* SMTP::      SMTP
+* Sendmail::  Sendmail
+* Parse822::  Parse822
+@end menu
+
+@node POP3
+@section POP3
+@cindex POP3
+@include pop3.texi
+
+@node IMAP4
+@section IMAP4
+@cindex IMAP4
+@include imap4.texi
+
+@node Mbox
+@section Mbox
+@cindex Mbox
+@include mbox.texi
+
+@node Mh
+@section Mh
+@cindex Mh
+@include mh.texi
+
+@node Maildir
+@section Maildir
+@cindex Maildir
+@include maildir.texi
+
+@node SMTP
+@section SMTP
+@cindex SMTP
+@include smtp.texi
+
+@node Sendmail
+@section Sendmail
+@cindex Sendmail
+@include sendmail.texi
+
+@node Parse822
+@section Parse822
+@cindex Parse822
+@include parse822.texi

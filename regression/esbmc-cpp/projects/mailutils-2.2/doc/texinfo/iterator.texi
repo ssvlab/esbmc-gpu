@@ -1,0 +1,62 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_iterator_} is reserved. */}
+@code{#include <mailutils/iterator.h>}
+@end smallexample
+
+@deftypefun  int mu_iterator_create (mu_iterator_t *@var{iterator}, void *@var{obj})
+@end deftypefun
+
+@deftypefun  int mu_iterator_dup (mu_iterator_t *@var{iterator}, mu_iterator_t @var{orig})
+@end deftypefun
+
+@deftypefun void mu_iterator_destroy (mu_iterator_t *)
+@end deftypefun
+
+@deftypefun  int mu_iterator_first (mu_iterator_t)
+@end deftypefun
+
+@deftypefun  int mu_iterator_next (mu_iterator_t)
+@end deftypefun
+
+@deftypefun  int mu_iterator_current (mu_iterator_t, void **@var{item})
+@end deftypefun
+
+@deftypefun  int mu_iterator_is_done (mu_iterator_t)
+@end deftypefun
+
+@deftypefun int mu_iterator_attach (mu_iterator_t *@var{root}, mu_iterator_t @var{iterator})
+@end deftypefun
+
+@deftypefun int mu_iterator_detach (mu_iterator_t *@var{root}, mu_iterator_t @var{iterator})
+@end deftypefun
+
+@deftypefun void mu_iterator_advance (mu_iterator_t @var{iterator}, void *@var{item})
+@end deftypefun
+
+@deftypefun int mu_iterator_set_first (mu_iterator_t @var{iterator}, int (*@var{first}) (void *))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_next (mu_iterator_t @var{iterator}, int (*@var{next}) (void *))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_getitem (mu_iterator_t @var{iterator}, int (*@var{getitem}) (void *, void **))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_finished_p (mu_iterator_t @var{iterator}, int (*@var{finished_p}) (void *))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_dup (mu_iterator_t @var{itr}, int (*@var{dup}) (void **@var{ptr}, void *@var{data}))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_destroy (mu_iterator_t @var{itr}, int (*@var{destroy}) (mu_iterator_t @var{itr}, void *@var{data}))
+@end deftypefun
+
+@deftypefun int mu_iterator_set_curitem_p (mu_iterator_t @var{itr}, int (*@var{curitem_p}) (void *, void *))
+@end deftypefun
+

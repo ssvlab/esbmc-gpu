@@ -1,0 +1,450 @@
+
+mu-address-get-personal
+@c snarfed from mu_address.c:74
+@deffn {Scheme Procedure} mu-address-get-personal address [num]
+Return personal part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+mu-address-get-comments
+@c snarfed from mu_address.c:84
+@deffn {Scheme Procedure} mu-address-get-comments address [num]
+Return comment part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+mu-address-get-email
+@c snarfed from mu_address.c:94
+@deffn {Scheme Procedure} mu-address-get-email address [num]
+Return email part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+mu-address-get-domain
+@c snarfed from mu_address.c:104
+@deffn {Scheme Procedure} mu-address-get-domain address [num]
+Return domain part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+mu-address-get-local
+@c snarfed from mu_address.c:114
+@deffn {Scheme Procedure} mu-address-get-local address [num]
+Return local part of the @var{num}th email address from @var{address}.
+
+@end deffn
+
+mu-address-get-count
+@c snarfed from mu_address.c:124
+@deffn {Scheme Procedure} mu-address-get-count address
+Return number of parts in email address @var{address}.
+
+@end deffn
+
+mu-username->email
+@c snarfed from mu_address.c:151
+@deffn {Scheme Procedure} mu-username->email [name]
+Deduce user's email address from his username. If @var{name} is omitted, 
+current username is assumed
+
+@end deffn
+
+mu-body-read-line
+@c snarfed from mu_body.c:107
+@deffn {Scheme Procedure} mu-body-read-line body
+Read next line from the @var{body}.
+@end deffn
+
+mu-body-write
+@c snarfed from mu_body.c:168
+@deffn {Scheme Procedure} mu-body-write body text
+Append @var{text} to message @var{body}.
+@end deffn
+
+mu-mail-directory
+@c snarfed from mu_mailbox.c:142
+@deffn {Scheme Procedure} mu-mail-directory [url]
+Do not use this function. Use mu-user-mailbox-url instead.
+@end deffn
+
+mu-user-mailbox-url
+@c snarfed from mu_mailbox.c:154
+@deffn {Scheme Procedure} mu-user-mailbox-url user
+Return URL of the default mailbox for user @var{user}.
+@end deffn
+
+mu-folder-directory
+@c snarfed from mu_mailbox.c:178
+@deffn {Scheme Procedure} mu-folder-directory [url]
+If @var{url} is given, sets it as a name of the user's folder directory.
+Returns the current value of the folder directory.
+@end deffn
+
+mu-mailbox-open
+@c snarfed from mu_mailbox.c:206
+@deffn {Scheme Procedure} mu-mailbox-open url mode
+Opens the mailbox specified by @var{url}. @var{mode} is a string, consisting of
+the characters described below, giving the access mode for the mailbox
+
+@multitable @columnfractions 0.20 0.70
+@headitem @var{mode} @tab Meaning
+@item r @tab Open for reading.
+@item w @tab Open for writing.
+@item a @tab Open for appending to the end of the mailbox.
+@item c @tab Create the mailbox if it does not exist.
+@end multitable
+
+@end deffn
+
+mu-mailbox-close
+@c snarfed from mu_mailbox.c:268
+@deffn {Scheme Procedure} mu-mailbox-close mbox
+Closes mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-get-url
+@c snarfed from mu_mailbox.c:283
+@deffn {Scheme Procedure} mu-mailbox-get-url mbox
+Returns URL of the mailbox @var{MBOX}.
+@end deffn
+
+mu-mailbox-get-port
+@c snarfed from mu_mailbox.c:307
+@deffn {Scheme Procedure} mu-mailbox-get-port mbox mode
+Returns a port associated with the contents of the @var{mbox},
+which is a string defining operation mode of the stream. It may
+contain any of the two characters: @samp{r} for reading, @samp{w} for
+writing.
+
+@end deffn
+
+mu-mailbox-get-message
+@c snarfed from mu_mailbox.c:333
+@deffn {Scheme Procedure} mu-mailbox-get-message mbox msgno
+Retrieve from message #@var{msgno} from the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-messages-count
+@c snarfed from mu_mailbox.c:359
+@deffn {Scheme Procedure} mu-mailbox-messages-count mbox
+Returns number of messages in the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-expunge
+@c snarfed from mu_mailbox.c:380
+@deffn {Scheme Procedure} mu-mailbox-expunge mbox
+Expunges deleted messages from the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-append-message
+@c snarfed from mu_mailbox.c:399
+@deffn {Scheme Procedure} mu-mailbox-append-message mbox mesg
+Appends message @var{mesg} to the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-first-message
+@c snarfed from mu_mailbox.c:436
+@deffn {Scheme Procedure} mu-mailbox-first-message mbox
+Returns first message from the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-next-message
+@c snarfed from mu_mailbox.c:463
+@deffn {Scheme Procedure} mu-mailbox-next-message mbox
+Returns next message from the mailbox @var{mbox}.
+@end deffn
+
+mu-mailbox-more-messages?
+@c snarfed from mu_mailbox.c:497
+@deffn {Scheme Procedure} mu-mailbox-more-messages? mbox
+Returns @samp{#t} if there are more messages in the mailbox @var{mbox}
+ahead of current iterator position.  Usually this function is used after
+a call to @samp{mu-mailbox-first-message} or @samp{mu-mailbox-next-message}.
+If not, it initializes the iterator and points it to the first message innthe mailbox.
+@end deffn
+
+mu-mailbox-get-size
+@c snarfed from mu_mailbox.c:528
+@deffn {Scheme Procedure} mu-mailbox-get-size mbox
+Return size of the mailbox @var{mbox}.
+@end deffn
+
+mu-message-create
+@c snarfed from mu_message.c:181
+@deffn {Scheme Procedure} mu-message-create
+Creates an empty message.
+
+@end deffn
+
+mu-message-copy
+@c snarfed from mu_message.c:193
+@deffn {Scheme Procedure} mu-message-copy mesg
+Creates a copy of the message @var{mesg}.
+
+@end deffn
+
+mu-message-destroy
+@c snarfed from mu_message.c:254
+@deffn {Scheme Procedure} mu-message-destroy mesg
+Destroys the message @var{mesg}.
+@end deffn
+
+mu-message-set-header
+@c snarfed from mu_message.c:271
+@deffn {Scheme Procedure} mu-message-set-header mesg header value [replace]
+Sets header @var{header} of the message @var{mesg} to new @var{value}.
+If @var{header} is already present in the message, its value
+is replaced with the suplied one iff the optional @var{replace} is
+@code{#t}. Otherwise, a new header is created and appended.
+@end deffn
+
+mu-message-get-size
+@c snarfed from mu_message.c:315
+@deffn {Scheme Procedure} mu-message-get-size mesg
+Returns size of the message @var{mesg}
+.
+@end deffn
+
+mu-message-get-lines
+@c snarfed from mu_message.c:330
+@deffn {Scheme Procedure} mu-message-get-lines mesg
+Returns number of lines in the message @var{msg}.
+
+@end deffn
+
+mu-message-get-envelope
+@c snarfed from mu_message.c:372
+@deffn {Scheme Procedure} mu-message-get-envelope mesg
+Returns envelope date of the message @var{mesg}.
+
+@end deffn
+
+mu-message-get-envelope-date
+@c snarfed from mu_message.c:407
+@deffn {Scheme Procedure} mu-message-get-envelope-date mesg
+Returns envelope date of the message @var{mesg}.
+
+@end deffn
+
+mu-message-get-sender
+@c snarfed from mu_message.c:437
+@deffn {Scheme Procedure} mu-message-get-sender mesg
+Returns email address of the sender of the message @var{mesg}.
+
+@end deffn
+
+mu-message-get-header
+@c snarfed from mu_message.c:464
+@deffn {Scheme Procedure} mu-message-get-header mesg header
+Returns value of the header @var{header} from the message @var{mesg}.
+
+@end deffn
+
+mu-message-get-header-fields
+@c snarfed from mu_message.c:523
+@deffn {Scheme Procedure} mu-message-get-header-fields mesg [headers]
+Returns list of headers in the message @var{mesg}. optional argument
+@var{headers} gives a list of header names to restrict return value to.
+
+@end deffn
+
+mu-message-set-header-fields
+@c snarfed from mu_message.c:590
+@deffn {Scheme Procedure} mu-message-set-header-fields mesg list [replace]
+Set headers in the message @var{mesg} to those listed in @var{list},
+which is a list of conses @code{(cons @var{header} @var{value})}.
+
+Optional parameter @var{replace} specifies whether new header
+values should replace the headers already present in the
+message.
+@end deffn
+
+mu-message-delete
+@c snarfed from mu_message.c:643
+@deffn {Scheme Procedure} mu-message-delete mesg [flag]
+Mark message @var{mesg} as deleted. Optional argument @var{flag} allows to
+toggle the deletion mark. The message is deleted if it is @code{#t} and
+undeleted if it is @code{#f}.
+@end deffn
+
+mu-message-get-flag
+@c snarfed from mu_message.c:678
+@deffn {Scheme Procedure} mu-message-get-flag mesg flag
+Return the value of the attribute @var{flag} of the message @var{mesg}.
+@end deffn
+
+mu-message-set-flag
+@c snarfed from mu_message.c:740
+@deffn {Scheme Procedure} mu-message-set-flag mesg flag [value]
+Set the attribute @var{flag} in message @var{mesg}. If optional @var{value}
+is @samp{#f}, the attribute is unset.
+
+@end deffn
+
+mu-message-get-user-flag
+@c snarfed from mu_message.c:837
+@deffn {Scheme Procedure} mu-message-get-user-flag mesg flag
+Return value of the user-defined attribute @var{flag} from the message @var{mesg}.
+@end deffn
+
+mu-message-set-user-flag
+@c snarfed from mu_message.c:860
+@deffn {Scheme Procedure} mu-message-set-user-flag mesg flag [value]
+Set user-defined attribute @var{flag} in the message @var{mesg}.
+If optional argumen @var{value} is @samp{#f}, the attribute is unset.
+@end deffn
+
+mu-message-get-port
+@c snarfed from mu_message.c:899
+@deffn {Scheme Procedure} mu-message-get-port mesg mode [full]
+Returns a port associated with the message @var{mesg}. The @var{mode} is a
+string defining operation mode of the stream. It may contain any of the
+two characters: @samp{r} for reading, @samp{w} for writing.
+If optional argument @var{full} is specified, it should be a boolean value.
+If it is @samp{#t} then the returned port will allow access to any
+part of the message (including headers). If it is @code{#f} then the port
+accesses only the message body (the default).
+
+@end deffn
+
+mu-message-get-body
+@c snarfed from mu_message.c:949
+@deffn {Scheme Procedure} mu-message-get-body mesg
+Returns message body for the message @var{mesg}.
+@end deffn
+
+mu-message-multipart?
+@c snarfed from mu_message.c:967
+@deffn {Scheme Procedure} mu-message-multipart? mesg
+Returns @code{#t} if @var{mesg} is a multipart @acronym{MIME} message.
+@end deffn
+
+mu-message-get-num-parts
+@c snarfed from mu_message.c:983
+@deffn {Scheme Procedure} mu-message-get-num-parts mesg
+Returns number of parts in a multipart @acronym{MIME} message @var{mesg}.
+Returns @code{#f} if the argument is not a multipart message.
+@end deffn
+
+mu-message-get-part
+@c snarfed from mu_message.c:1008
+@deffn {Scheme Procedure} mu-message-get-part mesg part
+Returns part #@var{part} of a multipart @acronym{MIME} message @var{mesg}.
+@end deffn
+
+mu-message-send
+@c snarfed from mu_message.c:1037
+@deffn {Scheme Procedure} mu-message-send mesg [mailer [from [to]]]
+Sends message @var{mesg}. Optional @var{mailer} overrides default mailer
+settings. Optional @var{from} and @var{to} give sender and recever
+addresses, respectively.
+
+@end deffn
+
+mu-message-get-uid
+@c snarfed from mu_message.c:1120
+@deffn {Scheme Procedure} mu-message-get-uid mesg
+Returns UID of the message @var{mesg}
+
+@end deffn
+
+mu-mime-create
+@c snarfed from mu_mime.c:97
+@deffn {Scheme Procedure} mu-mime-create [flags [mesg]]
+Creates a new @acronym{MIME} object.  Both arguments are optional.
+@var{Flags} specifies the type of the object to create (@samp{0} is a
+reasonable value).  @var{mesg} gives the message to create the
+@acronym{MIME} object from.
+@end deffn
+
+mu-mime-multipart?
+@c snarfed from mu_mime.c:133
+@deffn {Scheme Procedure} mu-mime-multipart? mime
+Returns @code{#t} if @var{mime} is a multipart object.
+
+@end deffn
+
+mu-mime-get-num-parts
+@c snarfed from mu_mime.c:143
+@deffn {Scheme Procedure} mu-mime-get-num-parts mime
+Returns number of parts in the @acronym{MIME} object @var{mime}.
+@end deffn
+
+mu-mime-get-part
+@c snarfed from mu_mime.c:162
+@deffn {Scheme Procedure} mu-mime-get-part mime num
+Returns @var{num}th part from the @acronym{MIME} object @var{mime}.
+@end deffn
+
+mu-mime-add-part
+@c snarfed from mu_mime.c:184
+@deffn {Scheme Procedure} mu-mime-add-part mime mesg
+Adds message @var{mesg} to the @acronym{MIME} object @var{mime}.
+@end deffn
+
+mu-mime-get-message
+@c snarfed from mu_mime.c:210
+@deffn {Scheme Procedure} mu-mime-get-message mime
+Converts @acronym{MIME} object @var{mime} to a message.
+
+@end deffn
+
+mu-openlog
+@c snarfed from mu_logger.c:29
+@deffn {Scheme Procedure} mu-openlog ident option facility
+Opens a connection to the system logger for Guile program.
+@var{ident}, @var{option} and @var{facility} have the same meaning as in openlog(3)
+@end deffn
+
+mu-logger
+@c snarfed from mu_logger.c:46
+@deffn {Scheme Procedure} mu-logger prio text
+Distributes @var{text} via the syslog priority @var{prio}.
+@end deffn
+
+mu-closelog
+@c snarfed from mu_logger.c:65
+@deffn {Scheme Procedure} mu-closelog
+Closes the channel to the system logger opened by @code{mu-openlog}.
+@end deffn
+
+mu-register-format
+@c snarfed from mu_scm.c:106
+@deffn {Scheme Procedure} mu-register-format . rest
+Registers desired mailutils formats.  Any number of arguments can be given.
+Each argument must be one of the following strings:
+
+@multitable @columnfractions 0.3 0.6
+@headitem Argument @tab Meaning
+@item @samp{mbox}  @tab Regular UNIX mbox format
+@item @samp{mh}    @tab @acronym{MH} mailbox format
+@item @samp{maildir} @tab @i{Maildir} mailbox format
+@item @samp{pop}   @tab @acronym{POP} mailbox format
+@item @samp{imap}  @tab @acronym{IMAP} mailbox format
+@item @samp{sendmail} @tab @i{sendmail} mailer format
+@item @samp{smtp}  @tab @acronym{SMTP} mailer format
+@end multitable
+
+If called without arguments, the function registers all available formats
+
+@end deffn
+
+mu-strerror
+@c snarfed from mu_scm.c:142
+@deffn {Scheme Procedure} mu-strerror err
+Return the error message corresponding to @var{err}, which must be
+an integer value.
+
+@end deffn
+
+mu-getpwuid
+@c snarfed from mu_util.c:29
+@deffn {Scheme Procedure} mu-getpwuid user
+Look up an entry in the user database. @var{User} can be an integer,
+or a string, giving the behaviour of @code{mu_get_auth_by_uid} or
+@code{mu_get_auth_by_name} respectively.
+
+Returns a vector with fields corresponding to those of the @code{mu_auth_data}
+entry in question. If no matching entry was found, returns @code{#f}.
+
+@end deffn

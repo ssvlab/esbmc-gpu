@@ -1,0 +1,170 @@
+@c This is part of the GNU Mailutils manual.
+@c Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2010
+@c Free Software Foundation, Inc.
+@c See file mailutils.texi for copying conditions.
+@comment *******************************************************************
+
+@smallexample
+@code{/* Prefix @emph{mu_message_} is reserved. */}
+@code{#include <mailutils/message.h>}
+
+@end smallexample
+
+The @code{mu_message_t} object is a convenient way to manipulate messages. It
+encapsulates the @code{envelope_t}, the @code{header_t} and the @code{body_t}.
+
+@smallexample
+@group
+    mailbox_t
+    ----------                   mu_message_t
+   (message[1])        +------>+--------------------+
+    ----------         |       |  mu_envelope_t     |
+   (message[2])        |       |--------------------|
+    ----------         |       |  mu_header_t       |
+   (message[3])--------+       |--------------------|
+    ----------                 |  mu_body_t         |
+   (message[n])                |--------------------|
+    ----------                 |  mu_attribute_t    |
+                               |--------------------|
+                               |  mu_stream_t       |
+                               +--------------------+
+@end group
+@end smallexample
+
+@c
+@c Basic.
+@c
+
+@deftypefun void mu_message_create (mu_message_t *@var{msg}, void *@var{owner})
+@end deftypefun
+
+@deftypefun void mu_message_destroy (mu_message_t *@var{msg}, void *@var{owner})
+The resources allocate for @var{msg} are freed.
+@end deftypefun
+
+@deftypefun  int mu_message_create_copy (mu_message_t *@var{to}, mu_message_t *@var{from})
+@end deftypefun
+
+@deftypefun  void* mu_message_get_owner (mu_message_t @var{msg})
+@end deftypefun
+
+@deftypefun  int mu_message_is_modified (mu_message_t @var{msg})
+@end deftypefun
+
+@deftypefun  int mu_message_clear_modified (mu_message_t @var{msg})
+@end deftypefun
+
+@deftypefun  int mu_message_get_mailbox (mu_message_t @var{msg}, mu_mailbox_t *@var{mbox})
+@end deftypefun
+
+@deftypefun  int mu_message_set_mailbox (mu_message_t @var{msg}, mu_mailbox_t @var{mbox}, void *@var{owner})
+@end deftypefun
+
+@c
+@c ------------
+@c
+
+@deftypefun  int mu_message_ref (mu_message_t @var{msg})
+@end deftypefun
+
+@deftypefun  int mu_message_get_envelope (mu_message_t @var{msg}, mu_envelope_t *@var{envelope})
+@end deftypefun
+
+@deftypefun  int mu_message_set_envelope (mu_message_t @var{msg}, mu_envelope_t @var{envelope}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_header (mu_message_t @var{msg}, mu_header_t *@var{header})
+Retrieve @var{msg} header.
+@end deftypefun
+
+@deftypefun  int mu_message_set_header (mu_message_t @var{msg}, mu_header_t @var{header}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_body (mu_message_t @var{msg}, mu_body_t *@var{body})
+@end deftypefun
+
+@deftypefun  int mu_message_set_body (mu_message_t @var{msg}, mu_body_t @var{body}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_stream (mu_message_t @var{msg}, mu_stream_t *@var{stream})
+@end deftypefun
+
+@deftypefun  int mu_message_set_stream (mu_message_t @var{msg}, mu_stream_t @var{stream}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_attribute (mu_message_t @var{msg}, mu_attribute_t *@var{attribute})
+@end deftypefun
+
+@deftypefun  int mu_message_set_attribute (mu_message_t @var{msg}, mu_attribute_t @var{attribute}, void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_observable (mu_message_t @var{msg}, mu_observable_t *@var{observable})
+@end deftypefun
+
+@c
+@c ------------
+@c
+
+@deftypefun  int mu_message_is_multipart (mu_message_t @var{msg}, int *@var{multi})
+Set *@var{multi} to non-zero value if @var{msg} is multi-part.
+@end deftypefun
+
+@deftypefun  int mu_message_set_is_multipart (mu_message_t @var{msg}, int (*@var{_is_multipart}) (mu_message_t, int *), void *);
+@end deftypefun
+
+@deftypefun  int mu_message_size (mu_message_t @var{msg}, size_t *@var{size})
+@end deftypefun
+
+@deftypefun  int mu_message_set_size (mu_message_t @var{msg}, int (*@var{_size}) (mu_message_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_lines (mu_message_t @var{msg}, size_t *@var{size})
+@end deftypefun
+
+@deftypefun  int mu_message_set_lines (mu_message_t @var{msg}, int (*@var{_lines}) (mu_message_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_num_parts (mu_message_t @var{msg}, size_t *@var{nparts})
+@end deftypefun
+
+@deftypefun  int mu_message_set_get_num_parts (mu_message_t @var{msg}, int (*@var{_get_num_parts}) (mu_message_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_part (mu_message_t @var{msg}, size_t @var{part}, mu_message_t *@var{msg})
+@end deftypefun
+
+@deftypefun  int mu_message_set_get_part (mu_message_t @var{msg}, int (*@var{_get_part}) (mu_message_t, size_t, mu_message_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_uidl (mu_message_t @var{msg}, char *@var{buffer}, size_t @var{buflen}, size_t *@var{writen})
+@end deftypefun
+
+@deftypefun  int mu_message_set_uidl (mu_message_t @var{msg}, int (*@var{_get_uidl}) (mu_message_t, char *, size_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_get_uid (mu_message_t @var{msg}, size_t *@var{uid})
+@end deftypefun
+
+@deftypefun  int mu_message_set_uid (mu_message_t @var{msg}, int (*@var{_get_uid}) (mu_message_t, size_t *), void *@var{owner})
+@end deftypefun
+
+@deftypefun  int mu_message_create_attachment (const char *@var{content_type}, const char *@var{encoding}, const char *@var{filename}, mu_message_t *@var{newmsg})
+@end deftypefun
+
+@deftypefun  int mu_message_save_attachment (mu_message_t @var{msg}, const char *@var{filename}, void **@var{data})
+@end deftypefun
+
+@deftypefun  int mu_message_encapsulate (mu_message_t @var{msg}, mu_message_t *@var{newmsg}, void **@var{data})
+@end deftypefun
+
+@deftypefun  int mu_message_unencapsulate (mu_message_t @var{msg}, mu_message_t *@var{newmsg}, void **@var{data});
+@end deftypefun
+
+@deftypefun  int mu_message_get_attachment_name (mu_message_t @var{msg}, char *@var{name}, size_t @var{bufsize}, size_t *@var{size});
+@end deftypefun
+
+@deftypefun  int mu_message_aget_attachment_name (mu_message_t @var{msg}, char **@var{name});
+@end deftypefun
+
+@deftypefun  int mu_message_save_to_mailbox (mu_message_t @var{msg}, mu_ticket_t @var{ticket}, mu_debug_t @var{debug}, const char *@var{toname});
+@end deftypefun

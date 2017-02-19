@@ -1,0 +1,89 @@
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2010 Free Software Foundation, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+TEST redirect.sv
+PATTERN BEGIN
+REDIRECT on msg uid 1: to gray@gnu.org
+REDIRECT on msg uid 2: to gray@gnu.org
+REDIRECT on msg uid 3: to gray@gnu.org
+PATTERN END
+
+FILE BEGIN
+ENVELOPE FROM: coyote@desert.example.org
+ENVELOPE TO: <gray@gnu.org>
+-re
+   0: X-Authentication-Warning: [^ \t]+ set sender using -f flag
+   1: X-Loop-Prevention: foobar@nonexistent.net
+   2: From: coyote@desert.example.org
+   3: To: roadrunner@acme.example.com
+   4: Subject: I have a present for you
+   5: X-Caffeine: C8H10N4O2
+   6: 
+   7: Look, I'm sorry about the whole anvil thing, and I really
+   8: didn't mean to try and drop it on you from the top of the
+   9: cliff.  I want to try to make it up to you.  I've got some
+  10: great birdseed over here at my place--top of the line
+  11: stuff--and if you come by, I'll have it all wrapped up
+  12: for you.  I'm really sorry for all the problems I've caused
+  13: for you over the years, but I know we can work this out.
+  14: 
+  15: -- 
+  16: Wile E. Coyote   "Super Genius"   coyote@desert.example.org
+  17: 
+END OF MESSAGE
+ENVELOPE FROM: b1ff@de.res.example.com
+ENVELOPE TO: <gray@gnu.org>
+-re
+   0: X-Authentication-Warning: [^ \t]+ set sender using -f flag
+   1: X-Loop-Prevention: foobar@nonexistent.net
+   2: From: youcouldberich!@reply-by-postal-mail.invalid
+   3: To: rube@landru.example.edu
+   4: Subject: $$$ YOU, TOO, CAN BE A MILLIONAIRE! $$$
+   5: Date: TBD
+   6: X-Number: 0015
+   7:
+   8: YOU MAY HAVE ALREADY WON TEN MILLION DOLLARS, BUT I DOUBT
+   9: IT!  SO JUST POST THIS TO SIX HUNDRED NEWSGROUPS!  IT WILL
+  10: GUARANTEE THAT YOU GET AT LEAST FIVE RESPONSES WITH MONEY!
+  11: MONEY! MONEY! COLD HARD CASH!  YOU WILL RECEIVE OVER
+  12: $20,000 IN LESS THAN TWO MONTHS!  AND IT'S LEGAL!!!!!!!!!
+  13: !!!!!!!!!!!!!!!!!!111111111!!!!!!!11111111111!!1  JUST
+  14: SEND $5 IN SMALL, UNMARKED BILLS TO THE ADDRESSES BELOW!
+  15: 
+END OF MESSAGE
+ENVELOPE FROM: bar@dontmailme.org
+ENVELOPE TO: <gray@gnu.org>
+-re
+   0: X-Authentication-Warning: [^ \t]+ set sender using -f flag
+   1: X-Loop-Prevention: foobar@nonexistent.net
+   2: Received: (from bar@dontmailme.org)
+   3: 	by dontmailme.org id fERKR9N16790
+   4: 	for foobar@nonexistent.net; Fri, 28 Dec 2001 22:18:08 +0200
+   5: Date: Fri, 28 Dec 2001 23:28:08 +0200
+   6: From: Bar <bar@dontmailme.org>
+   7: To: Foo Bar <foobar@nonexistent.net>
+   8: Message-Id: <200112232808.fERKR9N16790@dontmailme.org>
+   9: Subject: Coffee
+  10: 
+  11: How about some coffee?
+  12: 
+END OF MESSAGE
+FILE END
+TEST END
+
+# End of Redirect

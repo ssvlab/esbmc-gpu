@@ -1,0 +1,102 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2006, 2007, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+mail_version
+
+if ![mu_check_capability ENABLE_SENDMAIL] {
+    unsupported "Support for sendmail not compiled in"
+} else {
+    mail_start "--file=%mbox1"
+
+    mail_command "set sendmail=\"sendmail:$top_builddir/examples/mta\""
+    mail_command "set inplacealiases"
+    mail_command "setenv MTA_DIAG=\"$MU_FOLDER_DIR/mta.diag\""
+
+    mail_test -noprompt "reply 1" \
+	"To: <foobar@nonexistent.net>,<bar@dontmailme.org>"\
+	"Subject: Re: Jabberwocky"\
+	""
+
+    mail_test -noprompt "~m"\
+	"Interpolating: 1"\
+	"(continue)"
+    
+    mail_test "." 
+
+    mail_stop
+
+    mu_test_file "$MU_FOLDER_DIR/mta.diag" \
+	-re "ENVELOPE FROM: \[^\r\n\]*"\
+	"ENVELOPE TO: <foobar@nonexistent.net>,<bar@dontmailme.org>"\
+	"   0: To: <foobar@nonexistent.net>,<bar@dontmailme.org>"\
+	"   1: Subject: Re: Jabberwocky"\
+	"   2: In-Reply-To: Your message of Fri, 28 Dec 2001 22:18:08 +0200"\
+	"   3: \t<200112282018.fBSKI8N04906@nonexistent.net>"\
+	"   4: References: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"   5: X-Mailer: mail (GNU Mailutils $MU_TOOL_VERSION)"\
+	"   6: "\
+	"   7: > Received: (from foobar@nonexistent.net)"\
+	"   8: > 	by nonexistent.net id fBSKI8N04906"\
+	"   9: > 	for bar@dontmailme.org; Fri, 28 Dec 2001 22:18:08 +0200"\
+	"  10: > Date: Fri, 28 Dec 2001 22:18:08 +0200"\
+	"  11: > From: Foo Bar <foobar@nonexistent.net>"\
+	"  12: > Message-Id: <200112282018.fBSKI8N04906@nonexistent.net>"\
+	"  13: > To: Bar <bar@dontmailme.org>"\
+	"  14: > Subject: Jabberwocky"\
+	"  15: >"\
+	"  16: > `Twas brillig, and the slithy toves"\
+	"  17: > Did gyre and gimble in the wabe;"\
+	"  18: > All mimsy were the borogoves,"\
+	"  19: > And the mome raths outgrabe."\
+	"  20: > "\
+	"  21: > `Beware the Jabberwock, my son!"\
+	"  22: > The jaws that bite, the claws that catch!"\
+	"  23: > Beware the Jujub bird, and shun"\
+	"  24: > The frumious Bandersnatch!'"\
+	"  25: > "\
+	"  26: > He took his vorpal sword in hand:"\
+	"  27: > Long time the manxome foe he sought --"\
+	"  28: > So rested he by the Tumtum gree,"\
+	"  29: > And stood awhile in thought."\
+	"  30: > "\
+	"  31: > And as in uffish thought he stood,"\
+	"  32: > The Jabberwock, with eyes of flame,"\
+	"  33: > Came whiffling through the tulgey wook,"\
+	"  34: > And burbled as it came!"\
+	"  35: > "\
+	"  36: > One, two!  One, two!  And through and through"\
+	"  37: > The vorpal blade went snicker-snack!"\
+	"  38: > He left it dead, and with its head"\
+	"  39: > He went galumphing back."\
+	"  40: > "\
+	"  41: > `And has thou slain the Jabberwock?"\
+	"  42: > Come to my arms, my beamish boy!"\
+	"  43: > O frabjous day!  Calloh!  Callay!"\
+	"  44: > He chortled in his joy."\
+	"  45: > "\
+	"  46: > `Twas brillig, and the slithy toves"\
+	"  47: > Did gyre and gimble in the wabe;"\
+	"  48: > All mimsy were the borogoves,"\
+	"  49: > And the mome raths outgrabe."\
+	"  50: > "\
+	"  51: "\
+	"END OF MESSAGE"
+}
+
+# End of send.exp

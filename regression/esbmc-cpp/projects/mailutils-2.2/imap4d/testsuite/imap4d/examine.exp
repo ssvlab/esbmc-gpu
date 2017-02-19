@@ -1,0 +1,62 @@
+# -*- tcl -*-
+# This file is part of Mailutils testsuite.
+# Copyright (C) 2002, 2007, 2008, 2010 Free Software Foundation, Inc.
+#  
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#   
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#  
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+imap4d_start 
+imap4d_auth "user!passwd" "guessme"
+imap4d_test "EXAMINE INBOX"\
+"95 EXISTS"\
+"95 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 96\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS ()\] No Permanent flags"\
+"OK \[READ-ONLY\] EXAMINE Completed"
+
+imap4d_test "SELECT INBOX"\
+"95 EXISTS"\
+"95 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 96\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage "\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS (\\Answered \\Deleted \\Seen)\] Permanent flags"\
+"OK \[READ-WRITE\] SELECT Completed"
+
+imap4d_test "STATUS INBOX (MESSAGES RECENT UNSEEN UIDVALIDITY UIDNEXT)" \
+-re {STATUS INBOX \(MESSAGES 95 RECENT 95 UNSEEN 95 UIDVALIDITY [0-9]+ UIDNEXT 96\)} \
+"OK"
+
+imap4d_test "STATUS mbox1 (MESSAGES RECENT UNSEEN UIDNEXT)" \
+"STATUS mbox1 (MESSAGES 5 RECENT 5 UNSEEN 5 UIDNEXT 6)" \
+"OK"
+
+imap4d_test "EXAMINE mbox1" \
+"5 EXISTS"\
+"5 RECENT"\
+-re {OK \[UIDVALIDITY [0-9]+\] UID valididy status}\
+"OK \[UIDNEXT 6\] Predicted next uid"\
+"OK \[UNSEEN 1\] first unseen messsage"\
+"FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)"\
+"OK \[PERMANENTFLAGS ()\] No Permanent flags"\
+"OK \[READ-ONLY\] EXAMINE Completed"
+
+imap4d_stop
+
+# End of examine.exp

@@ -1,0 +1,3 @@
+main.c
+--unwind 1 --function commandLoop --depth 130 --no-pointer-check --string-abstraction
+^VERIFICATION FAILED$
